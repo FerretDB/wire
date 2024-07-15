@@ -16,8 +16,6 @@ package wire
 
 import "fmt"
 
-//go:generate go run golang.org/x/tools/cmd/stringer@latest -linecomment -type OpMsgFlagBit
-
 // OpMsgFlagBit integer is a bitmask encoding flags that modify the format and behavior of OpMsg.
 type OpMsgFlagBit flagBit
 

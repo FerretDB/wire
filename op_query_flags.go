@@ -16,8 +16,6 @@ package wire
 
 import "fmt"
 
-//go:generate go run golang.org/x/tools/cmd/stringer@latest -linecomment -type OpQueryFlagBit
-
 // OpQueryFlagBit an integer bitmask for the operation.
 type OpQueryFlagBit flagBit
 

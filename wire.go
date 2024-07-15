@@ -15,4 +15,6 @@
 // Package wire provides wire protocol implementation.
 package wire
 
+//go:generate go run golang.org/x/tools/cmd/stringer@latest -linecomment -output stringers.go -type OpCode,OpMsgFlagBit,OpQueryFlagBit,OpReplyFlagBit
+
 const debugbuild = true

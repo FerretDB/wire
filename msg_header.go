@@ -24,8 +24,6 @@ import (
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 )
 
-//go:generate go run golang.org/x/tools/cmd/stringer@latest -linecomment -type OpCode
-
 // OpCode represents wire operation code.
 type OpCode int32
 

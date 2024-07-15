@@ -48,6 +48,8 @@ import (
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 )
 
+//go:generate go run golang.org/x/tools/cmd/stringer@latest -linecomment -output stringers.go -type decodeMode,tag
+
 type (
 	// ScalarType represents a BSON scalar type.
 	//
@@ -104,8 +106,6 @@ const (
 
 // Null represents BSON scalar value null.
 var Null = bsonproto.Null
-
-//go:generate go run golang.org/x/tools/cmd/stringer@latest -linecomment -type decodeMode
 
 // decodeMode represents a mode for decoding BSON.
 type decodeMode int

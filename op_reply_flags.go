@@ -16,8 +16,6 @@ package wire
 
 import "fmt"
 
-//go:generate go run golang.org/x/tools/cmd/stringer@latest -linecomment -type OpReplyFlagBit
-
 // OpReplyFlagBit is a bit vector to specify OP_REPLY flags.
 type OpReplyFlagBit flagBit
 

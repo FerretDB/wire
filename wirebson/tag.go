@@ -14,8 +14,6 @@
 
 package wirebson
 
-//go:generate go run golang.org/x/tools/cmd/stringer@latest -linecomment -type tag
-
 // tag represents type identifier of the document/array field.
 type tag byte
 
