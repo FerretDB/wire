@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// package wirebson implements encoding and decoding of BSON as defined by https://bsonspec.org/spec.html.
+// Package wirebson implements encoding and decoding of BSON as defined by https://bsonspec.org/spec.html.
 //
 // # Types
 //
