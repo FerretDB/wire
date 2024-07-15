@@ -1,0 +1,2 @@
+MongoDB wire protocol implementation in Go.
+Copyright 2021 FerretDB Inc. (https://www.ferretdb.com/)
