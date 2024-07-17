@@ -44,7 +44,7 @@ jobs:
         with:
           cache-key: test
 
-      - name: Install Task
+      - name: Install Task and tools
         run: go generate -x
         working-directory: tools
 
