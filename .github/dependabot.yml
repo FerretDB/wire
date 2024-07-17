@@ -23,7 +23,20 @@ updates:
     assignees: [AlekSi]
     open-pull-requests-limit: 20
     groups:
-      ferretdb:
+      wire:
+        patterns: ["*"]
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "01:42"
+
+  - package-ecosystem: "gomod"
+    directory: "/tools"
+    labels: ["deps", "not ready"]
+    assignees: [AlekSi]
+    open-pull-requests-limit: 20
+    groups:
+      tools:
         patterns: ["*"]
     schedule:
       interval: "weekly"
