@@ -28,40 +28,19 @@ import (
 type OpCode int32
 
 const (
-	// OpCodeReply is used for the initial handshake with old clients.
-	// It is not used otherwise and is deprecated.
-	OpCodeReply = OpCode(1) // OP_REPLY
-
-	// OpCodeUpdate is deprecated.
-	OpCodeUpdate = OpCode(2001) // OP_UPDATE
-
-	// OpCodeInsert is deprecated and unused.
-	OpCodeInsert = OpCode(2002) // OP_INSERT
-
-	// OpCodeGetByOID is deprecated and unused.
-	OpCodeGetByOID = OpCode(2003) // OP_GET_BY_OID
-
-	// OpCodeQuery is used for the initial handshake with old clients.
-	// It is not used otherwise and is deprecated.
-	OpCodeQuery = OpCode(2004) // OP_QUERY
-
-	// OpCodeGetMore is deprecated and unused.
-	OpCodeGetMore = OpCode(2005) // OP_GET_MORE
-
-	// OpCodeDelete is deprecated and unused.
-	OpCodeDelete = OpCode(2006) // OP_DELETE
-
-	// OpCodeKillCursors is deprecated and unused.
+	OpCodeReply       = OpCode(1)    // OP_REPLY
+	OpCodeUpdate      = OpCode(2001) // OP_UPDATE
+	OpCodeInsert      = OpCode(2002) // OP_INSERT
+	OpCodeGetByOID    = OpCode(2003) // OP_GET_BY_OID
+	OpCodeQuery       = OpCode(2004) // OP_QUERY
+	OpCodeGetMore     = OpCode(2005) // OP_GET_MORE
+	OpCodeDelete      = OpCode(2006) // OP_DELETE
 	OpCodeKillCursors = OpCode(2007) // OP_KILL_CURSORS
-
-	// OpCodeCompressed is not implemented yet.
-	OpCodeCompressed = OpCode(2012) // OP_COMPRESSED
-
-	// OpCodeMsg is the main operation for client-server communication.
-	OpCodeMsg = OpCode(2013) // OP_MSG
+	OpCodeCompressed  = OpCode(2012) // OP_COMPRESSED
+	OpCodeMsg         = OpCode(2013) // OP_MSG
 )
 
-// MsgHeader in general, each message consists of a standard message header followed by request-specific data.
+// MsgHeader represents common message header.
 type MsgHeader struct {
 	MessageLength int32
 	RequestID     int32
@@ -74,7 +53,7 @@ const (
 	MsgHeaderLen = 16
 
 	// MaxMsgLen is the maximum message length.
-	MaxMsgLen = 48000000
+	MaxMsgLen = 48_000_000
 )
 
 // readFrom reads header.

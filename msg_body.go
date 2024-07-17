@@ -30,15 +30,11 @@ import (
 //
 //sumtype:decl
 type MsgBody interface {
-	msgbody() // seal for sumtype
-
-	// check performs deep (and slow) validity check.
-	check() error
+	encoding.BinaryMarshaler
 
 	// UnmarshalBinaryNocopy is a variant of [encoding.BinaryUnmarshaler] that does not have to copy the data.
 	UnmarshalBinaryNocopy([]byte) error
 
-	encoding.BinaryMarshaler
 	fmt.Stringer
 
 	// StringBlock returns an indented string representation for logging.
@@ -46,6 +42,11 @@ type MsgBody interface {
 
 	// StringFlow returns an unindented string representation for logging.
 	StringFlow() string
+
+	// check performs deep (and slow) validity check.
+	check() error
+
+	msgbody() // seal for go-check-sumtype linter
 }
 
 // ErrZeroRead is returned when zero bytes was read from connection,
@@ -54,7 +55,7 @@ var ErrZeroRead = errors.New("zero bytes read")
 
 // ReadMessage reads from reader and returns wire header and body.
 //
-// Error is (possibly wrapped) ErrZeroRead if zero bytes was read.
+// Error is (possibly wrapped) [ErrZeroRead] if zero bytes was read.
 func ReadMessage(r *bufio.Reader) (*MsgHeader, MsgBody, error) {
 	var header MsgHeader
 	if err := header.readFrom(r); err != nil {

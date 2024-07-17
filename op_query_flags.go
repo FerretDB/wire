@@ -20,26 +20,13 @@ import "fmt"
 type OpQueryFlagBit flagBit
 
 const (
-	// OpQueryTailableCursor indicates that the cursor will not be closed.
-	OpQueryTailableCursor = OpQueryFlagBit(1 << 1) // TailableCursor
-
-	// OpQuerySlaveOk indicates that query can run on a replica slave.
-	OpQuerySlaveOk = OpQueryFlagBit(1 << 2) // SlaveOk
-
-	// OpQueryOplogReplay is deprecated.
-	OpQueryOplogReplay = OpQueryFlagBit(1 << 3) // OplogReplay
-
-	// OpQueryNoCursorTimeout disables cursor timeouts.
+	OpQueryTailableCursor  = OpQueryFlagBit(1 << 1) // TailableCursor
+	OpQuerySlaveOk         = OpQueryFlagBit(1 << 2) // SlaveOk
+	OpQueryOplogReplay     = OpQueryFlagBit(1 << 3) // OplogReplay
 	OpQueryNoCursorTimeout = OpQueryFlagBit(1 << 4) // NoCursorTimeout
-
-	// OpQueryAwaitData together with OpQueryTailableCursor, waits for data instead of returning it.
-	OpQueryAwaitData = OpQueryFlagBit(1 << 5) // AwaitData
-
-	// OpQueryExhaust indicates that server can divide data into multiple streams and expect that client can handle it.
-	OpQueryExhaust = OpQueryFlagBit(1 << 6) // Exhaust
-
-	// OpQueryPartial ignore error and give partial results.
-	OpQueryPartial = OpQueryFlagBit(1 << 7) // Partial
+	OpQueryAwaitData       = OpQueryFlagBit(1 << 5) // AwaitData
+	OpQueryExhaust         = OpQueryFlagBit(1 << 6) // Exhaust
+	OpQueryPartial         = OpQueryFlagBit(1 << 7) // Partial
 )
 
 // OpQueryFlags enables String() and FlagSet methods for flags.

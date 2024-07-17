@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package wire provides wire protocol implementation.
+// Package wire provides [MongoDB wire protocol] implementation.
+//
+// [MongoDB wire protocol]: https://www.mongodb.com/docs/manual/reference/mongodb-wire-protocol/
 package wire
 
 //go:generate ./bin/stringer -linecomment -output stringers.go -type OpCode,OpMsgFlagBit,OpQueryFlagBit,OpReplyFlagBit
 
+// TODO https://github.com/FerretDB/wire/issues/7
 const debugbuild = true
