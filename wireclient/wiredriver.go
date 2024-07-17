@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package wiredriver provides low-level wire protocol driver for testing.
-package wiredriver
+// Package wireclient provides low-level wire protocol client.
+package wireclient
 
 import (
 	"bufio"
@@ -22,18 +22,16 @@ import (
 	"log/slog"
 	"net"
 	"net/url"
-	"path/filepath"
 	"sync/atomic"
-
-	"github.com/xdg-go/scram"
 
 	"github.com/FerretDB/wire"
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
-	"github.com/FerretDB/wire/internal/util/must"
-	"github.com/FerretDB/wire/wirebson"
 )
 
-// Conn represents a single connection.
+// lastRequestID stores last generated request ID.
+var lastRequestID atomic.Int32
+
+// Conn represents a single client connection.
 //
 // It is not safe for concurrent use.
 type Conn struct {
@@ -41,19 +39,24 @@ type Conn struct {
 	r *bufio.Reader
 	w *bufio.Writer
 	l *slog.Logger // debug level only
-
-	authCreds     *url.Userinfo
-	authMechanism string
-	authDB        string
 }
 
-// Connect creates a new non-authenticated connection for the given MongoDB URI and logger.
+// New wraps the given connection.
+//
+// The passed logger will be used only for debug level messages.
+func New(c net.Conn, l *slog.Logger) *Conn {
+	return &Conn{
+		c: c,
+		r: bufio.NewReader(c),
+		w: bufio.NewWriter(c),
+		l: l,
+	}
+}
+
+// Connect creates a new connection for the given MongoDB URI.
 //
 // Context can be used to cancel the connection attempt.
 // Canceling the context after the connection is established has no effect.
-//
-// Authentication credentials and mechanism can be set in the URI.
-// They are not used by this function, but available to [Authenticate] and via [AuthInfo].
 func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
@@ -72,22 +75,8 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	var authDB string
-
-	if u.Path != "/" {
-		authDB = filepath.Base(u.Path)
-	}
-
-	var authMechanism string
-
-	for k, v := range u.Query() {
+	for k := range u.Query() {
 		switch k {
-		case "authMechanism":
-			authMechanism = v[0]
-
-		case "authSource":
-			authDB = v[0]
-
 		case "replicaSet":
 			// safe to ignore
 
@@ -105,135 +94,34 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	if authMechanism == "" {
-		authMechanism = "SCRAM-SHA-1"
-	}
-
-	if authDB == "" {
-		authDB = "admin"
-	}
-
-	return &Conn{
-		c: c,
-		r: bufio.NewReader(c),
-		w: bufio.NewWriter(c),
-		l: l,
-
-		authCreds:     u.User,
-		authMechanism: authMechanism,
-		authDB:        authDB,
-	}, nil
-}
-
-// AuthInfo returns the authentication credentials and mechanism extracted from the MongoDB URI.
-func (c *Conn) AuthInfo() (*url.Userinfo, string) {
-	return c.authCreds, c.authMechanism
-}
-
-// Authenticate attempts to authenticate the connection.
-//
-// This method is a shortcut for code that primary does not test authentication itself,
-// but accesses MongoDB-compatible system that requires authentication.
-// Code that tests various authentication scenarios should use [Request], [Write], or [WriteRaw] directly.
-func (c *Conn) Authenticate() error {
-	username := c.authCreds.Username()
-	password, _ := c.authCreds.Password()
-
-	var h scram.HashGeneratorFcn
-
-	switch c.authMechanism {
-	case "SCRAM-SHA-256":
-		h = scram.SHA256
-
-	default:
-		return lazyerrors.Errorf("unsupported mechanism %q", c.authMechanism)
-	}
-
-	s, err := h.NewClient(username, password, "")
-	if err != nil {
-		return lazyerrors.Error(err)
-	}
-
-	conv := s.NewConversation()
-
-	payload, err := conv.Step("")
-	if err != nil {
-		return lazyerrors.Error(err)
-	}
-
-	cmd := must.NotFail(wirebson.NewDocument(
-		"saslStart", int32(1),
-		"mechanism", c.authMechanism,
-		"payload", wirebson.Binary{B: []byte(payload)},
-		"$db", c.authDB,
-	))
-
-	for {
-		var body *wire.OpMsg
-
-		if body, err = wire.NewOpMsg(must.NotFail(cmd.Encode())); err != nil {
-			return lazyerrors.Error(err)
-		}
-
-		var resBody wire.MsgBody
-
-		if _, resBody, err = c.Request(nil, body); err != nil {
-			return lazyerrors.Error(err)
-		}
-
-		var resMsg *wirebson.Document
-
-		if resMsg, err = must.NotFail(resBody.(*wire.OpMsg).RawDocument()).Decode(); err != nil {
-			return lazyerrors.Error(err)
-		}
-
-		if ok := resMsg.Get("ok"); ok != 1.0 {
-			return lazyerrors.Errorf("%s was not successful (ok was %v)", cmd.Command(), ok)
-		}
-
-		if resMsg.Get("done").(bool) {
-			return nil
-		}
-
-		payload, err = conv.Step(string(resMsg.Get("payload").(wirebson.Binary).B))
-		if err != nil {
-			return lazyerrors.Error(err)
-		}
-
-		cmd = must.NotFail(wirebson.NewDocument(
-			"saslContinue", int32(1),
-			"conversationId", int32(1),
-			"payload", wirebson.Binary{B: []byte(payload)},
-			"$db", c.authDB,
-		))
-	}
+	return New(c, l), nil
 }
 
 // Close closes the connection.
 func (c *Conn) Close() error {
-	var err error
-
 	c.l.Debug("Closing...")
 
-	if e := c.w.Flush(); e != nil {
-		err = lazyerrors.Error(e)
+	if err := c.c.Close(); err != nil {
+		return lazyerrors.Error(err)
 	}
 
-	if e := c.c.Close(); e != nil && err == nil {
-		err = lazyerrors.Error(e)
-	}
-
-	return err
+	return nil
 }
 
 // Read reads the next message from the connection.
-func (c *Conn) Read() (*wire.MsgHeader, wire.MsgBody, error) {
+//
+// Passed context's deadline is honored if set.
+func (c *Conn) Read(ctx context.Context) (*wire.MsgHeader, wire.MsgBody, error) {
+	d, _ := ctx.Deadline()
+	c.c.SetReadDeadline(d)
+
 	header, body, err := wire.ReadMessage(c.r)
 	if err != nil {
 		return nil, nil, lazyerrors.Error(err)
 	}
 
-	c.l.Debug(
+	c.l.DebugContext(
+		ctx,
 		fmt.Sprintf("<<<\n%s\n", body.StringBlock()),
 		slog.Int("length", int(header.MessageLength)),
 		slog.Int("id", int(header.RequestID)),
@@ -245,14 +133,21 @@ func (c *Conn) Read() (*wire.MsgHeader, wire.MsgBody, error) {
 }
 
 // Write writes the given message to the connection.
-func (c *Conn) Write(header *wire.MsgHeader, body wire.MsgBody) error {
-	c.l.Debug(
+//
+// Passed context's deadline is honored if set.
+func (c *Conn) Write(ctx context.Context, header *wire.MsgHeader, body wire.MsgBody) error {
+	c.l.DebugContext(
+		ctx,
 		fmt.Sprintf(">>>\n%s\n", body.StringBlock()),
 		slog.Int("length", int(header.MessageLength)),
 		slog.Int("id", int(header.RequestID)),
 		slog.Int("response_to", int(header.ResponseTo)),
 		slog.String("opcode", header.OpCode.String()),
 	)
+
+	if d, ok := ctx.Deadline(); ok {
+		c.c.SetWriteDeadline(d)
+	}
 
 	if err := wire.WriteMessage(c.w, header, body); err != nil {
 		return lazyerrors.Error(err)
@@ -266,8 +161,13 @@ func (c *Conn) Write(header *wire.MsgHeader, body wire.MsgBody) error {
 }
 
 // WriteRaw writes the given raw bytes to the connection.
-func (c *Conn) WriteRaw(b []byte) error {
-	c.l.Debug(fmt.Sprintf(">>> %d raw bytes", len(b)))
+//
+// Passed context's deadline is honored if set.
+func (c *Conn) WriteRaw(ctx context.Context, b []byte) error {
+	c.l.DebugContext(ctx, ">>> raw bytes", slog.Int("length", len(b)))
+
+	d, _ := ctx.Deadline()
+	c.c.SetWriteDeadline(d)
 
 	if _, err := c.w.Write(b); err != nil {
 		return lazyerrors.Error(err)
@@ -280,16 +180,13 @@ func (c *Conn) WriteRaw(b []byte) error {
 	return nil
 }
 
-// lastRequestID stores incremented value of last recorded request header ID.
-var lastRequestID atomic.Int32
-
 // Request sends the given request to the connection and returns the response.
 // If header MessageLength or RequestID is not specified, it assigns the proper values.
 // For header.OpCode the wire.OpCodeMsg is used as default.
 //
 // It returns errors only for request/response parsing issues, or connection issues.
 // All of the driver level errors are stored inside response.
-func (c *Conn) Request(header *wire.MsgHeader, body wire.MsgBody) (*wire.MsgHeader, wire.MsgBody, error) {
+func (c *Conn) Request(ctx context.Context, header *wire.MsgHeader, body wire.MsgBody) (*wire.MsgHeader, wire.MsgBody, error) {
 	if header == nil {
 		header = new(wire.MsgHeader)
 	}
@@ -321,11 +218,11 @@ func (c *Conn) Request(header *wire.MsgHeader, body wire.MsgBody) (*wire.MsgHead
 		}
 	}
 
-	if err := c.Write(header, body); err != nil {
+	if err := c.Write(ctx, header, body); err != nil {
 		return nil, nil, lazyerrors.Error(err)
 	}
 
-	resHeader, resBody, err := c.Read()
+	resHeader, resBody, err := c.Read(ctx)
 	if err != nil {
 		return nil, nil, lazyerrors.Error(err)
 	}
