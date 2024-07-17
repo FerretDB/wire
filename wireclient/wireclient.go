@@ -183,41 +183,30 @@ func (c *Conn) WriteRaw(ctx context.Context, b []byte) error {
 }
 
 // Request sends the given request to the connection and returns the response.
-// If header's MessageLength or RequestID are not specified, it assigns the proper values.
-// For header's OpCode the [wire.OpCodeMsg] is used as default.
+// The header is generated automatically.
 //
 // Passed context's deadline is honored if set.
 //
 // It returns errors only for request/response parsing or connection issues.
 // All protocol-level errors are stored inside response.
-func (c *Conn) Request(ctx context.Context, header *wire.MsgHeader, body wire.MsgBody) (*wire.MsgHeader, wire.MsgBody, error) {
-	if header == nil {
-		header = new(wire.MsgHeader)
+func (c *Conn) Request(ctx context.Context, body wire.MsgBody) (*wire.MsgHeader, wire.MsgBody, error) {
+	b, err := body.MarshalBinary()
+	if err != nil {
+		return nil, nil, lazyerrors.Error(err)
 	}
 
-	if header.MessageLength == 0 {
-		b, err := body.MarshalBinary()
-		if err != nil {
-			return nil, nil, lazyerrors.Error(err)
-		}
-
-		header.MessageLength = int32(len(b) + wire.MsgHeaderLen)
+	header := &wire.MsgHeader{
+		MessageLength: int32(len(b) + wire.MsgHeaderLen),
+		RequestID:     nextRequestID.Add(1),
 	}
 
-	if header.RequestID == 0 {
-		header.RequestID = nextRequestID.Add(1)
-	}
-
-	if header.ResponseTo != 0 {
-		return nil, nil, lazyerrors.Errorf("setting response_to is not allowed")
-	}
-
-	if header.OpCode == 0 {
+	switch body.(type) {
+	case *wire.OpMsg:
 		header.OpCode = wire.OpCodeMsg
-	}
-
-	if body == nil {
-		return nil, nil, lazyerrors.Errorf("body can't be nil")
+	case *wire.OpQuery:
+		header.OpCode = wire.OpCodeQuery
+	default:
+		return nil, nil, lazyerrors.Errorf("unsupported body type %T", body)
 	}
 
 	if err := c.Write(ctx, header, body); err != nil {
