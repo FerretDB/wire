@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package driver provides low-level wire protocol driver for testing.
-package driver
+// Package wiredriver provides low-level wire protocol driver for testing.
+package wiredriver
 
 import (
 	"bufio"
@@ -30,7 +30,7 @@ import (
 	"github.com/FerretDB/wire"
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 	"github.com/FerretDB/wire/internal/util/must"
-	bson "github.com/FerretDB/wire/wirebson"
+	"github.com/FerretDB/wire/wirebson"
 )
 
 // Conn represents a single connection.
@@ -161,10 +161,10 @@ func (c *Conn) Authenticate() error {
 		return lazyerrors.Error(err)
 	}
 
-	cmd := must.NotFail(bson.NewDocument(
+	cmd := must.NotFail(wirebson.NewDocument(
 		"saslStart", int32(1),
 		"mechanism", c.authMechanism,
-		"payload", bson.Binary{B: []byte(payload)},
+		"payload", wirebson.Binary{B: []byte(payload)},
 		"$db", c.authDB,
 	))
 
@@ -181,7 +181,7 @@ func (c *Conn) Authenticate() error {
 			return lazyerrors.Error(err)
 		}
 
-		var resMsg *bson.Document
+		var resMsg *wirebson.Document
 
 		if resMsg, err = must.NotFail(resBody.(*wire.OpMsg).RawDocument()).Decode(); err != nil {
 			return lazyerrors.Error(err)
@@ -195,15 +195,15 @@ func (c *Conn) Authenticate() error {
 			return nil
 		}
 
-		payload, err = conv.Step(string(resMsg.Get("payload").(bson.Binary).B))
+		payload, err = conv.Step(string(resMsg.Get("payload").(wirebson.Binary).B))
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
 
-		cmd = must.NotFail(bson.NewDocument(
+		cmd = must.NotFail(wirebson.NewDocument(
 			"saslContinue", int32(1),
 			"conversationId", int32(1),
-			"payload", bson.Binary{B: []byte(payload)},
+			"payload", wirebson.Binary{B: []byte(payload)},
 			"$db", c.authDB,
 		))
 	}
