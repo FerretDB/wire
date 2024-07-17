@@ -44,15 +44,21 @@ jobs:
         with:
           cache-key: test
 
-      - name: Run tests
-        run: go test -race -count=1 ./...
-        env:
-          GOFLAGS: ${{ runner.debug == '1' && '-v' || '' }}
+      - name: Install Task
+        run: go generate -x
+        working-directory: tools
 
-      # we don't want them on CI
-      - name: Clean test and fuzz caches
-        if: always()
-        run: go clean -testcache -fuzzcache
+      - name: Init
+        run: bin/task init
+
+      - name: Generate and format
+        run: bin/task gen
+
+      - name: Run tests
+        run: bin/task test
+
+      - name: Fuzz
+        run: bin/task fuzz
 
       - name: Check dirty
         run: |

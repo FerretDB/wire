@@ -1,0 +1,48 @@
+---
+version: 3
+
+env:
+  GORACE: halt_on_error=1,history_size=2
+  GOCOVERDIR: tmp/cover
+
+vars:
+  FUZZ_TIME: 15s
+
+tasks:
+  init-tools:
+    dir: tools
+    cmds:
+      - go mod tidy
+      - go mod verify
+      - go generate -x
+
+  init:
+    deps: [init-tools]
+    cmds:
+      - go mod tidy
+      - go mod verify
+
+  gen:
+    desc: "Generate and format"
+    cmds:
+      - go generate -x
+      - task: fmt
+
+  fmt:
+    desc: "Format"
+    cmds:
+      - bin/gofumpt -w .
+
+  test:
+    desc: "Run tests"
+    cmds:
+      - go test ./...
+
+  fuzz:
+    desc: "Fuzz for about 1 minute (with default FUZZ_TIME)"
+    cmds:
+      - go test -list='Fuzz.*' ./...
+      - go test -run=XXX -fuzz=FuzzDocument -fuzztime={{.FUZZ_TIME}} ./wirebson
+      - go test -run=XXX -fuzz=FuzzMsg      -fuzztime={{.FUZZ_TIME}} .
+      - go test -run=XXX -fuzz=FuzzQuery    -fuzztime={{.FUZZ_TIME}} .
+      - go test -run=XXX -fuzz=FuzzReply    -fuzztime={{.FUZZ_TIME}} .

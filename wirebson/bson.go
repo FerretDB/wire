@@ -48,7 +48,7 @@ import (
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 )
 
-//go:generate go run golang.org/x/tools/cmd/stringer@latest -linecomment -output stringers.go -type decodeMode,tag
+//go:generate ../bin/stringer -linecomment -output stringers.go -type decodeMode,tag
 
 type (
 	// ScalarType represents a BSON scalar type.
