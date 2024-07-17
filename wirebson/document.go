@@ -63,6 +63,16 @@ func NewDocument(pairs ...any) (*Document, error) {
 	return res, nil
 }
 
+// MustDocument is a variant of [NewDocument] that panics on error.
+func MustDocument(pairs ...any) *Document {
+	res, err := NewDocument(pairs...)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
+}
+
 // MakeDocument creates a new empty Document with the given capacity.
 func MakeDocument(cap int) *Document {
 	return &Document{

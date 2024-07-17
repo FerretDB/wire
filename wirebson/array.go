@@ -45,6 +45,16 @@ func NewArray(values ...any) (*Array, error) {
 	return res, nil
 }
 
+// MustArray is a variant of [NewArray] that panics on error.
+func MustArray(values ...any) *Array {
+	res, err := NewArray(values...)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
+}
+
 // MakeArray creates a new empty Array with the given capacity.
 func MakeArray(cap int) *Array {
 	return &Array{

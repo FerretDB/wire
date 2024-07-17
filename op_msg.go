@@ -33,7 +33,7 @@ type OpMsg struct {
 	checksum uint32
 }
 
-// NewOpMsg creates a message with a single section of kind 0 with a single raw document.
+// NewOpMsg creates a message with a single section of kind 0 with a single document.
 func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
 	raw, err := doc.Encode()
 	if err != nil {
@@ -46,6 +46,17 @@ func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
 	}
 
 	return &msg, nil
+}
+
+// MustOpMsg creates a message with a single section of kind 0 with a single document
+// constructed from the given pairs of field names and values.
+// It panics on error.
+func MustOpMsg(pairs ...any) *OpMsg {
+	msg, err := NewOpMsg(wirebson.MustDocument(pairs...))
+	if err != nil {
+		panic(err)
+	}
+	return msg
 }
 
 // Sections returns the sections of the OpMsg.
