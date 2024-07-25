@@ -25,7 +25,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
-	"github.com/FerretDB/wire/internal/util/must"
 )
 
 // ParseDump decodes from hex dump to the byte array.
@@ -65,8 +64,17 @@ func ParseDump(s string) ([]byte, error) {
 
 // MustParseDumpFile panics if fails to parse file input to byte array.
 func MustParseDumpFile(path ...string) []byte {
-	b := must.NotFail(os.ReadFile(filepath.Join(path...)))
-	return must.NotFail(ParseDump(string(b)))
+	b, err := os.ReadFile(filepath.Join(path...))
+	if err != nil {
+		panic(err)
+	}
+
+	b, err = ParseDump(string(b))
+	if err != nil {
+		panic(err)
+	}
+
+	return b
 }
 
 // Unindent removes the common number of leading tabs from all lines in s.

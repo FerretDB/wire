@@ -148,7 +148,12 @@ func (query *OpQuery) Query() *wirebson.Document {
 		return nil
 	}
 
-	return must.NotFail(query.query.Decode())
+	doc, err := query.query.Decode()
+	if err != nil {
+		panic(err)
+	}
+
+	return doc
 }
 
 // logMessage returns a string representation for logging.
@@ -157,12 +162,12 @@ func (query *OpQuery) logMessage(logFunc func(v any) string) string {
 		return "<nil>"
 	}
 
-	m := must.NotFail(wirebson.NewDocument(
+	m := wirebson.MustDocument(
 		"Flags", query.Flags.String(),
 		"FullCollectionName", query.FullCollectionName,
 		"NumberToSkip", query.NumberToSkip,
 		"NumberToReturn", query.NumberToReturn,
-	))
+	)
 
 	doc, err := query.query.DecodeDeep()
 	if err == nil {

@@ -24,7 +24,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/FerretDB/wire/internal/util/must"
 	"github.com/FerretDB/wire/internal/util/testutil"
 )
 
@@ -75,7 +74,7 @@ func TestLogging(t *testing.T) {
 	}{
 		{
 			name: "Numbers",
-			doc: must.NotFail(NewDocument(
+			doc: MustDocument(
 				"f64", 42.0,
 				"inf", float64(math.Inf(1)),
 				"neg_inf", float64(math.Inf(-1)),
@@ -84,7 +83,7 @@ func TestLogging(t *testing.T) {
 				"nan", float64(math.NaN()),
 				"i32", int32(42),
 				"i64", int64(42),
-			)),
+			),
 			t: `v.f64=42 v.inf=+Inf v.neg_inf=-Inf v.zero=0 v.neg_zero=-0 v.nan=NaN v.i32=42 v.i64=42`,
 			j: `{"v":{"f64":42,"inf":"+Inf","neg_inf":"-Inf","zero":0,"neg_zero":-0,"nan":"NaN","i32":42,"i64":42}}`,
 			m: `
@@ -112,12 +111,12 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			name: "Scalars",
-			doc: must.NotFail(NewDocument(
+			doc: MustDocument(
 				"null", Null,
 				"id", ObjectID{0x42},
 				"bool", true,
 				"time", time.Date(2023, 3, 6, 13, 14, 42, 123456789, time.FixedZone("", int(4*time.Hour.Seconds()))),
-			)),
+			),
 			t: `v.null=<nil> v.id=ObjectID(420000000000000000000000) v.bool=true v.time=2023-03-06T09:14:42.123Z`,
 			j: `{"v":{"null":null,"id":"ObjectID(420000000000000000000000)","bool":true,"time":"2023-03-06T09:14:42.123Z"}}`,
 			m: `
@@ -137,21 +136,19 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			name: "Composites",
-			doc: must.NotFail(NewDocument(
-				"doc", must.NotFail(NewDocument(
+			doc: MustDocument(
+				"doc", MustDocument(
 					"foo", "bar",
-					"baz", must.NotFail(NewDocument(
-						"qux", "quux",
-					)),
-				)),
+					"baz", MustDocument("qux", "quux"),
+				),
 				"doc_raw", RawDocument{0x42},
-				"doc_empty", must.NotFail(NewDocument()),
-				"array", must.NotFail(NewArray(
+				"doc_empty", MustDocument(),
+				"array", MustArray(
 					"foo",
 					"bar",
-					must.NotFail(NewArray("baz", "qux")),
-				)),
-			)),
+					MustArray("baz", "qux"),
+				),
+			),
 			t: `v.doc.foo=bar v.doc.baz.qux=quux v.doc_raw=RawDocument<1> ` +
 				`v.array.0=foo v.array.1=bar v.array.2.0=baz v.array.2.1=qux`,
 			j: `{"v":{"doc":{"foo":"bar","baz":{"qux":"quux"}},"doc_raw":"RawDocument<1>",` +
@@ -280,8 +277,8 @@ func makeNested(array bool, depth int) any {
 	}
 
 	if array {
-		return must.NotFail(NewArray(child))
+		return MustArray(child)
 	}
 
-	return must.NotFail(NewDocument("f", child))
+	return MustDocument("f", child)
 }

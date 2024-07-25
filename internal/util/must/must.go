@@ -17,17 +17,6 @@ package must
 
 import "fmt"
 
-// NotFail panics if the error is not nil, returns res otherwise.
-//
-// Use that function only for static initialization, test code, or code that "can't" fail.
-// When in doubt, don't.
-func NotFail[T any](res T, err error) T {
-	if err != nil {
-		panic(err)
-	}
-	return res
-}
-
 // NoError panics if the error is not nil.
 //
 // Use that function only for static initialization, test code, or code that "can't" fail.
@@ -35,17 +24,6 @@ func NotFail[T any](res T, err error) T {
 func NoError(err error) {
 	if err != nil {
 		panic(err)
-	}
-}
-
-// BeZero panics if argument has non-zero value.
-//
-// Use that function only for static initialization, test code, or code that "can't" fail.
-// When in doubt, don't.
-func BeZero[T comparable](v T) {
-	var zero T
-	if v != zero {
-		panic(fmt.Sprintf("v has non-zero value (%#v)", v))
 	}
 }
 

@@ -21,7 +21,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/FerretDB/wire/internal/util/must"
 	"github.com/FerretDB/wire/internal/util/testutil"
 )
 
@@ -57,27 +56,27 @@ var normalTestCases = []normalTestCase{
 	{
 		name: "handshake1",
 		raw:  testutil.MustParseDumpFile("testdata", "handshake1.hex"),
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"ismaster", true,
-			"client", must.NotFail(NewDocument(
-				"driver", must.NotFail(NewDocument(
+			"client", MustDocument(
+				"driver", MustDocument(
 					"name", "nodejs",
 					"version", "4.0.0-beta.6",
-				)),
-				"os", must.NotFail(NewDocument(
+				),
+				"os", MustDocument(
 					"type", "Darwin",
 					"name", "darwin",
 					"architecture", "x64",
 					"version", "20.6.0",
-				)),
+				),
 				"platform", "Node.js v14.17.3, LE (unified)|Node.js v14.17.3, LE (unified)",
-				"application", must.NotFail(NewDocument(
+				"application", MustDocument(
 					"name", "mongosh 1.0.1",
-				)),
-			)),
-			"compression", must.NotFail(NewArray("none")),
+				),
+			),
+			"compression", MustArray("none"),
 			"loadBalanced", false,
-		)),
+		),
 		m: `
 		{
 		  "ismaster": true,
@@ -99,27 +98,27 @@ var normalTestCases = []normalTestCase{
 	{
 		name: "handshake2",
 		raw:  testutil.MustParseDumpFile("testdata", "handshake2.hex"),
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"ismaster", true,
-			"client", must.NotFail(NewDocument(
-				"driver", must.NotFail(NewDocument(
+			"client", MustDocument(
+				"driver", MustDocument(
 					"name", "nodejs",
 					"version", "4.0.0-beta.6",
-				)),
-				"os", must.NotFail(NewDocument(
+				),
+				"os", MustDocument(
 					"type", "Darwin",
 					"name", "darwin",
 					"architecture", "x64",
 					"version", "20.6.0",
-				)),
+				),
 				"platform", "Node.js v14.17.3, LE (unified)|Node.js v14.17.3, LE (unified)",
-				"application", must.NotFail(NewDocument(
+				"application", MustDocument(
 					"name", "mongosh 1.0.1",
-				)),
-			)),
-			"compression", must.NotFail(NewArray("none")),
+				),
+			),
+			"compression", MustArray("none"),
 			"loadBalanced", false,
-		)),
+		),
 		m: `
 		{
 		  "ismaster": true,
@@ -141,9 +140,9 @@ var normalTestCases = []normalTestCase{
 	{
 		name: "handshake3",
 		raw:  testutil.MustParseDumpFile("testdata", "handshake3.hex"),
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"buildInfo", int32(1),
-			"lsid", must.NotFail(NewDocument(
+			"lsid", MustDocument(
 				"id", Binary{
 					Subtype: BinaryUUID,
 					B: []byte{
@@ -151,9 +150,9 @@ var normalTestCases = []normalTestCase{
 						0xb8, 0xe7, 0xa3, 0xa3, 0x2e, 0xc2, 0x56, 0xbe,
 					},
 				},
-			)),
+			),
 			"$db", "admin",
-		)),
+		),
 		m: `
 		{
 		  "buildInfo": 1,
@@ -164,19 +163,19 @@ var normalTestCases = []normalTestCase{
 	{
 		name: "handshake4",
 		raw:  testutil.MustParseDumpFile("testdata", "handshake4.hex"),
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"version", "5.0.0",
 			"gitVersion", "1184f004a99660de6f5e745573419bda8a28c0e9",
-			"modules", must.NotFail(NewArray()),
+			"modules", MustArray(),
 			"allocator", "tcmalloc",
 			"javascriptEngine", "mozjs",
 			"sysInfo", "deprecated",
-			"versionArray", must.NotFail(NewArray(int32(5), int32(0), int32(0), int32(0))),
-			"openssl", must.NotFail(NewDocument(
+			"versionArray", MustArray(int32(5), int32(0), int32(0), int32(0)),
+			"openssl", MustDocument(
 				"running", "OpenSSL 1.1.1f  31 Mar 2020",
 				"compiled", "OpenSSL 1.1.1f  31 Mar 2020",
-			)),
-			"buildEnvironment", must.NotFail(NewDocument(
+			),
+			"buildEnvironment", MustDocument(
 				"distmod", "ubuntu2004",
 				"distarch", "x86_64",
 				"cc", "/opt/mongodbtoolchain/v3/bin/gcc: gcc (GCC) 8.5.0",
@@ -198,13 +197,13 @@ var normalTestCases = []normalTestCase{
 					"BOOST_SYSTEM_NO_DEPRECATED BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS "+
 					"BOOST_ENABLE_ASSERT_DEBUG_HANDLER BOOST_LOG_NO_SHORTHAND_NAMES BOOST_LOG_USE_NATIVE_SYSLOG "+
 					"BOOST_LOG_WITHOUT_THREAD_ATTR ABSL_FORCE_ALIGNED_ACCESS",
-			)),
+			),
 			"bits", int32(64),
 			"debug", false,
 			"maxBsonObjectSize", int32(16777216),
-			"storageEngines", must.NotFail(NewArray("devnull", "ephemeralForTest", "wiredTiger")),
+			"storageEngines", MustArray("devnull", "ephemeralForTest", "wiredTiger"),
 			"ok", float64(1),
-		)),
+		),
 		m: `
 		{
 		  "version": "5.0.0",
@@ -240,32 +239,32 @@ var normalTestCases = []normalTestCase{
 	{
 		name: "all",
 		raw:  testutil.MustParseDumpFile("testdata", "all.hex"),
-		doc: must.NotFail(NewDocument(
-			"array", must.NotFail(NewArray(
-				must.NotFail(NewArray("")),
-				must.NotFail(NewArray("foo")),
-			)),
-			"binary", must.NotFail(NewArray(
+		doc: MustDocument(
+			"array", MustArray(
+				MustArray(""),
+				MustArray("foo"),
+			),
+			"binary", MustArray(
 				Binary{Subtype: BinaryUser, B: []byte{0x42}},
 				Binary{Subtype: BinaryGeneric, B: []byte{}},
-			)),
-			"bool", must.NotFail(NewArray(true, false)),
-			"datetime", must.NotFail(NewArray(
+			),
+			"bool", MustArray(true, false),
+			"datetime", MustArray(
 				time.Date(2021, 7, 27, 9, 35, 42, 123000000, time.UTC).Local(),
 				time.Time{}.Local(),
-			)),
-			"document", must.NotFail(NewArray(
-				must.NotFail(NewDocument("foo", "")),
-				must.NotFail(NewDocument("", "foo")),
-			)),
-			"double", must.NotFail(NewArray(42.13, 0.0)),
-			"int32", must.NotFail(NewArray(int32(42), int32(0))),
-			"int64", must.NotFail(NewArray(int64(42), int64(0))),
-			"objectID", must.NotFail(NewArray(ObjectID{0x42}, ObjectID{})),
-			"string", must.NotFail(NewArray("foo", "")),
-			"timestamp", must.NotFail(NewArray(Timestamp(42), Timestamp(0))),
-			"decimal128", must.NotFail(NewArray(Decimal128{L: 42, H: 13})),
-		)),
+			),
+			"document", MustArray(
+				MustDocument("foo", ""),
+				MustDocument("", "foo"),
+			),
+			"double", MustArray(42.13, 0.0),
+			"int32", MustArray(int32(42), int32(0)),
+			"int64", MustArray(int64(42), int64(0)),
+			"objectID", MustArray(ObjectID{0x42}, ObjectID{}),
+			"string", MustArray("foo", ""),
+			"timestamp", MustArray(Timestamp(42), Timestamp(0)),
+			"decimal128", MustArray(Decimal128{L: 42, H: 13}),
+		),
 		m: `
 		{
 		  "array": [[""], ["foo"]],
@@ -303,9 +302,9 @@ var normalTestCases = []normalTestCase{
 			0x18, 0x2d, 0x44, 0x54, 0xfb, 0x21, 0x09, 0x40,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", float64(3.141592653589793),
-		)),
+		),
 		m: `{"f": 3.141592653589793}`,
 	},
 	{
@@ -317,9 +316,9 @@ var normalTestCases = []normalTestCase{
 			0x76, 0x00,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", "v",
-		)),
+		),
 		m: `{"f": "v"}`,
 	},
 	{
@@ -332,9 +331,9 @@ var normalTestCases = []normalTestCase{
 			0x76,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", Binary{B: []byte("v"), Subtype: BinaryUser},
-		)),
+		),
 		m: `{"f": Binary(user:dg==)}`,
 	},
 	{
@@ -345,9 +344,9 @@ var normalTestCases = []normalTestCase{
 			0x62, 0x56, 0xc5, 0xba, 0x18, 0x2d, 0x44, 0x54, 0xfb, 0x21, 0x09, 0x40,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", ObjectID{0x62, 0x56, 0xc5, 0xba, 0x18, 0x2d, 0x44, 0x54, 0xfb, 0x21, 0x09, 0x40},
-		)),
+		),
 		m: `{"f": ObjectID(6256c5ba182d4454fb210940)}`,
 	},
 	{
@@ -358,9 +357,9 @@ var normalTestCases = []normalTestCase{
 			0x01,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", true,
-		)),
+		),
 		m: `{"f": true}`,
 	},
 	{
@@ -371,9 +370,9 @@ var normalTestCases = []normalTestCase{
 			0x0b, 0xce, 0x82, 0x18, 0x8d, 0x01, 0x00, 0x00,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", time.Date(2024, 1, 17, 17, 40, 42, 123000000, time.UTC),
-		)),
+		),
 		m: `{"f": 2024-01-17T17:40:42.123Z}`,
 	},
 	{
@@ -383,9 +382,9 @@ var normalTestCases = []normalTestCase{
 			0x0a, 0x66, 0x00,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", Null,
-		)),
+		),
 		m: `{"f": null}`,
 	},
 	{
@@ -397,9 +396,9 @@ var normalTestCases = []normalTestCase{
 			0x6f, 0x00,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", Regex{Pattern: "p", Options: "o"},
-		)),
+		),
 		m: `{"f": /p/o}`,
 	},
 	{
@@ -410,9 +409,9 @@ var normalTestCases = []normalTestCase{
 			0xa1, 0xb0, 0xb9, 0x12,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", int32(314159265),
-		)),
+		),
 		m: `{"f": 314159265}`,
 	},
 	{
@@ -423,9 +422,9 @@ var normalTestCases = []normalTestCase{
 			0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", Timestamp(42),
-		)),
+		),
 		m: `{"f": Timestamp(42)}`,
 	},
 	{
@@ -436,9 +435,9 @@ var normalTestCases = []normalTestCase{
 			0x21, 0x6d, 0x25, 0x0a, 0x43, 0x29, 0x0b, 0x00,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", int64(3141592653589793),
-		)),
+		),
 		m: `{"f": int64(3141592653589793)}`,
 	},
 	{
@@ -449,9 +448,9 @@ var normalTestCases = []normalTestCase{
 			0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			0x00,
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"f", Decimal128{L: 42, H: 13},
-		)),
+		),
 		m: `{"f": Decimal128(42,13)}`,
 	},
 	{
@@ -462,9 +461,9 @@ var normalTestCases = []normalTestCase{
 			0x05, 0x00, 0x00, 0x00, 0x00, // subdocument length and end of subdocument
 			0x00, // end of document
 		},
-		doc: must.NotFail(NewDocument(
-			"foo", must.NotFail(NewDocument()),
-		)),
+		doc: MustDocument(
+			"foo", MustDocument(),
+		),
 		m: `{"foo": {}}`,
 	},
 	{
@@ -475,9 +474,9 @@ var normalTestCases = []normalTestCase{
 			0x05, 0x00, 0x00, 0x00, 0x00, // subarray length and end of subarray
 			0x00, // end of document
 		},
-		doc: must.NotFail(NewDocument(
-			"foo", must.NotFail(NewArray()),
-		)),
+		doc: MustDocument(
+			"foo", MustArray(),
+		),
 		m: `{"foo": []}`,
 	},
 	{
@@ -488,10 +487,10 @@ var normalTestCases = []normalTestCase{
 			0x08, 0x00, 0x01, // "": true
 			0x00, // end of document
 		},
-		doc: must.NotFail(NewDocument(
+		doc: MustDocument(
 			"", false,
 			"", true,
-		)),
+		),
 		m: `{"": false, "": true}`,
 	},
 }

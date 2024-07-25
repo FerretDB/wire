@@ -131,7 +131,11 @@ func (reply *OpReply) RawDocument() wirebson.RawDocument {
 
 // SetDocument sets reply document.
 func (reply *OpReply) SetDocument(doc *wirebson.Document) {
-	reply.document = must.NotFail(doc.Encode())
+	var err error
+	reply.document, err = doc.Encode()
+	if err != nil {
+		panic(err)
+	}
 }
 
 // logMessage returns a string representation for logging.
@@ -140,11 +144,11 @@ func (reply *OpReply) logMessage(logFunc func(v any) string) string {
 		return "<nil>"
 	}
 
-	m := must.NotFail(wirebson.NewDocument(
+	m := wirebson.MustDocument(
 		"ResponseFlags", reply.Flags.String(),
 		"CursorID", reply.CursorID,
 		"StartingFrom", reply.StartingFrom,
-	))
+	)
 
 	if reply.document == nil {
 		must.NoError(m.Add("NumberReturned", int32(0)))

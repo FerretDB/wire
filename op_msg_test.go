@@ -18,7 +18,6 @@ import (
 	"math"
 	"testing"
 
-	"github.com/FerretDB/wire/internal/util/must"
 	"github.com/FerretDB/wire/internal/util/testutil"
 	"github.com/FerretDB/wire/wirebson"
 )
@@ -40,7 +39,7 @@ var msgTestCases = []testCase{
 			sections: []opMsgSection{{
 				documents: []wirebson.RawDocument{makeRawDocument(
 					"buildInfo", int32(1),
-					"lsid", must.NotFail(wirebson.NewDocument(
+					"lsid", wirebson.MustDocument(
 						"id", wirebson.Binary{
 							Subtype: wirebson.BinaryUUID,
 							B: []byte{
@@ -48,7 +47,7 @@ var msgTestCases = []testCase{
 								0xb8, 0xe7, 0xa3, 0xa3, 0x2e, 0xc2, 0x56, 0xbe,
 							},
 						},
-					)),
+					),
 					"$db", "admin",
 				)},
 			}},
@@ -85,16 +84,16 @@ var msgTestCases = []testCase{
 				documents: []wirebson.RawDocument{makeRawDocument(
 					"version", "5.0.0",
 					"gitVersion", "1184f004a99660de6f5e745573419bda8a28c0e9",
-					"modules", must.NotFail(wirebson.NewArray()),
+					"modules", wirebson.MustArray(),
 					"allocator", "tcmalloc",
 					"javascriptEngine", "mozjs",
 					"sysInfo", "deprecated",
-					"versionArray", must.NotFail(wirebson.NewArray(int32(5), int32(0), int32(0), int32(0))),
-					"openssl", must.NotFail(wirebson.NewDocument(
+					"versionArray", wirebson.MustArray(int32(5), int32(0), int32(0), int32(0)),
+					"openssl", wirebson.MustDocument(
 						"running", "OpenSSL 1.1.1f  31 Mar 2020",
 						"compiled", "OpenSSL 1.1.1f  31 Mar 2020",
-					)),
-					"buildEnvironment", must.NotFail(wirebson.NewDocument(
+					),
+					"buildEnvironment", wirebson.MustDocument(
 						"distmod", "ubuntu2004",
 						"distarch", "x86_64",
 						"cc", "/opt/mongodbtoolchain/v3/bin/gcc: gcc (GCC) 8.5.0",
@@ -117,11 +116,11 @@ var msgTestCases = []testCase{
 							"BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS BOOST_ENABLE_ASSERT_DEBUG_HANDLER "+
 							"BOOST_LOG_NO_SHORTHAND_NAMES BOOST_LOG_USE_NATIVE_SYSLOG "+
 							"BOOST_LOG_WITHOUT_THREAD_ATTR ABSL_FORCE_ALIGNED_ACCESS",
-					)),
+					),
 					"bits", int32(64),
 					"debug", false,
 					"maxBsonObjectSize", int32(16777216),
-					"storageEngines", must.NotFail(wirebson.NewArray("devnull", "ephemeralForTest", "wiredTiger")),
+					"storageEngines", wirebson.MustArray("devnull", "ephemeralForTest", "wiredTiger"),
 					"ok", float64(1),
 				)},
 			}},
@@ -182,9 +181,9 @@ var msgTestCases = []testCase{
 					documents: []wirebson.RawDocument{makeRawDocument(
 						"insert", "actor",
 						"ordered", true,
-						"writeConcern", must.NotFail(wirebson.NewDocument(
+						"writeConcern", wirebson.MustDocument(
 							"w", "majority",
-						)),
+						),
 						"$db", "monila",
 					)},
 				},
@@ -291,12 +290,12 @@ var msgTestCases = []testCase{
 			sections: []opMsgSection{{
 				documents: []wirebson.RawDocument{makeRawDocument(
 					"insert", "values",
-					"documents", must.NotFail(wirebson.NewArray(
-						must.NotFail(wirebson.NewDocument(
+					"documents", wirebson.MustArray(
+						wirebson.MustDocument(
 							"v", math.NaN(),
 							"_id", wirebson.ObjectID{0x63, 0x77, 0xf2, 0x13, 0x75, 0x7c, 0x0b, 0xab, 0xde, 0xbc, 0x2f, 0x6a},
-						)),
-					)),
+						),
+					),
 					"ordered", true,
 					"$db", "test",
 				)},
@@ -523,14 +522,14 @@ var msgTestCases = []testCase{
 					kind:       1,
 					identifier: "updates",
 					documents: []wirebson.RawDocument{makeRawDocument(
-						"q", must.NotFail(wirebson.NewDocument(
+						"q", wirebson.MustDocument(
 							"a", float64(20),
-						)),
-						"u", must.NotFail(wirebson.NewDocument(
-							"$inc", must.NotFail(wirebson.NewDocument(
+						),
+						"u", wirebson.MustDocument(
+							"$inc", wirebson.MustDocument(
 								"a", float64(1),
-							)),
-						)),
+							),
+						),
 						"multi", false,
 						"upsert", false,
 					)},

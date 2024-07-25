@@ -17,7 +17,6 @@ package wire
 import (
 	"testing"
 
-	"github.com/FerretDB/wire/internal/util/must"
 	"github.com/FerretDB/wire/internal/util/testutil"
 	"github.com/FerretDB/wire/wirebson"
 )
@@ -40,23 +39,23 @@ var queryTestCases = []testCase{
 			NumberToReturn:     -1,
 			query: makeRawDocument(
 				"ismaster", true,
-				"client", must.NotFail(wirebson.NewDocument(
-					"driver", must.NotFail(wirebson.NewDocument(
+				"client", wirebson.MustDocument(
+					"driver", wirebson.MustDocument(
 						"name", "nodejs",
 						"version", "4.0.0-beta.6",
-					)),
-					"os", must.NotFail(wirebson.NewDocument(
+					),
+					"os", wirebson.MustDocument(
 						"type", "Darwin",
 						"name", "darwin",
 						"architecture", "x64",
 						"version", "20.6.0",
-					)),
+					),
 					"platform", "Node.js v14.17.3, LE (unified)|Node.js v14.17.3, LE (unified)",
-					"application", must.NotFail(wirebson.NewDocument(
+					"application", wirebson.MustDocument(
 						"name", "mongosh 1.0.1",
-					)),
-				)),
-				"compression", must.NotFail(wirebson.NewArray("none")),
+					),
+				),
+				"compression", wirebson.MustArray("none"),
 				"loadBalanced", false,
 			),
 			returnFieldsSelector: nil,
@@ -102,23 +101,23 @@ var queryTestCases = []testCase{
 			NumberToReturn:     -1,
 			query: makeRawDocument(
 				"ismaster", true,
-				"client", must.NotFail(wirebson.NewDocument(
-					"driver", must.NotFail(wirebson.NewDocument(
+				"client", wirebson.MustDocument(
+					"driver", wirebson.MustDocument(
 						"name", "nodejs",
 						"version", "4.0.0-beta.6",
-					)),
-					"os", must.NotFail(wirebson.NewDocument(
+					),
+					"os", wirebson.MustDocument(
 						"type", "Darwin",
 						"name", "darwin",
 						"architecture", "x64",
 						"version", "20.6.0",
-					)),
+					),
 					"platform", "Node.js v14.17.3, LE (unified)|Node.js v14.17.3, LE (unified)",
-					"application", must.NotFail(wirebson.NewDocument(
+					"application", wirebson.MustDocument(
 						"name", "mongosh 1.0.1",
-					)),
-				)),
-				"compression", must.NotFail(wirebson.NewArray("none")),
+					),
+				),
+				"compression", wirebson.MustArray("none"),
 				"loadBalanced", false,
 			),
 			returnFieldsSelector: nil,

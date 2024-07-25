@@ -25,15 +25,20 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/FerretDB/wire/internal/util/must"
 	"github.com/FerretDB/wire/internal/util/testutil"
 	"github.com/FerretDB/wire/wirebson"
 )
 
 // makeRawDocument creates a new RawDocument from the given pairs of field names and values.
 func makeRawDocument(pairs ...any) wirebson.RawDocument {
-	d := must.NotFail(wirebson.NewDocument(pairs...))
-	return must.NotFail(d.Encode())
+	d := wirebson.MustDocument(pairs...)
+
+	raw, err := d.Encode()
+	if err != nil {
+		panic(err)
+	}
+
+	return raw
 }
 
 // lastErr returns the last error in error chain.

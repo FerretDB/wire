@@ -18,7 +18,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/FerretDB/wire/internal/util/must"
 	"github.com/FerretDB/wire/internal/util/testutil"
 	"github.com/FerretDB/wire/wirebson"
 )
@@ -40,10 +39,10 @@ var replyTestCases = []testCase{
 			StartingFrom: 0,
 			document: makeRawDocument(
 				"ismaster", true,
-				"topologyVersion", must.NotFail(wirebson.NewDocument(
+				"topologyVersion", wirebson.MustDocument(
 					"processId", wirebson.ObjectID{0x60, 0xfb, 0xed, 0x53, 0x71, 0xfe, 0x1b, 0xae, 0x70, 0x33, 0x95, 0x05},
 					"counter", int64(0),
-				)),
+				),
 				"maxBsonObjectSize", int32(16777216),
 				"maxMessageSizeBytes", int32(48000000),
 				"maxWriteBatchSize", int32(100000),
@@ -94,10 +93,10 @@ var replyTestCases = []testCase{
 			StartingFrom: 0,
 			document: makeRawDocument(
 				"ismaster", true,
-				"topologyVersion", must.NotFail(wirebson.NewDocument(
+				"topologyVersion", wirebson.MustDocument(
 					"processId", wirebson.ObjectID{0x60, 0xfb, 0xed, 0x53, 0x71, 0xfe, 0x1b, 0xae, 0x70, 0x33, 0x95, 0x05},
 					"counter", int64(0),
-				)),
+				),
 				"maxBsonObjectSize", int32(16777216),
 				"maxMessageSizeBytes", int32(48000000),
 				"maxWriteBatchSize", int32(100000),

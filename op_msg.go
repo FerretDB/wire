@@ -308,16 +308,16 @@ func (msg *OpMsg) logMessage(logFunc func(v any) string) string {
 		return "<nil>"
 	}
 
-	m := must.NotFail(wirebson.NewDocument(
+	m := wirebson.MustDocument(
 		"FlagBits", msg.Flags.String(),
 		"Checksum", int64(msg.checksum),
-	))
+	)
 
 	sections := wirebson.MakeArray(len(msg.sections))
 	for _, section := range msg.sections {
-		s := must.NotFail(wirebson.NewDocument(
+		s := wirebson.MustDocument(
 			"Kind", int32(section.kind),
-		))
+		)
 
 		switch section.kind {
 		case 0:
@@ -337,7 +337,7 @@ func (msg *OpMsg) logMessage(logFunc func(v any) string) string {
 				if err == nil {
 					must.NoError(docs.Add(doc))
 				} else {
-					must.NoError(docs.Add(must.NotFail(wirebson.NewDocument("error", err.Error()))))
+					must.NoError(docs.Add(wirebson.MustDocument("error", err.Error())))
 				}
 			}
 
