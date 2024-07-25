@@ -256,10 +256,10 @@ func TestLogging(t *testing.T) {
 			jbuf.Reset()
 
 			m := LogMessage(tc.doc)
-			assert.Equal(t, testutil.Unindent(t, tc.m), m, "actual LogMessage result:\n%s", m)
+			assert.Equal(t, testutil.Unindent(tc.m), m, "actual LogMessage result:\n%s", m)
 
 			b := LogMessageBlock(tc.doc)
-			assert.Equal(t, testutil.Unindent(t, tc.b), b, "actual LogMessageBlock result:\n%s", b)
+			assert.Equal(t, testutil.Unindent(tc.b), b, "actual LogMessageBlock result:\n%s", b)
 		})
 	}
 }

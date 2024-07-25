@@ -14,7 +14,12 @@
 
 package wireclient
 
-import "testing"
+import (
+	"context"
+	"testing"
+
+	"github.com/FerretDB/wire/internal/util/testutil"
+)
 
 func TestConn(t *testing.T) {
 	if testing.Short() {
@@ -22,4 +27,6 @@ func TestConn(t *testing.T) {
 	}
 
 	// TODO https://github.com/FerretDB/wire/issues/1
+
+	Connect(context.TODO(), "mongodb://127.0.0.1:27017/", testutil.Logger(t))
 }

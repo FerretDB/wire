@@ -17,18 +17,16 @@ package testutil
 import (
 	"bufio"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 )
 
-// ParseDump decodes from hex dump to the byte array.
-func ParseDump(s string) ([]byte, error) {
+// parseDump decodes from hex dump to the byte array.
+func parseDump(s string) ([]byte, error) {
 	var res []byte
 
 	scanner := bufio.NewScanner(strings.NewReader(strings.TrimSpace(s)))
@@ -69,7 +67,7 @@ func MustParseDumpFile(path ...string) []byte {
 		panic(err)
 	}
 
-	b, err = ParseDump(string(b))
+	b, err = parseDump(string(b))
 	if err != nil {
 		panic(err)
 	}
@@ -78,24 +76,31 @@ func MustParseDumpFile(path ...string) []byte {
 }
 
 // Unindent removes the common number of leading tabs from all lines in s.
-func Unindent(tb testing.TB, s string) string {
-	tb.Helper()
-
-	require.NotEmpty(tb, s)
+func Unindent(s string) string {
+	if s == "" {
+		panic("input must not be empty")
+	}
 
 	parts := strings.Split(s, "\n")
-	require.Positive(tb, len(parts))
+	if len(parts) == 0 {
+		panic("zero parts")
+	}
 
 	if parts[0] == "" {
 		parts = parts[1:]
 	}
 
 	indent := len(parts[0]) - len(strings.TrimLeft(parts[0], "\t"))
-	require.GreaterOrEqual(tb, indent, 0)
+	if indent < 0 {
+		panic("invalid indent")
+	}
 
-	for i := range parts {
-		require.Greater(tb, len(parts[i]), indent, "line: %q", parts[i])
-		parts[i] = parts[i][indent:]
+	for i, l := range parts {
+		if len(l) <= indent {
+			panic(fmt.Sprintf("invalid indent on line %q", l))
+		}
+
+		parts[i] = l[indent:]
 	}
 
 	return strings.Join(parts, "\n")

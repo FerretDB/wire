@@ -38,13 +38,8 @@ func (lw *logWriter) Write(p []byte) (int, error) {
 
 // Logger returns slog test logger.
 func Logger(tb testing.TB) *slog.Logger {
-	return LevelLogger(tb, slog.LevelDebug)
-}
-
-// LevelLogger returns a slog test logger for the given level (which might be dynamic).
-func LevelLogger(tb testing.TB, level slog.Leveler) *slog.Logger {
 	h := slog.NewTextHandler(&logWriter{tb: tb}, &slog.HandlerOptions{
-		Level: level,
+		Level: slog.LevelDebug,
 	})
 
 	return slog.New(h)

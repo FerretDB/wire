@@ -109,11 +109,11 @@ const goExpected = `` +
 func TestParseDump(t *testing.T) {
 	t.Parallel()
 
-	actual, err := ParseDump(wiresharkDump)
+	actual, err := parseDump(wiresharkDump)
 	require.NoError(t, err)
 	assert.Equal(t, []byte(wiresharkExpected), actual)
 
-	actual, err = ParseDump(goDump)
+	actual, err = parseDump(goDump)
 	require.NoError(t, err)
 	goExpectedB, err := hex.DecodeString(goExpected)
 	require.NoError(t, err)
