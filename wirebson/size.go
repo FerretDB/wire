@@ -17,7 +17,7 @@ package wirebson
 import (
 	"strconv"
 
-	"github.com/cristalhq/bson/bsonproto"
+	"github.com/FerretDB/wire/internal/bsonproto"
 )
 
 // sizeAny returns a size of the encoding of value v in bytes.

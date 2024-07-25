@@ -17,8 +17,7 @@ package wirebson
 import (
 	"encoding/binary"
 
-	"github.com/cristalhq/bson/bsonproto"
-
+	"github.com/FerretDB/wire/internal/bsonproto"
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 )
 

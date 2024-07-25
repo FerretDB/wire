@@ -19,8 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cristalhq/bson/bsonproto"
-
+	"github.com/FerretDB/wire/internal/bsonproto"
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 )
 

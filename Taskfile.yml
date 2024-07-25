@@ -25,7 +25,7 @@ tasks:
   gen:
     desc: "Generate and format"
     cmds:
-      - go generate -x
+      - go generate -x ./...
       - task: fmt
 
   fmt:
