@@ -65,3 +65,8 @@ func checkSections(sections []opMsgSection) error {
 
 	return nil
 }
+
+// Section returns an identifier and documents of the section.
+func (s *opMsgSection) Section() (string, []wirebson.RawDocument) {
+	return s.identifier, s.documents
+}
