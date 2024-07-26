@@ -28,7 +28,7 @@ type OpMsg struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: flags, sections, optional checksum.
 
-	sections []opMsgSection
+	sections []OpMsgSection
 	Flags    OpMsgFlags
 	checksum uint32
 }
@@ -41,7 +41,7 @@ func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
 	}
 
 	var msg OpMsg
-	if err = msg.SetSections(opMsgSection{documents: []wirebson.RawDocument{raw}}); err != nil {
+	if err = msg.SetSections(OpMsgSection{Documents: []wirebson.RawDocument{raw}}); err != nil {
 		return nil, lazyerrors.Error(err)
 	}
 
@@ -60,12 +60,12 @@ func MustOpMsg(pairs ...any) *OpMsg {
 }
 
 // Sections returns the sections of the OpMsg.
-func (msg *OpMsg) Sections() []opMsgSection {
+func (msg *OpMsg) Sections() []OpMsgSection {
 	return msg.sections
 }
 
 // SetSections sets sections of the OpMsg.
-func (msg *OpMsg) SetSections(sections ...opMsgSection) error {
+func (msg *OpMsg) SetSections(sections ...OpMsgSection) error {
 	if err := checkSections(sections); err != nil {
 		return lazyerrors.Error(err)
 	}
@@ -81,25 +81,25 @@ func (msg *OpMsg) SetSections(sections ...opMsgSection) error {
 	return nil
 }
 
-// RawSection0 returns the value of first section with kind 0.
+// RawSection0 returns the value of first section with Kind 0.
 func (msg *OpMsg) RawSection0() wirebson.RawDocument {
 	for _, s := range msg.Sections() {
-		if s.kind == 0 {
-			return s.documents[0]
+		if s.Kind == 0 {
+			return s.Documents[0]
 		}
 	}
 
 	return nil
 }
 
-// RawSections1 returns the value of all sections with kind 1.
+// RawSections1 returns the value of all sections with Kind 1.
 func (msg *OpMsg) RawSections1() []wirebson.RawDocument {
 	var docs []wirebson.RawDocument
 
 	for _, s := range msg.Sections() {
-		switch s.kind {
+		switch s.Kind {
 		case 1:
-			for _, d := range s.documents {
+			for _, d := range s.Documents {
 				docs = append(docs, d)
 			}
 		}
@@ -108,18 +108,18 @@ func (msg *OpMsg) RawSections1() []wirebson.RawDocument {
 	return docs
 }
 
-// RawSections returns the value of section with kind 0 and the value of all sections with kind 1.
+// RawSections returns the value of section with Kind 0 and the value of all sections with Kind 1.
 func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
 	var spec wirebson.RawDocument
 	var seq []byte
 
 	for _, s := range msg.Sections() {
-		switch s.kind {
+		switch s.Kind {
 		case 0:
-			spec = s.documents[0]
+			spec = s.Documents[0]
 
 		case 1:
-			for _, d := range s.documents {
+			for _, d := range s.Documents {
 				seq = append(seq, d...)
 			}
 		}
@@ -138,11 +138,11 @@ func (msg *OpMsg) RawDocument() (wirebson.RawDocument, error) {
 	}
 
 	s := msg.sections[0]
-	if s.kind != 0 || s.identifier != "" {
-		return nil, lazyerrors.Errorf(`expected section 0/"", got %d/%q`, s.kind, s.identifier)
+	if s.Kind != 0 || s.Identifier != "" {
+		return nil, lazyerrors.Errorf(`expected section 0/"", got %d/%q`, s.Kind, s.Identifier)
 	}
 
-	return s.documents[0], nil
+	return s.Documents[0], nil
 }
 
 func (msg *OpMsg) msgbody() {}
@@ -150,7 +150,7 @@ func (msg *OpMsg) msgbody() {}
 // check implements [MsgBody].
 func (msg *OpMsg) check() error {
 	for _, s := range msg.sections {
-		for _, d := range s.documents {
+		for _, d := range s.Documents {
 			if _, err := d.DecodeDeep(); err != nil {
 				return lazyerrors.Error(err)
 			}
@@ -171,18 +171,18 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 	offset := 4
 
 	for {
-		var section opMsgSection
-		section.kind = b[offset]
+		var section OpMsgSection
+		section.Kind = b[offset]
 		offset++
 
-		switch section.kind {
+		switch section.Kind {
 		case 0:
 			l, err := wirebson.FindRaw(b[offset:])
 			if err != nil {
 				return lazyerrors.Error(err)
 			}
 
-			section.documents = []wirebson.RawDocument{b[offset : offset+l]}
+			section.Documents = []wirebson.RawDocument{b[offset : offset+l]}
 			offset += l
 
 		case 1:
@@ -203,13 +203,13 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 				return lazyerrors.Errorf("len(b) = %d, offset = %d", len(b), offset)
 			}
 
-			section.identifier, err = wirebson.DecodeCString(b[offset:])
+			section.Identifier, err = wirebson.DecodeCString(b[offset:])
 			if err != nil {
 				return lazyerrors.Error(err)
 			}
 
-			offset += wirebson.SizeCString(section.identifier)
-			secSize -= wirebson.SizeCString(section.identifier)
+			offset += wirebson.SizeCString(section.Identifier)
+			secSize -= wirebson.SizeCString(section.Identifier)
 
 			for secSize != 0 {
 				if secSize < 0 {
@@ -225,13 +225,13 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 					return lazyerrors.Error(err)
 				}
 
-				section.documents = append(section.documents, b[offset:offset+l])
+				section.Documents = append(section.Documents, b[offset:offset+l])
 				offset += l
 				secSize -= l
 			}
 
 		default:
-			return lazyerrors.Errorf("kind is %d", section.kind)
+			return lazyerrors.Errorf("kind is %d", section.Kind)
 		}
 
 		msg.sections = append(msg.sections, section)
@@ -283,17 +283,17 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 	binary.LittleEndian.PutUint32(b, uint32(msg.Flags))
 
 	for _, section := range msg.sections {
-		b = append(b, section.kind)
+		b = append(b, section.Kind)
 
-		switch section.kind {
+		switch section.Kind {
 		case 0:
-			b = append(b, section.documents[0]...)
+			b = append(b, section.Documents[0]...)
 
 		case 1:
-			sec := make([]byte, wirebson.SizeCString(section.identifier))
-			wirebson.EncodeCString(sec, section.identifier)
+			sec := make([]byte, wirebson.SizeCString(section.Identifier))
+			wirebson.EncodeCString(sec, section.Identifier)
 
-			for _, doc := range section.documents {
+			for _, doc := range section.Documents {
 				sec = append(sec, doc...)
 			}
 
@@ -303,7 +303,7 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 			b = append(b, sec...)
 
 		default:
-			return nil, lazyerrors.Errorf("kind is %d", section.kind)
+			return nil, lazyerrors.Errorf("kind is %d", section.Kind)
 		}
 	}
 
@@ -332,12 +332,12 @@ func (msg *OpMsg) logMessage(logFunc func(v any) string) string {
 	sections := wirebson.MakeArray(len(msg.sections))
 	for _, section := range msg.sections {
 		s := wirebson.MustDocument(
-			"Kind", int32(section.kind),
+			"Kind", int32(section.Kind),
 		)
 
-		switch section.kind {
+		switch section.Kind {
 		case 0:
-			doc, err := section.documents[0].DecodeDeep()
+			doc, err := section.Documents[0].DecodeDeep()
 			if err == nil {
 				must.NoError(s.Add("Document", doc))
 			} else {
@@ -345,10 +345,10 @@ func (msg *OpMsg) logMessage(logFunc func(v any) string) string {
 			}
 
 		case 1:
-			must.NoError(s.Add("Identifier", section.identifier))
-			docs := wirebson.MakeArray(len(section.documents))
+			must.NoError(s.Add("Identifier", section.Identifier))
+			docs := wirebson.MakeArray(len(section.Documents))
 
-			for _, d := range section.documents {
+			for _, d := range section.Documents {
 				doc, err := d.DecodeDeep()
 				if err == nil {
 					must.NoError(docs.Add(doc))
@@ -360,7 +360,7 @@ func (msg *OpMsg) logMessage(logFunc func(v any) string) string {
 			must.NoError(s.Add("Documents", docs))
 
 		default:
-			panic(fmt.Sprintf("unknown kind %d", section.kind))
+			panic(fmt.Sprintf("unknown kind %d", section.Kind))
 		}
 
 		must.NoError(sections.Add(s))

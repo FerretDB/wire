@@ -19,18 +19,18 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// opMsgSection is one or more sections contained in an OpMsg.
-type opMsgSection struct {
+// OpMsgSection is one or more sections contained in an OpMsg.
+type OpMsgSection struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
-	// The wire order is: kind, identifier, documents.
+	// The wire order is: Kind, Identifier, Documents.
 
-	identifier string
-	documents  []wirebson.RawDocument
-	kind       byte
+	Identifier string
+	Documents  []wirebson.RawDocument
+	Kind       byte
 }
 
 // checkSections checks given sections.
-func checkSections(sections []opMsgSection) error {
+func checkSections(sections []OpMsgSection) error {
 	if len(sections) == 0 {
 		return lazyerrors.New("no sections")
 	}
@@ -38,28 +38,28 @@ func checkSections(sections []opMsgSection) error {
 	var kind0Found bool
 
 	for _, s := range sections {
-		switch s.kind {
+		switch s.Kind {
 		case 0:
 			if kind0Found {
 				return lazyerrors.New("multiple kind 0 sections")
 			}
 			kind0Found = true
 
-			if s.identifier != "" {
+			if s.Identifier != "" {
 				return lazyerrors.New("kind 0 section has identifier")
 			}
 
-			if len(s.documents) != 1 {
-				return lazyerrors.Errorf("kind 0 section has %d documents", len(s.documents))
+			if len(s.Documents) != 1 {
+				return lazyerrors.Errorf("kind 0 section has %d documents", len(s.Documents))
 			}
 
 		case 1:
-			if s.identifier == "" {
+			if s.Identifier == "" {
 				return lazyerrors.New("kind 1 section has no identifier")
 			}
 
 		default:
-			return lazyerrors.Errorf("unknown kind %d", s.kind)
+			return lazyerrors.Errorf("unknown kind %d", s.Kind)
 		}
 	}
 
@@ -67,6 +67,6 @@ func checkSections(sections []opMsgSection) error {
 }
 
 // Section returns an identifier and documents of the section.
-func (s *opMsgSection) Section() (string, []wirebson.RawDocument) {
-	return s.identifier, s.documents
+func (s *OpMsgSection) Section() (string, []wirebson.RawDocument) {
+	return s.Identifier, s.Documents
 }
