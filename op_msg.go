@@ -92,6 +92,22 @@ func (msg *OpMsg) RawSection0() wirebson.RawDocument {
 	return nil
 }
 
+// RawSections1 returns the value of all sections with kind 1.
+func (msg *OpMsg) RawSections1() []wirebson.RawDocument {
+	var seq []wirebson.RawDocument
+
+	for _, s := range msg.Sections() {
+		switch s.kind {
+		case 1:
+			for _, d := range s.documents {
+				seq = append(seq, d)
+			}
+		}
+	}
+
+	return seq
+}
+
 // RawSections returns the value of section with kind 0 and the value of all sections with kind 1.
 func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
 	var spec wirebson.RawDocument
