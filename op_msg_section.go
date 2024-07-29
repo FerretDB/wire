@@ -22,11 +22,16 @@ import (
 // OpMsgSection is one or more sections contained in an OpMsg.
 type OpMsgSection struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
-	// The wire order is: Kind, Identifier, Documents.
+	// The wire order is: Kind, Identifier, documents.
 
 	Identifier string
-	Documents  []wirebson.RawDocument
+	documents  []wirebson.RawDocument
 	Kind       byte
+}
+
+// Documents returns all documents of that section.
+func (msg *OpMsgSection) Documents() []wirebson.RawDocument {
+	return msg.documents
 }
 
 // checkSections checks given sections.
@@ -49,8 +54,8 @@ func checkSections(sections []OpMsgSection) error {
 				return lazyerrors.New("kind 0 section has identifier")
 			}
 
-			if len(s.Documents) != 1 {
-				return lazyerrors.Errorf("kind 0 section has %d documents", len(s.Documents))
+			if len(s.documents) != 1 {
+				return lazyerrors.Errorf("kind 0 section has %d documents", len(s.documents))
 			}
 
 		case 1:
