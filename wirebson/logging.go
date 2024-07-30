@@ -152,12 +152,12 @@ func LogMessage(v any) string {
 	return logMessage(v, logMaxFlowLength, "", 1)
 }
 
-// LogMessageBlock is a variant of [RawArray.LogMessage] that never uses a flow style.
+// LogMessageBlock is a variant of [LogMessage] that never uses a flow style.
 func LogMessageBlock(v any) string {
 	return logMessage(v, 0, "", 1)
 }
 
-// LogMessageFlow is a variant of [RawArray.LogMessage] that always uses a flow style.
+// LogMessageFlow is a variant of [LogMessage] that always uses a flow style.
 func LogMessageFlow(v any) string {
 	return logMessage(v, math.MaxInt, "", 1)
 }

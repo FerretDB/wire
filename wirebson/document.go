@@ -95,9 +95,14 @@ func (doc *Document) checkFrozen() {
 	}
 }
 
-// FieldNames returns a slice of field names in the Document.
+// Len returns the number of fields in the Document.
+func (doc *Document) Len() int {
+	return len(doc.fields)
+}
+
+// FieldNames returns a slice of field names in the Document in the original order.
 //
-// If document contains duplicate field names, the same name may appear multiple times.
+// If document contains duplicate field names, the same name will appear multiple times.
 func (doc *Document) FieldNames() []string {
 	fields := make([]string, len(doc.fields))
 	for i, f := range doc.fields {
@@ -110,9 +115,11 @@ func (doc *Document) FieldNames() []string {
 // Get returns a value of the field with the given name.
 //
 // It returns nil if the field is not found.
-// If document contains duplicate field names, it returns the first one.
 //
-// TODO https://github.com/FerretDB/FerretDB/issues/4208
+// If document contains duplicate field names, it returns the first one.
+// To get other fields, a for/range loop can be used with [Document.Len] and [Document.GetByIndex].
+// Or iterators.
+// TODO https://github.com/FerretDB/wire/issues/9
 func (doc *Document) Get(name string) any {
 	for _, f := range doc.fields {
 		if f.name == name {
@@ -123,7 +130,14 @@ func (doc *Document) Get(name string) any {
 	return nil
 }
 
-// Add adds a new field to the Document.
+// GetByIndex returns the name and the value of the field at the given index (between 0 and [Document.Len]-1).
+// It panics if index is out of bounds.
+func (doc *Document) GetByIndex(i int) (string, any) {
+	f := doc.fields[i]
+	return f.name, f.value
+}
+
+// Add adds a new field to the end of the Document.
 func (doc *Document) Add(name string, value any) error {
 	if err := validBSONType(value); err != nil {
 		return lazyerrors.Errorf("%q: %w", name, err)

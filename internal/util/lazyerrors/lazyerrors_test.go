@@ -24,7 +24,7 @@ import (
 )
 
 func unwrap(err error, n int) error {
-	for i := 0; i < n; i++ {
+	for range n {
 		err = errors.Unwrap(err)
 	}
 	return err
