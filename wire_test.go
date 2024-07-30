@@ -131,6 +131,10 @@ func testMessages(t *testing.T, testCases []testCase) {
 						_ = msg.RawSection0()
 						_, _ = msg.RawSections()
 						_, _ = msg.RawDocument()
+
+						for _, section := range msg.Sections() {
+							_ = section.Documents()
+						}
 					})
 				}
 			})

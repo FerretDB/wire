@@ -36,7 +36,7 @@ var msgTestCases = []testCase{
 			OpCode:        OpCodeMsg,
 		},
 		msgBody: &OpMsg{
-			sections: []opMsgSection{{
+			sections: []OpMsgSection{{
 				documents: []wirebson.RawDocument{makeRawDocument(
 					"buildInfo", int32(1),
 					"lsid", wirebson.MustDocument(
@@ -80,7 +80,7 @@ var msgTestCases = []testCase{
 			OpCode:        OpCodeMsg,
 		},
 		msgBody: &OpMsg{
-			sections: []opMsgSection{{
+			sections: []OpMsgSection{{
 				documents: []wirebson.RawDocument{makeRawDocument(
 					"version", "5.0.0",
 					"gitVersion", "1184f004a99660de6f5e745573419bda8a28c0e9",
@@ -176,7 +176,7 @@ var msgTestCases = []testCase{
 			OpCode:        OpCodeMsg,
 		},
 		msgBody: &OpMsg{
-			sections: []opMsgSection{
+			sections: []OpMsgSection{
 				{
 					documents: []wirebson.RawDocument{makeRawDocument(
 						"insert", "actor",
@@ -188,8 +188,8 @@ var msgTestCases = []testCase{
 					)},
 				},
 				{
-					kind:       1,
-					identifier: "documents",
+					Kind:       1,
+					Identifier: "documents",
 					documents: []wirebson.RawDocument{
 						makeRawDocument(
 							"_id", wirebson.ObjectID{0x61, 0x2e, 0xc2, 0x80, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01},
@@ -287,7 +287,7 @@ var msgTestCases = []testCase{
 			OpCode:        OpCodeMsg,
 		},
 		msgBody: &OpMsg{
-			sections: []opMsgSection{{
+			sections: []OpMsgSection{{
 				documents: []wirebson.RawDocument{makeRawDocument(
 					"insert", "values",
 					"documents", wirebson.MustArray(
@@ -352,7 +352,7 @@ var msgTestCases = []testCase{
 			OpCode:        OpCodeMsg,
 		},
 		msgBody: &OpMsg{
-			sections: []opMsgSection{
+			sections: []OpMsgSection{
 				{
 					documents: []wirebson.RawDocument{makeRawDocument(
 						"insert", "TestInsertSimple",
@@ -361,8 +361,8 @@ var msgTestCases = []testCase{
 					)},
 				},
 				{
-					kind:       1,
-					identifier: "documents",
+					Kind:       1,
+					Identifier: "documents",
 					documents: []wirebson.RawDocument{makeRawDocument(
 						"_id", wirebson.ObjectID{0x63, 0x7c, 0xfa, 0xd8, 0x8d, 0xc3, 0xce, 0xcd, 0xe3, 0x8e, 0x1e, 0x6b},
 						"v", math.Copysign(0, -1),
@@ -428,10 +428,10 @@ var msgTestCases = []testCase{
 		},
 		msgBody: &OpMsg{
 			Flags: OpMsgFlags(OpMsgChecksumPresent),
-			sections: []opMsgSection{
+			sections: []OpMsgSection{
 				{
-					kind:       1,
-					identifier: "documents",
+					Kind:       1,
+					Identifier: "documents",
 					documents: []wirebson.RawDocument{makeRawDocument(
 						"_id", wirebson.ObjectID{0x63, 0x8c, 0xec, 0x46, 0xaa, 0x77, 0x8b, 0xf3, 0x70, 0x10, 0x54, 0x29},
 						"a", float64(3),
@@ -517,10 +517,10 @@ var msgTestCases = []testCase{
 		},
 		msgBody: &OpMsg{
 			Flags: OpMsgFlags(OpMsgChecksumPresent),
-			sections: []opMsgSection{
+			sections: []OpMsgSection{
 				{
-					kind:       1,
-					identifier: "updates",
+					Kind:       1,
+					Identifier: "updates",
 					documents: []wirebson.RawDocument{makeRawDocument(
 						"q", wirebson.MustDocument(
 							"a", float64(20),
@@ -601,10 +601,10 @@ var msgTestCases = []testCase{
 		},
 		msgBody: &OpMsg{
 			Flags: OpMsgFlags(OpMsgChecksumPresent),
-			sections: []opMsgSection{
+			sections: []OpMsgSection{
 				{
-					kind:       1,
-					identifier: "documents",
+					Kind:       1,
+					Identifier: "documents",
 					documents: []wirebson.RawDocument{makeRawDocument(
 						"_id", wirebson.ObjectID{0x63, 0x8c, 0xec, 0x46, 0xaa, 0x77, 0x8b, 0xf3, 0x70, 0x10, 0x54, 0x29},
 						"a", float64(3),
