@@ -17,10 +17,33 @@ tasks:
       - go generate -x
 
   init:
+    desc: "Install development tools"
     deps: [init-tools]
     cmds:
       - go mod tidy
       - go mod verify
+
+  env-up-detach:
+    cmds:
+      - docker version
+      - docker compose version
+      - >
+        docker compose up --always-recreate-deps --force-recreate --remove-orphans --renew-anon-volumes --timeout=0 --detach
+
+  env-logs:
+    cmds:
+      - docker compose logs --follow
+
+  env-up:
+    desc: "Start development environment"
+    deps: [env-up-detach]
+    cmds:
+      - task: env-logs
+
+  env-down:
+    desc: "Stop development environment"
+    cmds:
+      - docker compose down --remove-orphans --volumes
 
   gen:
     desc: "Generate and format"
@@ -33,10 +56,17 @@ tasks:
     cmds:
       - bin/gofumpt -w .
 
-  test:
-    desc: "Run tests"
+  test-short:
+    desc: "Run short tests"
     cmds:
-      - go test ./...
+      - go test -short -race ./...
+
+  test:
+    desc: "Run all tests (requires MONGODB_URI set)"
+    cmds:
+      - go test -race ./...
+    env:
+      MONGODB_URI: mongodb://localhost:27017/
 
   fuzz:
     desc: "Fuzz for about 1 minute (with default FUZZ_TIME)"

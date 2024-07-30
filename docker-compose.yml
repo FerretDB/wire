@@ -1,0 +1,8 @@
+---
+# This file is used by integration tests.
+
+services:
+  mongodb:
+    image: mongo:latest
+    ports:
+      - 27017:27017
