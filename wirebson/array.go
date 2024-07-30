@@ -88,7 +88,7 @@ func (arr *Array) Get(index int) any {
 	return arr.elements[index]
 }
 
-// Add adds a new element to the Array.
+// Add adds a new element to the end of the Array.
 func (arr *Array) Add(value any) error {
 	if err := validBSONType(value); err != nil {
 		return lazyerrors.Error(err)

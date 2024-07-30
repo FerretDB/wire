@@ -21,6 +21,9 @@ env:
   GOPROXY: https://proxy.golang.org
   GOTOOLCHAIN: local
 
+  # TODO https://github.com/FerretDB/wire/issues/9
+  GOEXPERIMENT: rangefunc
+
 jobs:
   test:
     name: Test

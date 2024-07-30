@@ -46,3 +46,8 @@ tasks:
       - go test -run=XXX -fuzz=FuzzMsg      -fuzztime={{.FUZZ_TIME}} .
       - go test -run=XXX -fuzz=FuzzQuery    -fuzztime={{.FUZZ_TIME}} .
       - go test -run=XXX -fuzz=FuzzReply    -fuzztime={{.FUZZ_TIME}} .
+
+  godocs:
+    desc: "Serve Go code documentation"
+    cmds:
+      - bin/pkgsite{{exeExt}} -http=127.0.0.1:6060 -open
