@@ -20,6 +20,7 @@ env:
   GOMODCACHE: /home/runner/go/mod
   GOPROXY: https://proxy.golang.org
   GOTOOLCHAIN: local
+  MONGODB_URI: mongodb://localhost:27017/
 
   # TODO https://github.com/FerretDB/wire/issues/9
   GOEXPERIMENT: rangefunc
@@ -57,7 +58,13 @@ jobs:
       - name: Generate and format
         run: bin/task gen
 
-      - name: Run tests
+      - name: Run short tests
+        run: bin/task test-short
+
+      - name: Start development environment
+        run: bin/task env-up-detach
+
+      - name: Run all tests
         run: bin/task test
 
       - name: Fuzz

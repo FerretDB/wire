@@ -16,7 +16,10 @@ package wireclient
 
 import (
 	"context"
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/FerretDB/wire/internal/util/testutil"
 )
@@ -26,7 +29,18 @@ func TestConn(t *testing.T) {
 		t.Skip("skipping integration tests for -short")
 	}
 
-	// TODO https://github.com/FerretDB/wire/issues/1
+	uri := os.Getenv("MONGODB_URI")
+	require.NotEmpty(t, uri, "MONGODB_URI environment variable must be set; set it or run tests with `go test -short`")
 
-	Connect(context.TODO(), "mongodb://127.0.0.1:27017/", testutil.Logger(t))
+	ctx := context.Background()
+
+	conn, err := Connect(ctx, uri, testutil.Logger(t))
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, conn.Close())
+	})
+
+	t.Run("SomeTest", func(t *testing.T) {
+		// TODO https://github.com/FerretDB/wire/issues/1
+	})
 }
