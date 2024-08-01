@@ -28,11 +28,12 @@ tasks:
       - docker version
       - docker compose version
       - >
-        docker compose up --always-recreate-deps --force-recreate --remove-orphans --renew-anon-volumes --timeout=0 --detach
+        docker compose --file=.dev/docker-compose.yml --project-name=wire
+        up --always-recreate-deps --force-recreate --remove-orphans --renew-anon-volumes --timeout=0 --detach
 
   env-logs:
     cmds:
-      - docker compose logs --follow
+      - docker compose --file=.dev/docker-compose.yml --project-name=wire logs --follow
 
   env-up:
     desc: "Start development environment"
@@ -43,7 +44,7 @@ tasks:
   env-down:
     desc: "Stop development environment"
     cmds:
-      - docker compose down --remove-orphans --volumes
+      - docker compose --file=.dev/docker-compose.yml down --remove-orphans --volumes
 
   gen:
     desc: "Generate and format"

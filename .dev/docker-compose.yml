@@ -3,6 +3,8 @@
 
 services:
   mongodb:
-    image: mongo:latest
+    build:
+      context: .
+      dockerfile: mongo.Dockerfile
     ports:
       - 27017:27017
