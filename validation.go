@@ -16,8 +16,10 @@ package wire
 
 import (
 	"errors"
-	"github.com/FerretDB/wire/wirebson"
 	"math"
+
+	"github.com/FerretDB/wire/internal/util/lazyerrors"
+	"github.com/FerretDB/wire/wirebson"
 )
 
 // validateNan returns error if float Nan was encountered.
@@ -30,12 +32,28 @@ func validateNan(v any) error {
 			}
 		}
 
+	case wirebson.RawDocument:
+		doc, err := v.Decode()
+		if err != nil {
+			return lazyerrors.Error(err)
+		}
+
+		return validateNan(doc)
+
 	case *wirebson.Array:
 		for i := range v.Len() {
 			if err := validateNan(v.Get(i)); err != nil {
 				return err
 			}
 		}
+
+	case wirebson.RawArray:
+		arr, err := v.Decode()
+		if err != nil {
+			return lazyerrors.Error(err)
+		}
+
+		return validateNan(arr)
 
 	case float64:
 		if math.IsNaN(v) {
