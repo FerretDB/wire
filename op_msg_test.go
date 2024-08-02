@@ -18,6 +18,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/FerretDB/wire/internal/util/testutil"
 	"github.com/FerretDB/wire/wirebson"
 )
@@ -631,4 +633,55 @@ func TestMsg(t *testing.T) {
 
 func FuzzMsg(f *testing.F) {
 	fuzzMessages(f, msgTestCases)
+}
+
+func TestOpMsgNaN(t *testing.T) {
+	// do not run this test in parallel as it changes global variable [AllowNaN]
+
+	body := []byte{
+		0x00, 0x00, 0x00, 0x00, // FlagBits
+		0x00,                   // section kind
+		0x64, 0x00, 0x00, 0x00, // document size
+		0x02, 0x69, 0x6e, 0x73, 0x65, 0x72, 0x74, 0x00, // string "insert"
+		0x07, 0x00, 0x00, 0x00, // "values" length
+		0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x00, // "values"
+		0x04, 0x64, 0x6f, 0x63, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x00, // array "documents"
+		0x29, 0x00, 0x00, 0x00, // document (array) size
+		0x03, 0x30, 0x00, // element 0 (document)
+		0x21, 0x00, 0x00, 0x00, // element 0 size
+		0x01, 0x76, 0x00, // double "v"
+		0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf8, 0x7f, // NaN
+		0x07, 0x5f, 0x69, 0x64, 0x00, // ObjectID "_id"
+		0x63, 0x77, 0xf2, 0x13, 0x75, 0x7c, 0x0b, 0xab, 0xde, 0xbc, 0x2f, 0x6a, // ObjectID value
+		0x00,                                                       // end of element 0 (document)
+		0x00,                                                       // end of document (array)
+		0x08, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x65, 0x64, 0x00, 0x01, // "ordered" true
+		0x02, 0x24, 0x64, 0x62, 0x00, // "$db"
+		0x05, 0x00, 0x00, 0x00, // "test" length
+		0x74, 0x65, 0x73, 0x74, 0x00, // "test"
+		0x00, // end of document
+	}
+
+	t.Run("DoNotAllowNaN", func(t *testing.T) {
+		AllowNaN = false
+		t.Cleanup(func() { AllowNaN = true })
+
+		_, err := NewOpMsg(wirebson.MustDocument("NaN", math.NaN()))
+		require.ErrorContains(t, err, "NaN is not supported")
+
+		var msg OpMsg
+		err = msg.UnmarshalBinaryNocopy(body)
+
+		require.ErrorContains(t, err, "NaN is not supported")
+	})
+
+	t.Run("AllowNaN", func(t *testing.T) {
+		_, err := NewOpMsg(wirebson.MustDocument("NaN", math.NaN()))
+		require.NoError(t, err)
+
+		var msg OpMsg
+
+		err = msg.UnmarshalBinaryNocopy(body)
+		require.NoError(t, err)
+	})
 }
