@@ -22,7 +22,10 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// validateNaN returns error if float64 NaN was encountered.
+// ErrNaN indicates float64 NaN is encountered.
+var ErrNaN = errors.New("NaN is not supported")
+
+// validateNaN returns error if float64 NaN is encountered.
 func validateNaN(v any) error {
 	switch v := v.(type) {
 	case *wirebson.Document:
@@ -57,7 +60,7 @@ func validateNaN(v any) error {
 
 	case float64:
 		if math.IsNaN(v) {
-			return errors.New("NaN is not supported")
+			return ErrNaN
 		}
 	}
 

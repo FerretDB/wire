@@ -667,12 +667,12 @@ func TestOpMsgNaN(t *testing.T) {
 		t.Cleanup(func() { AllowNaN = true })
 
 		_, err := NewOpMsg(wirebson.MustDocument("NaN", math.NaN()))
-		require.ErrorContains(t, err, "NaN is not supported")
+		require.ErrorIs(t, err, ErrNaN)
 
 		var msg OpMsg
 		err = msg.UnmarshalBinaryNocopy(body)
 
-		require.ErrorContains(t, err, "NaN is not supported")
+		require.ErrorIs(t, err, ErrNaN)
 	})
 
 	t.Run("AllowNaN", func(t *testing.T) {
