@@ -65,7 +65,7 @@ tasks:
   test:
     desc: "Run all tests (requires MONGODB_URI set)"
     cmds:
-      - go test -race ./...
+      - go test -race -count=1 ./...
     env:
       MONGODB_URI: mongodb://localhost:27017/
 
