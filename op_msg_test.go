@@ -253,7 +253,7 @@ var msgTestCases = []testCase{
 		err:       wirebson.ErrDecodeInvalidInput.Error(),
 	},
 	{
-		name: "NaN", // the testcase name is used in [setExpectedB]
+		name: "NaN",
 		expectedB: []byte{
 			0x79, 0x00, 0x00, 0x00, // MessageLength
 			0x11, 0x00, 0x00, 0x00, // RequestID
@@ -635,7 +635,14 @@ func TestMsg(t *testing.T) {
 		CheckNaNs = true
 		t.Cleanup(func() { CheckNaNs = false })
 
-		testMessages(t, msgTestCases)
+		tcs := make([]testCase, len(msgTestCases))
+		copy(tcs, msgTestCases)
+
+		if CheckNaNs {
+			tcs[4].err = "NaN is not supported"
+		}
+
+		testMessages(t, tcs)
 	})
 }
 
