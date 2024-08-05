@@ -12,25 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// We should remove the build tag below once we use 1.23 everywhere.
-// See https://pkg.go.dev/internal/goexperiment
-// TODO https://github.com/FerretDB/wire/issues/9
-
-//go:build goexperiment.rangefunc
-
 package wirebson
 
 import (
-	"iter"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-// All returns a Seq that yields all elements of the array.
-func (arr *Array) All() iter.Seq[any] {
-	return func(yield func(any) bool) {
-		for _, v := range arr.elements {
-			if !yield(v) {
-				return
-			}
-		}
+func TestDocumentAll(t *testing.T) {
+	t.Parallel()
+
+	doc := MustDocument(
+		"foo", int32(1),
+		"bar", int32(2),
+		"baz", int64(3),
+	)
+
+	var ks []string
+	var vs []any
+
+	for k, v := range doc.All() {
+		ks = append(ks, k)
+		vs = append(vs, v)
 	}
+
+	require.Equal(t, []string{"foo", "bar", "baz"}, ks)
+	require.Equal(t, []any{int32(1), int32(2), int64(3)}, vs)
 }

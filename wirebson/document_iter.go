@@ -21,7 +21,16 @@
 package wirebson
 
 import (
-	_ "iter"
+	"iter"
 )
 
-// TODO https://github.com/FerretDB/wire/issues/9
+// All returns a Seq2 that yields all field name value pairs of the document.
+func (doc *Document) All() iter.Seq2[string, any] {
+	return func(yield func(string, any) bool) {
+		for _, f := range doc.fields {
+			if !yield(f.name, f.value) {
+				return
+			}
+		}
+	}
+}
