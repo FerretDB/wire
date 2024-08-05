@@ -253,7 +253,7 @@ var msgTestCases = []testCase{
 		err:       wirebson.ErrDecodeInvalidInput.Error(),
 	},
 	{
-		name: "NaN", // the testcase name as it is used in [setExpectedB]
+		name: "NaN", // the testcase name is used in [setExpectedB]
 		expectedB: []byte{
 			0x79, 0x00, 0x00, 0x00, // MessageLength
 			0x11, 0x00, 0x00, 0x00, // RequestID
