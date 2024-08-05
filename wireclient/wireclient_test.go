@@ -20,6 +20,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,7 +39,7 @@ func (lw *logWriter) Write(p []byte) (int, error) {
 	// https://github.com/neilotoole/slogt/tree/v1.1.0?tab=readme-ov-file#deficiency
 
 	// handle the most common escape sequences for request/response bodies
-	s := string(p)
+	s := strings.TrimSpace(string(p))
 	s = strings.ReplaceAll(s, `\n`, "\n")
 	s = strings.ReplaceAll(s, `\"`, `"`)
 
@@ -63,11 +64,12 @@ func TestConn(t *testing.T) {
 	uri := os.Getenv("MONGODB_URI")
 	require.NotEmpty(t, uri, "MONGODB_URI environment variable must be set; set it or run tests with `go test -short`")
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	t.Cleanup(cancel)
 
 	t.Run("Login", func(t *testing.T) {
-		conn, err := Connect(ctx, uri, logger(t))
-		require.NoError(t, err)
+		conn := ConnectPing(ctx, uri, logger(t))
+		require.NotNil(t, conn)
 
 		t.Cleanup(func() {
 			require.NoError(t, conn.Close())

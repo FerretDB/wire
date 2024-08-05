@@ -23,6 +23,7 @@ import (
 	"net"
 	"net/url"
 	"sync/atomic"
+	"time"
 
 	"github.com/xdg-go/scram"
 
@@ -103,6 +104,29 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	}
 
 	return New(c, l), nil
+}
+
+// ConnectPing uses a combination of [Connect] and [Conn.Ping] to establish a working connection.
+//
+// nil is returned on context expiration.
+func ConnectPing(ctx context.Context, uri string, l *slog.Logger) *Conn {
+	for ctx.Err() == nil {
+		conn, err := Connect(ctx, uri, l)
+		if err != nil {
+			sleep(ctx, time.Second)
+			continue
+		}
+
+		if err = conn.Ping(ctx); err != nil {
+			_ = conn.Close()
+			sleep(ctx, time.Second)
+			continue
+		}
+
+		return conn
+	}
+
+	return nil
 }
 
 // Close closes the connection.
@@ -235,13 +259,38 @@ func (c *Conn) Request(ctx context.Context, body wire.MsgBody) (*wire.MsgHeader,
 	return resHeader, resBody, err
 }
 
+// Ping sends a ping command.
+// It returns error for unexpected server response or any other error.
+func (c *Conn) Ping(ctx context.Context) error {
+	cmd := wire.MustOpMsg("ping", int32(1), "$db", "test")
+
+	_, resBody, err := c.Request(ctx, cmd)
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
+	}
+
+	resRaw, err := resBody.(*wire.OpMsg).RawDocument()
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
+	}
+
+	res, err := resRaw.Decode()
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
+	}
+
+	if ok := res.Get("ok"); ok != 1.0 {
+		return fmt.Errorf("wireclient.Conn.Ping: failed (ok was %v)", ok)
+	}
+
+	return nil
+}
+
 // Login authenticates the connection with the given credentials.
 //
 // It should not be used to test various authentication scenarios.
 func (c *Conn) Login(ctx context.Context, username, password, authDB string) error {
-	h := scram.SHA256
-
-	s, err := h.NewClient(username, password, "")
+	s, err := scram.SHA256.NewClient(username, password, "")
 	if err != nil {
 		return fmt.Errorf("wireclient.Conn.Login: %w", err)
 	}
@@ -260,8 +309,11 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 		"$db", authDB,
 	)
 
-	for i := range 3 {
-		c.l.DebugContext(ctx, "Login", slog.Int("step", i), slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()))
+	for step := range 3 {
+		c.l.DebugContext(
+			ctx, "Login",
+			slog.Int("step", step), slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
+		)
 
 		body, err := wire.NewOpMsg(cmd)
 		if err != nil {
@@ -273,18 +325,18 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
-		rawRes, err := resBody.(*wire.OpMsg).RawDocument()
+		resRaw, err := resBody.(*wire.OpMsg).RawDocument()
 		if err != nil {
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
-		res, err := rawRes.Decode()
+		res, err := resRaw.Decode()
 		if err != nil {
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
 		if ok := res.Get("ok"); ok != 1.0 {
-			return fmt.Errorf("wireclient.Conn.Login: %s was not successful (ok was %v)", cmd.Command(), ok)
+			return fmt.Errorf("wireclient.Conn.Login: %s failed (ok was %v)", cmd.Command(), ok)
 		}
 
 		if res.Get("done").(bool) {
@@ -309,4 +361,11 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 	}
 
 	return fmt.Errorf("wireclient.Conn.Login: too many steps")
+}
+
+// sleep waits until the given duration is over or the context is canceled.
+func sleep(ctx context.Context, d time.Duration) {
+	ctx, cancel := context.WithTimeout(ctx, d)
+	defer cancel()
+	<-ctx.Done()
 }

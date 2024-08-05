@@ -44,7 +44,7 @@ tasks:
   env-down:
     desc: "Stop development environment"
     cmds:
-      - docker compose --file=.dev/docker-compose.yml down --remove-orphans --volumes
+      - docker compose --file=.dev/docker-compose.yml --project-name=wire down --remove-orphans --volumes
 
   gen:
     desc: "Generate and format"
