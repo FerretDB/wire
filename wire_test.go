@@ -86,10 +86,6 @@ func (tc *testCase) setExpectedB(tb testing.TB) {
 		tc.headerB = nil
 		tc.bodyB = nil
 	}
-
-	if CheckNaNs && tc.name == "NaN" {
-		tc.err = "NaN is not supported"
-	}
 }
 
 func testMessages(t *testing.T, testCases []testCase) {
