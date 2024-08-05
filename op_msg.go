@@ -23,8 +23,8 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// AllowNaN accepts float64 NaN value; if set false an error is returned when NaN is present in wire messages.
-var AllowNaN = true
+// CheckNaNs set to true returns an error if float64 NaN value is present in wire messages.
+var CheckNaNs bool
 
 // OpMsg is the main wire protocol message type.
 type OpMsg struct {
@@ -75,7 +75,7 @@ func (msg *OpMsg) SetSections(sections ...OpMsgSection) error {
 
 	msg.sections = sections
 
-	if debugbuild || !AllowNaN {
+	if debugbuild || CheckNaNs {
 		if err := msg.check(); err != nil {
 			return lazyerrors.Error(err)
 		}
@@ -143,11 +143,11 @@ func (msg *OpMsg) check() error {
 				return lazyerrors.Error(err)
 			}
 
-			if AllowNaN {
+			if !CheckNaNs {
 				continue
 			}
 
-			if err = validateNaN(doc); err != nil {
+			if err = checkNaN(doc); err != nil {
 				return err
 			}
 		}
@@ -253,7 +253,7 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 		return lazyerrors.Error(err)
 	}
 
-	if debugbuild || !AllowNaN {
+	if debugbuild || CheckNaNs {
 		if err := msg.check(); err != nil {
 			return lazyerrors.Error(err)
 		}

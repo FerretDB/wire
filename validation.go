@@ -22,15 +22,12 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// ErrNaN indicates float64 NaN is encountered.
-var ErrNaN = errors.New("NaN is not supported")
-
-// validateNaN returns error if float64 NaN is encountered.
-func validateNaN(v any) error {
+// checkNaN returns error if float64 NaN is encountered.
+func checkNaN(v any) error {
 	switch v := v.(type) {
 	case *wirebson.Document:
 		for _, f := range v.FieldNames() {
-			if err := validateNaN(v.Get(f)); err != nil {
+			if err := checkNaN(v.Get(f)); err != nil {
 				return err
 			}
 		}
@@ -41,11 +38,11 @@ func validateNaN(v any) error {
 			return lazyerrors.Error(err)
 		}
 
-		return validateNaN(doc)
+		return checkNaN(doc)
 
 	case *wirebson.Array:
 		for i := range v.Len() {
-			if err := validateNaN(v.Get(i)); err != nil {
+			if err := checkNaN(v.Get(i)); err != nil {
 				return err
 			}
 		}
@@ -56,11 +53,11 @@ func validateNaN(v any) error {
 			return lazyerrors.Error(err)
 		}
 
-		return validateNaN(arr)
+		return checkNaN(arr)
 
 	case float64:
 		if math.IsNaN(v) {
-			return ErrNaN
+			return errors.New("NaN is not supported")
 		}
 	}
 
