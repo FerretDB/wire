@@ -21,7 +21,27 @@
 package wirebson
 
 import (
-	_ "iter"
+	"iter"
 )
 
-// TODO https://github.com/FerretDB/wire/issues/9
+// All returns an iterator over index value pairs of the array.
+func (arr *Array) All() iter.Seq2[int, any] {
+	return func(yield func(int, any) bool) {
+		for i, v := range arr.elements {
+			if !yield(i, v) {
+				return
+			}
+		}
+	}
+}
+
+// Values returns an iterator over values of the array.
+func (arr *Array) Values() iter.Seq[any] {
+	return func(yield func(any) bool) {
+		for _, v := range arr.elements {
+			if !yield(v) {
+				return
+			}
+		}
+	}
+}

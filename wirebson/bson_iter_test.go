@@ -21,7 +21,58 @@
 package wirebson
 
 import (
-	_ "iter"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-// TODO https://github.com/FerretDB/wire/issues/9
+func TestDocumentAll(t *testing.T) {
+	t.Parallel()
+
+	doc := MustDocument(
+		"foo", int32(1),
+		"bar", int32(2),
+		"baz", int64(3),
+	)
+
+	var ks []string
+	var vs []any
+
+	for k, v := range doc.All() {
+		ks = append(ks, k)
+		vs = append(vs, v)
+	}
+
+	require.Equal(t, []string{"foo", "bar", "baz"}, ks)
+	require.Equal(t, []any{int32(1), int32(2), int64(3)}, vs)
+}
+
+func TestArrayAll(t *testing.T) {
+	t.Parallel()
+
+	arr := MustArray("foo", int32(1), "bar", int32(2))
+
+	var is []int
+	var vs []any
+
+	for i, v := range arr.All() {
+		is = append(is, i)
+		vs = append(vs, v)
+	}
+
+	require.Equal(t, []int{0, 1, 2, 3}, is)
+	require.Equal(t, []any{"foo", int32(1), "bar", int32(2)}, vs)
+}
+
+func TestArrayValues(t *testing.T) {
+	t.Parallel()
+
+	arr := MustArray("foo", int32(1), "bar", int32(2))
+
+	var vs []any
+	for v := range arr.Values() {
+		vs = append(vs, v)
+	}
+
+	require.Equal(t, []any{"foo", int32(1), "bar", int32(2)}, vs)
+}
