@@ -23,9 +23,12 @@ import (
 	"net"
 	"net/url"
 	"sync/atomic"
+	"time"
+
+	"github.com/xdg-go/scram"
 
 	"github.com/FerretDB/wire"
-	"github.com/FerretDB/wire/internal/util/lazyerrors"
+	"github.com/FerretDB/wire/wirebson"
 )
 
 // nextRequestID stores the last generated request ID.
@@ -62,19 +65,23 @@ func New(c net.Conn, l *slog.Logger) *Conn {
 func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
-		return nil, lazyerrors.Error(err)
+		return nil, fmt.Errorf("wireclient.Connect: %w", err)
 	}
 
 	if u.Scheme != "mongodb" {
-		return nil, lazyerrors.Errorf("invalid scheme %q", u.Scheme)
+		return nil, fmt.Errorf("wireclient.Connect: invalid scheme %q", u.Scheme)
 	}
 
 	if u.Opaque != "" {
-		return nil, lazyerrors.Errorf("invalid URI %q", uri)
+		return nil, fmt.Errorf("wireclient.Connect: invalid URI %q", uri)
+	}
+
+	if u.Path != "/" {
+		return nil, fmt.Errorf("wireclient.Connect: unsupported path %q", u.Path)
 	}
 
 	if _, _, err = net.SplitHostPort(u.Host); err != nil {
-		return nil, lazyerrors.Error(err)
+		return nil, fmt.Errorf("wireclient.Connect: %w", err)
 	}
 
 	for k := range u.Query() {
@@ -83,28 +90,51 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 			// safe to ignore
 
 		default:
-			return nil, lazyerrors.Errorf("query parameter %q is not supported", k)
+			return nil, fmt.Errorf("wireclient.Connect: query parameter %q is not supported", k)
 		}
 	}
 
-	l.DebugContext(ctx, "Connecting...", slog.String("uri", uri))
+	l.DebugContext(ctx, "Connecting", slog.String("uri", uri))
 
 	d := net.Dialer{}
 
 	c, err := d.DialContext(ctx, "tcp", u.Host)
 	if err != nil {
-		return nil, lazyerrors.Error(err)
+		return nil, fmt.Errorf("wireclient.Connect: %w", err)
 	}
 
 	return New(c, l), nil
 }
 
+// ConnectPing uses a combination of [Connect] and [Conn.Ping] to establish a working connection.
+//
+// nil is returned on context expiration.
+func ConnectPing(ctx context.Context, uri string, l *slog.Logger) *Conn {
+	for ctx.Err() == nil {
+		conn, err := Connect(ctx, uri, l)
+		if err != nil {
+			sleep(ctx, time.Second)
+			continue
+		}
+
+		if err = conn.Ping(ctx); err != nil {
+			_ = conn.Close()
+			sleep(ctx, time.Second)
+			continue
+		}
+
+		return conn
+	}
+
+	return nil
+}
+
 // Close closes the connection.
 func (c *Conn) Close() error {
-	c.l.Debug("Closing...")
+	c.l.Debug("Closing")
 
 	if err := c.c.Close(); err != nil {
-		return lazyerrors.Error(err)
+		return fmt.Errorf("wireclient.Conn.Close: %w", err)
 	}
 
 	return nil
@@ -119,7 +149,7 @@ func (c *Conn) Read(ctx context.Context) (*wire.MsgHeader, wire.MsgBody, error) 
 
 	header, body, err := wire.ReadMessage(c.r)
 	if err != nil {
-		return nil, nil, lazyerrors.Error(err)
+		return nil, nil, fmt.Errorf("wireclient.Conn.Read: %w", err)
 	}
 
 	c.l.DebugContext(
@@ -152,11 +182,11 @@ func (c *Conn) Write(ctx context.Context, header *wire.MsgHeader, body wire.MsgB
 	}
 
 	if err := wire.WriteMessage(c.w, header, body); err != nil {
-		return lazyerrors.Error(err)
+		return fmt.Errorf("wireclient.Conn.Write: %w", err)
 	}
 
 	if err := c.w.Flush(); err != nil {
-		return lazyerrors.Error(err)
+		return fmt.Errorf("wireclient.Conn.Write: %w", err)
 	}
 
 	return nil
@@ -172,11 +202,11 @@ func (c *Conn) WriteRaw(ctx context.Context, b []byte) error {
 	c.c.SetWriteDeadline(d)
 
 	if _, err := c.w.Write(b); err != nil {
-		return lazyerrors.Error(err)
+		return fmt.Errorf("wireclient.Conn.WriteRaw: %w", err)
 	}
 
 	if err := c.w.Flush(); err != nil {
-		return lazyerrors.Error(err)
+		return fmt.Errorf("wireclient.Conn.WriteRaw: %w", err)
 	}
 
 	return nil
@@ -192,7 +222,7 @@ func (c *Conn) WriteRaw(ctx context.Context, b []byte) error {
 func (c *Conn) Request(ctx context.Context, body wire.MsgBody) (*wire.MsgHeader, wire.MsgBody, error) {
 	b, err := body.MarshalBinary()
 	if err != nil {
-		return nil, nil, lazyerrors.Error(err)
+		return nil, nil, fmt.Errorf("wireclient.Conn.Request: %w", err)
 	}
 
 	header := &wire.MsgHeader{
@@ -206,25 +236,136 @@ func (c *Conn) Request(ctx context.Context, body wire.MsgBody) (*wire.MsgHeader,
 	case *wire.OpQuery:
 		header.OpCode = wire.OpCodeQuery
 	default:
-		return nil, nil, lazyerrors.Errorf("unsupported body type %T", body)
+		return nil, nil, fmt.Errorf("wireclient.Conn.Request:unsupported body type %T", body)
 	}
 
 	if err := c.Write(ctx, header, body); err != nil {
-		return nil, nil, lazyerrors.Error(err)
+		return nil, nil, fmt.Errorf("wireclient.Conn.Request: %w", err)
 	}
 
 	resHeader, resBody, err := c.Read(ctx)
 	if err != nil {
-		return nil, nil, lazyerrors.Error(err)
+		return nil, nil, fmt.Errorf("wireclient.Conn.Request: %w", err)
 	}
 
 	if resHeader.ResponseTo != header.RequestID {
 		err = fmt.Errorf(
-			"response's response_to=%d is not equal to request's request_id=%d",
+			"wireclient.Conn.Request: response's response_to=%d is not equal to request's request_id=%d",
 			resHeader.ResponseTo,
 			header.RequestID,
 		)
 	}
 
 	return resHeader, resBody, err
+}
+
+// Ping sends a ping command.
+// It returns error for unexpected server response or any other error.
+func (c *Conn) Ping(ctx context.Context) error {
+	cmd := wire.MustOpMsg("ping", int32(1), "$db", "test")
+
+	_, resBody, err := c.Request(ctx, cmd)
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
+	}
+
+	resRaw, err := resBody.(*wire.OpMsg).RawDocument()
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
+	}
+
+	res, err := resRaw.Decode()
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
+	}
+
+	if ok := res.Get("ok"); ok != 1.0 {
+		return fmt.Errorf("wireclient.Conn.Ping: failed (ok was %v)", ok)
+	}
+
+	return nil
+}
+
+// Login authenticates the connection with the given credentials.
+//
+// It should not be used to test various authentication scenarios.
+func (c *Conn) Login(ctx context.Context, username, password, authDB string) error {
+	s, err := scram.SHA256.NewClient(username, password, "")
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+	}
+
+	conv := s.NewConversation()
+
+	payload, err := conv.Step("")
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+	}
+
+	cmd := wirebson.MustDocument(
+		"saslStart", int32(1),
+		"mechanism", "SCRAM-SHA-256",
+		"payload", wirebson.Binary{B: []byte(payload)},
+		"$db", authDB,
+	)
+
+	for step := range 3 {
+		c.l.DebugContext(
+			ctx, "Login",
+			slog.Int("step", step), slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
+		)
+
+		body, err := wire.NewOpMsg(cmd)
+		if err != nil {
+			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		}
+
+		_, resBody, err := c.Request(ctx, body)
+		if err != nil {
+			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		}
+
+		resRaw, err := resBody.(*wire.OpMsg).RawDocument()
+		if err != nil {
+			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		}
+
+		res, err := resRaw.Decode()
+		if err != nil {
+			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		}
+
+		if ok := res.Get("ok"); ok != 1.0 {
+			return fmt.Errorf("wireclient.Conn.Login: %s failed (ok was %v)", cmd.Command(), ok)
+		}
+
+		if res.Get("done").(bool) {
+			if !conv.Valid() {
+				return fmt.Errorf("wireclient.Conn.Login: conversation is not valid")
+			}
+
+			return nil
+		}
+
+		payload, err = conv.Step(string(res.Get("payload").(wirebson.Binary).B))
+		if err != nil {
+			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		}
+
+		cmd = wirebson.MustDocument(
+			"saslContinue", int32(1),
+			"conversationId", int32(1),
+			"payload", wirebson.Binary{B: []byte(payload)},
+			"$db", authDB,
+		)
+	}
+
+	return fmt.Errorf("wireclient.Conn.Login: too many steps")
+}
+
+// sleep waits until the given duration is over or the context is canceled.
+func sleep(ctx context.Context, d time.Duration) {
+	ctx, cancel := context.WithTimeout(ctx, d)
+	defer cancel()
+	<-ctx.Done()
 }
