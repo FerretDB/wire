@@ -26,9 +26,8 @@ import (
 func checkNaN(v any) error {
 	switch v := v.(type) {
 	case *wirebson.Document:
-		for i := range v.FieldNames() {
+		for i := range v.Len() {
 			_, f := v.GetByIndex(i)
-
 			if err := checkNaN(f); err != nil {
 				return err
 			}
