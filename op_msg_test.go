@@ -253,7 +253,7 @@ var msgTestCases = []testCase{
 		err:       wirebson.ErrDecodeInvalidInput.Error(),
 	},
 	{
-		name: "NaN",
+		name: "NaN", // name is used in [TestMsg], changing it would fail the test
 		expectedB: []byte{
 			0x79, 0x00, 0x00, 0x00, // MessageLength
 			0x11, 0x00, 0x00, 0x00, // RequestID
@@ -625,8 +625,29 @@ var msgTestCases = []testCase{
 }
 
 func TestMsg(t *testing.T) {
-	t.Parallel()
-	testMessages(t, msgTestCases)
+	// do not run this test in parallel as it changes global variable [CheckNaNs]
+
+	t.Run("DoNotCheckNaNs", func(t *testing.T) {
+		testMessages(t, msgTestCases)
+	})
+
+	t.Run("CheckNaNs", func(t *testing.T) {
+		CheckNaNs = true
+		t.Cleanup(func() { CheckNaNs = false })
+
+		tcs := make([]testCase, len(msgTestCases))
+		copy(tcs, msgTestCases)
+
+		for i, tc := range msgTestCases {
+			if tc.name == "NaN" {
+				tcs[i].err = "NaN is not supported"
+
+				break
+			}
+		}
+
+		testMessages(t, tcs)
+	})
 }
 
 func FuzzMsg(f *testing.F) {
