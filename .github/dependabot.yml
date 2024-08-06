@@ -17,6 +17,19 @@ updates:
       day: "wednesday"
       time: "01:42"
 
+  - package-ecosystem: "docker"
+    directory: "/.dev"
+    labels: ["deps", "not ready"]
+    assignees: [AlekSi]
+    open-pull-requests-limit: 20
+    groups:
+      docker:
+        patterns: ["*"]
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "01:42"
+
   - package-ecosystem: "gomod"
     directory: "/"
     labels: ["deps", "not ready"]
