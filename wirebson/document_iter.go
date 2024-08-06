@@ -24,7 +24,7 @@ import (
 	"iter"
 )
 
-// All returns a Seq2 that yields all field name value pairs of the document.
+// All returns an iterator over all field name value pairs of the document.
 func (doc *Document) All() iter.Seq2[string, any] {
 	return func(yield func(string, any) bool) {
 		for _, f := range doc.fields {

@@ -24,7 +24,7 @@ import (
 	"iter"
 )
 
-// All returns a Seq that yields all elements of the array.
+// All returns an iterator over all elements of the array.
 func (arr *Array) All() iter.Seq[any] {
 	return func(yield func(any) bool) {
 		for _, v := range arr.elements {

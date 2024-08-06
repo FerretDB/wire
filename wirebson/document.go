@@ -120,8 +120,8 @@ func (doc *Document) FieldNames() []string {
 // To get other fields, a for/range loop can be used with [Document.Len] and [Document.GetByIndex].
 // Or iterators.
 func (doc *Document) Get(name string) any {
-	for k, v := range doc.All() {
-		if name == k {
+	for f, v := range doc.All() {
+		if name == f {
 			return v
 		}
 	}
