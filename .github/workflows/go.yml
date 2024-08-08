@@ -38,6 +38,11 @@ jobs:
 
     if: github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'not ready')
 
+    strategy:
+      fail-fast: false
+      matrix:
+        dockerfile: [ferretdb, mongo]
+
     steps:
       # TODO https://github.com/FerretDB/github-actions/issues/211
       - name: Checkout code
@@ -63,6 +68,8 @@ jobs:
 
       - name: Start development environment
         run: bin/task env-up-detach
+        env:
+          DOCKERFILE: ${{ matrix.dockerfile }}
 
       - name: Run all tests
         run: bin/task test

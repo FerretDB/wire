@@ -5,9 +5,11 @@ services:
   mongodb:
     build:
       context: .
-      dockerfile: mongo.Dockerfile
+      dockerfile: ${DOCKERFILE:-mongo}.Dockerfile
     ports:
       - 27017:27017
     environment:
       - MONGO_INITDB_ROOT_USERNAME=username
       - MONGO_INITDB_ROOT_PASSWORD=password
+      - FERRETDB_SETUP_USERNAME=username
+      - FERRETDB_SETUP_PASSWORD=password
