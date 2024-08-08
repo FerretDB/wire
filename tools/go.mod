@@ -7,9 +7,9 @@ toolchain go1.22.5
 require (
 	github.com/go-task/task/v3 v3.38.0
 	github.com/quasilyte/go-consistent v0.6.1
-	golang.org/x/perf v0.0.0-20240716160700-783bcb78a185
-	golang.org/x/pkgsite v0.0.0-20240716182356-3166cf6ec5e3
-	golang.org/x/tools v0.23.0
+	golang.org/x/perf v0.0.0-20240806191124-3f62151e343c
+	golang.org/x/pkgsite v0.0.0-20240806212006-da7af58eca47
+	golang.org/x/tools v0.24.0
 	golang.org/x/vuln v1.1.3
 	mvdan.cc/gofumpt v0.6.0
 )
@@ -44,13 +44,13 @@ require (
 	github.com/sajari/fuzzy v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
-	golang.org/x/mod v0.19.0 // indirect
-	golang.org/x/net v0.27.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/mod v0.20.0 // indirect
+	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/telemetry v0.0.0-20240522233618-39ace7a40ae7 // indirect
-	golang.org/x/term v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/term v0.23.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	mvdan.cc/sh/v3 v3.8.0 // indirect
 	rsc.io/markdown v0.0.0-20231214224604-88bb533a6020 // indirect
