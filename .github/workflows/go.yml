@@ -27,13 +27,13 @@ env:
 
 jobs:
   test:
-    name: Test
+    name: Test ${{ matrix.dockerfile }}
     runs-on: ubuntu-22.04
     timeout-minutes: 15
 
     # Do not run this job in parallel for any PR change or branch push.
     concurrency:
-      group: ${{ github.workflow }}-test-${{ github.head_ref || github.ref_name }}
+      group: ${{ github.workflow }}-test-${{ matrix.dockerfile }}-${{ github.head_ref || github.ref_name }}
       cancel-in-progress: true
 
     if: github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'not ready')
