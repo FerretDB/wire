@@ -1,2 +1,3 @@
-bin/
+/bin/
+/.dev/db/
 *.txt
