@@ -69,6 +69,13 @@ tasks:
     env:
       MONGODB_URI: mongodb://localhost:27017/
 
+  bench:
+    desc: "Run benchmarks"
+    cmds:
+      - go test -list='Benchmark.*' ./...
+      - go test -count=10 -bench=BenchmarkDocument -benchtime=1s ./wirebson | tee -a new.txt
+      - bin/benchstat{{exeExt}} old.txt new.txt
+
   fuzz:
     desc: "Fuzz for about 1 minute (with default FUZZ_TIME)"
     cmds:

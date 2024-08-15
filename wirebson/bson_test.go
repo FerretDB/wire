@@ -595,54 +595,52 @@ var decodeTestCases = []decodeTestCase{
 func TestNormal(t *testing.T) {
 	for _, tc := range normalTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Run("bson", func(t *testing.T) {
-				t.Run("FindRaw", func(t *testing.T) {
-					ls := tc.raw.LogValue().Resolve().String()
-					assert.NotContains(t, ls, "panicked")
-					assert.NotContains(t, ls, "called too many times")
+			t.Run("FindRaw", func(t *testing.T) {
+				ls := tc.raw.LogValue().Resolve().String()
+				assert.NotContains(t, ls, "panicked")
+				assert.NotContains(t, ls, "called too many times")
 
-					assert.NotEmpty(t, LogMessage(tc.raw))
-					assert.NotEmpty(t, LogMessageBlock(tc.raw))
-					assert.NotEmpty(t, LogMessageFlow(tc.raw))
+				assert.NotEmpty(t, LogMessage(tc.raw))
+				assert.NotEmpty(t, LogMessageBlock(tc.raw))
+				assert.NotEmpty(t, LogMessageFlow(tc.raw))
 
-					l, err := FindRaw(tc.raw)
-					require.NoError(t, err)
-					require.Len(t, tc.raw, l)
-				})
+				l, err := FindRaw(tc.raw)
+				require.NoError(t, err)
+				require.Len(t, tc.raw, l)
+			})
 
-				t.Run("DecodeEncode", func(t *testing.T) {
-					doc, err := tc.raw.Decode()
-					require.NoError(t, err)
+			t.Run("DecodeEncode", func(t *testing.T) {
+				doc, err := tc.raw.Decode()
+				require.NoError(t, err)
 
-					ls := doc.LogValue().Resolve().String()
-					assert.NotContains(t, ls, "panicked")
-					assert.NotContains(t, ls, "called too many times")
+				ls := doc.LogValue().Resolve().String()
+				assert.NotContains(t, ls, "panicked")
+				assert.NotContains(t, ls, "called too many times")
 
-					assert.NotEmpty(t, LogMessage(doc))
-					assert.NotEmpty(t, LogMessageBlock(doc))
-					assert.NotEmpty(t, LogMessageFlow(doc))
+				assert.NotEmpty(t, LogMessage(doc))
+				assert.NotEmpty(t, LogMessageBlock(doc))
+				assert.NotEmpty(t, LogMessageFlow(doc))
 
-					raw, err := doc.Encode()
-					require.NoError(t, err)
-					assert.Equal(t, tc.raw, raw)
-				})
+				raw, err := doc.Encode()
+				require.NoError(t, err)
+				assert.Equal(t, tc.raw, raw)
+			})
 
-				t.Run("DecodeDeepEncode", func(t *testing.T) {
-					doc, err := tc.raw.DecodeDeep()
-					require.NoError(t, err)
+			t.Run("DecodeDeepEncode", func(t *testing.T) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(t, err)
 
-					ls := doc.LogValue().Resolve().String()
-					assert.NotContains(t, ls, "panicked")
-					assert.NotContains(t, ls, "called too many times")
+				ls := doc.LogValue().Resolve().String()
+				assert.NotContains(t, ls, "panicked")
+				assert.NotContains(t, ls, "called too many times")
 
-					assert.Equal(t, testutil.Unindent(tc.m), LogMessage(doc))
-					assert.NotEmpty(t, LogMessageBlock(doc))
-					assert.NotEmpty(t, LogMessageFlow(doc))
+				assert.Equal(t, testutil.Unindent(tc.m), LogMessage(doc))
+				assert.NotEmpty(t, LogMessageBlock(doc))
+				assert.NotEmpty(t, LogMessageFlow(doc))
 
-					raw, err := doc.Encode()
-					require.NoError(t, err)
-					assert.Equal(t, tc.raw, raw)
-				})
+				raw, err := doc.Encode()
+				require.NoError(t, err)
+				assert.Equal(t, tc.raw, raw)
 			})
 		})
 	}
@@ -657,42 +655,40 @@ func TestDecode(t *testing.T) {
 		require.NotNil(t, tc.decodeDeepErr, "invalid test case %q", tc.name)
 
 		t.Run(tc.name, func(t *testing.T) {
-			t.Run("bson", func(t *testing.T) {
-				t.Run("FindRaw", func(t *testing.T) {
-					ls := tc.raw.LogValue().Resolve().String()
-					assert.NotContains(t, ls, "panicked")
-					assert.NotContains(t, ls, "called too many times")
+			t.Run("FindRaw", func(t *testing.T) {
+				ls := tc.raw.LogValue().Resolve().String()
+				assert.NotContains(t, ls, "panicked")
+				assert.NotContains(t, ls, "called too many times")
 
-					assert.NotEmpty(t, LogMessage(tc.raw))
-					assert.NotEmpty(t, LogMessageBlock(tc.raw))
-					assert.NotEmpty(t, LogMessageFlow(tc.raw))
+				assert.NotEmpty(t, LogMessage(tc.raw))
+				assert.NotEmpty(t, LogMessageBlock(tc.raw))
+				assert.NotEmpty(t, LogMessageFlow(tc.raw))
 
-					l, err := FindRaw(tc.raw)
+				l, err := FindRaw(tc.raw)
 
-					if tc.findRawErr != nil {
-						require.ErrorIs(t, err, tc.findRawErr)
-						return
-					}
+				if tc.findRawErr != nil {
+					require.ErrorIs(t, err, tc.findRawErr)
+					return
+				}
 
-					require.NoError(t, err)
-					require.Equal(t, tc.findRawL, l)
-				})
+				require.NoError(t, err)
+				require.Equal(t, tc.findRawL, l)
+			})
 
-				t.Run("Decode", func(t *testing.T) {
-					_, err := tc.raw.Decode()
+			t.Run("Decode", func(t *testing.T) {
+				_, err := tc.raw.Decode()
 
-					if tc.decodeErr != nil {
-						require.ErrorIs(t, err, tc.decodeErr)
-						return
-					}
+				if tc.decodeErr != nil {
+					require.ErrorIs(t, err, tc.decodeErr)
+					return
+				}
 
-					require.NoError(t, err)
-				})
+				require.NoError(t, err)
+			})
 
-				t.Run("DecodeDeep", func(t *testing.T) {
-					_, err := tc.raw.DecodeDeep()
-					require.ErrorIs(t, err, tc.decodeDeepErr)
-				})
+			t.Run("DecodeDeep", func(t *testing.T) {
+				_, err := tc.raw.DecodeDeep()
+				require.ErrorIs(t, err, tc.decodeDeepErr)
 			})
 		})
 	}
@@ -701,103 +697,101 @@ func TestDecode(t *testing.T) {
 func BenchmarkDocument(b *testing.B) {
 	for _, tc := range normalTestCases {
 		b.Run(tc.name, func(b *testing.B) {
-			b.Run("bson", func(b *testing.B) {
-				var doc *Document
-				var raw []byte
-				var m string
-				var err error
+			var doc *Document
+			var raw []byte
+			var m string
+			var err error
 
-				b.Run("Decode", func(b *testing.B) {
-					b.ReportAllocs()
+			b.Run("Decode", func(b *testing.B) {
+				b.ReportAllocs()
 
-					for range b.N {
-						doc, err = tc.raw.Decode()
-					}
-
-					b.StopTimer()
-
-					require.NoError(b, err)
-					require.NotNil(b, doc)
-				})
-
-				b.Run("Encode", func(b *testing.B) {
+				for range b.N {
 					doc, err = tc.raw.Decode()
-					require.NoError(b, err)
+				}
 
-					b.ReportAllocs()
-					b.ResetTimer()
+				b.StopTimer()
 
-					for range b.N {
-						raw, err = doc.Encode()
-					}
+				require.NoError(b, err)
+				require.NotNil(b, doc)
+			})
 
-					b.StopTimer()
+			b.Run("Encode", func(b *testing.B) {
+				doc, err = tc.raw.Decode()
+				require.NoError(b, err)
 
-					require.NoError(b, err)
-					assert.NotNil(b, raw)
-				})
+				b.ReportAllocs()
+				b.ResetTimer()
 
-				b.Run("LogMessage", func(b *testing.B) {
-					doc, err = tc.raw.Decode()
-					require.NoError(b, err)
+				for range b.N {
+					raw, err = doc.Encode()
+				}
 
-					b.ReportAllocs()
-					b.ResetTimer()
+				b.StopTimer()
 
-					for range b.N {
-						m = LogMessage(doc)
-					}
+				require.NoError(b, err)
+				assert.NotNil(b, raw)
+			})
 
-					b.StopTimer()
+			b.Run("LogMessage", func(b *testing.B) {
+				doc, err = tc.raw.Decode()
+				require.NoError(b, err)
 
-					assert.NotEmpty(b, m)
-				})
+				b.ReportAllocs()
+				b.ResetTimer()
 
-				b.Run("DecodeDeep", func(b *testing.B) {
-					b.ReportAllocs()
+				for range b.N {
+					m = LogMessage(doc)
+				}
 
-					for range b.N {
-						doc, err = tc.raw.DecodeDeep()
-					}
+				b.StopTimer()
 
-					b.StopTimer()
+				assert.NotEmpty(b, m)
+			})
 
-					require.NoError(b, err)
-					require.NotNil(b, doc)
-				})
+			b.Run("DecodeDeep", func(b *testing.B) {
+				b.ReportAllocs()
 
-				b.Run("EncodeDeep", func(b *testing.B) {
+				for range b.N {
 					doc, err = tc.raw.DecodeDeep()
-					require.NoError(b, err)
+				}
 
-					b.ReportAllocs()
-					b.ResetTimer()
+				b.StopTimer()
 
-					for range b.N {
-						raw, err = doc.Encode()
-					}
+				require.NoError(b, err)
+				require.NotNil(b, doc)
+			})
 
-					b.StopTimer()
+			b.Run("EncodeDeep", func(b *testing.B) {
+				doc, err = tc.raw.DecodeDeep()
+				require.NoError(b, err)
 
-					require.NoError(b, err)
-					assert.NotNil(b, raw)
-				})
+				b.ReportAllocs()
+				b.ResetTimer()
 
-				b.Run("LogMessageDeep", func(b *testing.B) {
-					doc, err = tc.raw.DecodeDeep()
-					require.NoError(b, err)
+				for range b.N {
+					raw, err = doc.Encode()
+				}
 
-					b.ReportAllocs()
-					b.ResetTimer()
+				b.StopTimer()
 
-					for range b.N {
-						m = LogMessage(doc)
-					}
+				require.NoError(b, err)
+				assert.NotNil(b, raw)
+			})
 
-					b.StopTimer()
+			b.Run("LogMessageDeep", func(b *testing.B) {
+				doc, err = tc.raw.DecodeDeep()
+				require.NoError(b, err)
 
-					assert.NotEmpty(b, m)
-				})
+				b.ReportAllocs()
+				b.ResetTimer()
+
+				for range b.N {
+					m = LogMessage(doc)
+				}
+
+				b.StopTimer()
+
+				assert.NotEmpty(b, m)
 			})
 		})
 	}
@@ -808,60 +802,58 @@ func BenchmarkDocument(b *testing.B) {
 func testRawDocument(t *testing.T, rawDoc RawDocument) {
 	t.Helper()
 
-	t.Run("bson", func(t *testing.T) {
-		t.Run("FindRaw", func(t *testing.T) {
-			ls := rawDoc.LogValue().Resolve().String()
-			assert.NotContains(t, ls, "panicked")
-			assert.NotContains(t, ls, "called too many times")
+	t.Run("FindRaw", func(t *testing.T) {
+		ls := rawDoc.LogValue().Resolve().String()
+		assert.NotContains(t, ls, "panicked")
+		assert.NotContains(t, ls, "called too many times")
 
-			assert.NotEmpty(t, LogMessage(rawDoc))
-			assert.NotEmpty(t, LogMessageBlock(rawDoc))
-			assert.NotEmpty(t, LogMessageFlow(rawDoc))
+		assert.NotEmpty(t, LogMessage(rawDoc))
+		assert.NotEmpty(t, LogMessageBlock(rawDoc))
+		assert.NotEmpty(t, LogMessageFlow(rawDoc))
 
-			_, _ = FindRaw(rawDoc)
-		})
+		_, _ = FindRaw(rawDoc)
+	})
 
-		t.Run("DecodeEncode", func(t *testing.T) {
-			doc, err := rawDoc.Decode()
-			if err != nil {
-				_, err = rawDoc.DecodeDeep()
-				assert.Error(t, err) // it might be different
+	t.Run("DecodeEncode", func(t *testing.T) {
+		doc, err := rawDoc.Decode()
+		if err != nil {
+			_, err = rawDoc.DecodeDeep()
+			assert.Error(t, err) // it might be different
 
-				return
-			}
+			return
+		}
 
-			ls := doc.LogValue().Resolve().String()
-			assert.NotContains(t, ls, "panicked")
-			assert.NotContains(t, ls, "called too many times")
+		ls := doc.LogValue().Resolve().String()
+		assert.NotContains(t, ls, "panicked")
+		assert.NotContains(t, ls, "called too many times")
 
-			assert.NotEmpty(t, LogMessage(doc))
-			assert.NotEmpty(t, LogMessageBlock(doc))
-			assert.NotEmpty(t, LogMessageFlow(doc))
+		assert.NotEmpty(t, LogMessage(doc))
+		assert.NotEmpty(t, LogMessageBlock(doc))
+		assert.NotEmpty(t, LogMessageFlow(doc))
 
-			raw, err := doc.Encode()
-			if err == nil {
-				assert.Equal(t, rawDoc, raw)
-			}
-		})
-
-		t.Run("DecodeDeepEncode", func(t *testing.T) {
-			doc, err := rawDoc.DecodeDeep()
-			if err != nil {
-				return
-			}
-
-			ls := doc.LogValue().Resolve().String()
-			assert.NotContains(t, ls, "panicked")
-			assert.NotContains(t, ls, "called too many times")
-
-			assert.NotEmpty(t, LogMessage(doc))
-			assert.NotEmpty(t, LogMessageBlock(doc))
-			assert.NotEmpty(t, LogMessageFlow(doc))
-
-			raw, err := doc.Encode()
-			require.NoError(t, err)
+		raw, err := doc.Encode()
+		if err == nil {
 			assert.Equal(t, rawDoc, raw)
-		})
+		}
+	})
+
+	t.Run("DecodeDeepEncode", func(t *testing.T) {
+		doc, err := rawDoc.DecodeDeep()
+		if err != nil {
+			return
+		}
+
+		ls := doc.LogValue().Resolve().String()
+		assert.NotContains(t, ls, "panicked")
+		assert.NotContains(t, ls, "called too many times")
+
+		assert.NotEmpty(t, LogMessage(doc))
+		assert.NotEmpty(t, LogMessageBlock(doc))
+		assert.NotEmpty(t, LogMessageFlow(doc))
+
+		raw, err := doc.Encode()
+		require.NoError(t, err)
+		assert.Equal(t, rawDoc, raw)
 	})
 }
 
