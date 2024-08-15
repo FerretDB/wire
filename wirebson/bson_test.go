@@ -732,6 +732,24 @@ func BenchmarkDocument(b *testing.B) {
 				assert.NotNil(b, raw)
 			})
 
+			b.Run("LogValue", func(b *testing.B) {
+				doc, err = tc.raw.Decode()
+				require.NoError(b, err)
+
+				b.ReportAllocs()
+				b.ResetTimer()
+
+				for range b.N {
+					m = doc.LogValue().Resolve().String()
+				}
+
+				b.StopTimer()
+
+				assert.NotEmpty(b, m)
+				assert.NotContains(b, m, "panicked")
+				assert.NotContains(b, m, "called too many times")
+			})
+
 			b.Run("LogMessage", func(b *testing.B) {
 				doc, err = tc.raw.Decode()
 				require.NoError(b, err)
@@ -776,6 +794,24 @@ func BenchmarkDocument(b *testing.B) {
 
 				require.NoError(b, err)
 				assert.NotNil(b, raw)
+			})
+
+			b.Run("LogValueDeep", func(b *testing.B) {
+				doc, err = tc.raw.DecodeDeep()
+				require.NoError(b, err)
+
+				b.ReportAllocs()
+				b.ResetTimer()
+
+				for range b.N {
+					m = doc.LogValue().Resolve().String()
+				}
+
+				b.StopTimer()
+
+				assert.NotEmpty(b, m)
+				assert.NotContains(b, m, "panicked")
+				assert.NotContains(b, m, "called too many times")
 			})
 
 			b.Run("LogMessageDeep", func(b *testing.B) {

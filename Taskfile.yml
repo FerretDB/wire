@@ -6,6 +6,7 @@ env:
   GOCOVERDIR: tmp/cover
 
 vars:
+  BENCH_TIME: 1s
   FUZZ_TIME: 15s
 
 tasks:
@@ -73,7 +74,7 @@ tasks:
     desc: "Run benchmarks"
     cmds:
       - go test -list='Benchmark.*' ./...
-      - go test -count=10 -bench=BenchmarkDocument -benchtime=1s ./wirebson | tee -a new.txt
+      - go test -count=10 -bench=BenchmarkDocument -benchtime={{.BENCH_TIME}} ./wirebson | tee -a new.txt
       - bin/benchstat{{exeExt}} old.txt new.txt
 
   fuzz:
