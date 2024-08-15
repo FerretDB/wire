@@ -58,6 +58,13 @@ tasks:
     cmds:
       - bin/gofumpt -w .
 
+  lint:
+    desc: "Run linters"
+    cmds:
+      - bin/govulncheck -test -show=verbose,color ./...
+      - bin/go-consistent -pedantic . ./wirebson ./wireclient ./internal/...
+      - bin/golangci-lint run --config=.golangci.yml
+
   test-short:
     desc: "Run short tests"
     cmds:
@@ -75,7 +82,7 @@ tasks:
     cmds:
       - go test -list='Benchmark.*' ./...
       - go test -count=10 -bench=BenchmarkDocument -benchtime={{.BENCH_TIME}} ./wirebson | tee -a new.txt
-      - bin/benchstat{{exeExt}} old.txt new.txt
+      - bin/benchstat old.txt new.txt
 
   fuzz:
     desc: "Fuzz for about 1 minute (with default FUZZ_TIME)"
@@ -89,4 +96,4 @@ tasks:
   godocs:
     desc: "Serve Go code documentation"
     cmds:
-      - bin/pkgsite{{exeExt}} -http=127.0.0.1:6060 -open
+      - bin/pkgsite -http=127.0.0.1:6060 -open

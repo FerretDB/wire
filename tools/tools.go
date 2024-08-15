@@ -16,6 +16,7 @@ package tools
 
 import (
 	_ "github.com/go-task/task/v3/cmd/task"
+	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 	_ "github.com/quasilyte/go-consistent"
 	_ "golang.org/x/perf/cmd/benchstat"
 	_ "golang.org/x/pkgsite/cmd/pkgsite"
@@ -27,6 +28,7 @@ import (
 )
 
 //go:generate go build -v -o ../bin/ github.com/go-task/task/v3/cmd/task
+//go:generate go build -v -o ../bin/ github.com/golangci/golangci-lint/cmd/golangci-lint
 //go:generate go build -v -o ../bin/ github.com/quasilyte/go-consistent
 //go:generate go build -v -o ../bin/ golang.org/x/perf/cmd/benchstat
 //go:generate go build -v -o ../bin/ golang.org/x/pkgsite/cmd/pkgsite
