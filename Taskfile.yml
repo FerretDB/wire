@@ -48,13 +48,13 @@ tasks:
       - docker compose --file=.dev/docker-compose.yml --project-name=wire down --remove-orphans --volumes
 
   gen:
-    desc: "Generate and format"
+    desc: "Run code generators (and formatters)"
     cmds:
       - go generate -x ./...
       - task: fmt
 
   fmt:
-    desc: "Format"
+    desc: "Run code formatters"
     cmds:
       - bin/gofumpt -w .
 
@@ -85,7 +85,7 @@ tasks:
       - bin/benchstat old.txt new.txt
 
   fuzz:
-    desc: "Fuzz for about 1 minute (with default FUZZ_TIME)"
+    desc: "Run fuzzers for about 1 minute (with default FUZZ_TIME)"
     cmds:
       - go test -list='Fuzz.*' ./...
       - go test -run=XXX -fuzz=FuzzDocument -fuzztime={{.FUZZ_TIME}} ./wirebson
