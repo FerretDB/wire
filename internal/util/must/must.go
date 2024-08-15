@@ -15,7 +15,9 @@
 // Package must provides helper functions that panic on error.
 package must
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // NoError panics if the error is not nil.
 //

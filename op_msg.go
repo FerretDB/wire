@@ -216,8 +216,8 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 					return lazyerrors.Errorf("len(b) = %d, offset = %d", len(b), offset)
 				}
 
-				l, err := wirebson.FindRaw(b[offset:])
-				if err != nil {
+				var l int
+				if l, err = wirebson.FindRaw(b[offset:]); err != nil {
 					return lazyerrors.Error(err)
 				}
 

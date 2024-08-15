@@ -14,7 +14,9 @@
 
 package lazyerrors
 
-import "runtime"
+import (
+	"runtime"
+)
 
 func pc() uintptr {
 	pc := make([]uintptr, 1)

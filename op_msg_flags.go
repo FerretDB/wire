@@ -14,7 +14,9 @@
 
 package wire
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // OpMsgFlagBit integer is a bitmask encoding flags that modify the format and behavior of OpMsg.
 type OpMsgFlagBit flagBit

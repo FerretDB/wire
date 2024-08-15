@@ -80,7 +80,7 @@ func (raw RawDocument) decode(mode decodeMode) (*Document, error) {
 	offset := 4
 
 	for {
-		if err := decodeCheckOffset(raw, offset, 1); err != nil {
+		if err = decodeCheckOffset(raw, offset, 1); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 
@@ -95,12 +95,12 @@ func (raw RawDocument) decode(mode decodeMode) (*Document, error) {
 
 		offset++
 
-		if err := decodeCheckOffset(raw, offset, 1); err != nil {
+		if err = decodeCheckOffset(raw, offset, 1); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 
-		name, err := DecodeCString(raw[offset:])
-		if err != nil {
+		var name string
+		if name, err = DecodeCString(raw[offset:]); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 

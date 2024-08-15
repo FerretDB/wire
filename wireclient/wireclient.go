@@ -239,7 +239,7 @@ func (c *Conn) Request(ctx context.Context, body wire.MsgBody) (*wire.MsgHeader,
 		return nil, nil, fmt.Errorf("wireclient.Conn.Request:unsupported body type %T", body)
 	}
 
-	if err := c.Write(ctx, header, body); err != nil {
+	if err = c.Write(ctx, header, body); err != nil {
 		return nil, nil, fmt.Errorf("wireclient.Conn.Request: %w", err)
 	}
 
@@ -315,8 +315,8 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			slog.Int("step", step), slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
 		)
 
-		body, err := wire.NewOpMsg(cmd)
-		if err != nil {
+		var body *wire.OpMsg
+		if body, err = wire.NewOpMsg(cmd); err != nil {
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 

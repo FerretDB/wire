@@ -45,7 +45,7 @@ func encodeField(buf *bytes.Buffer, name string, v any) error {
 			return lazyerrors.Error(err)
 		}
 
-		if _, err := buf.Write(b); err != nil {
+		if _, err = buf.Write(b); err != nil {
 			return lazyerrors.Error(err)
 		}
 
@@ -82,7 +82,7 @@ func encodeField(buf *bytes.Buffer, name string, v any) error {
 			return lazyerrors.Error(err)
 		}
 
-		if _, err := buf.Write(b); err != nil {
+		if _, err = buf.Write(b); err != nil {
 			return lazyerrors.Error(err)
 		}
 

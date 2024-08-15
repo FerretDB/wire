@@ -14,7 +14,9 @@
 
 package wire
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // OpReplyFlagBit is a bit vector to specify OP_REPLY flags.
 type OpReplyFlagBit flagBit

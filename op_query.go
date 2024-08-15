@@ -107,7 +107,7 @@ func (query *OpQuery) UnmarshalBinaryNocopy(b []byte) error {
 	}
 
 	if debugbuild {
-		if err := query.check(); err != nil {
+		if err = query.check(); err != nil {
 			return lazyerrors.Error(err)
 		}
 	}
