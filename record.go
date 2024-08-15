@@ -69,8 +69,8 @@ func LoadRecords(dir string, limit int) ([]Record, error) {
 	var res []Record
 
 	for _, file := range files {
-		r, err := loadRecordFile(file)
-		if err != nil {
+		var r []Record
+		if r, err = loadRecordFile(file); err != nil {
 			return nil, lazyerrors.Errorf("%s: %w", file, err)
 		}
 
@@ -94,8 +94,9 @@ func loadRecordFile(file string) ([]Record, error) {
 	var res []Record
 
 	for {
-		header, body, err := ReadMessage(r)
-		if errors.Is(err, ErrZeroRead) {
+		var header *MsgHeader
+		var body MsgBody
+		if header, body, err = ReadMessage(r); errors.Is(err, ErrZeroRead) {
 			break
 		}
 
@@ -105,13 +106,13 @@ func loadRecordFile(file string) ([]Record, error) {
 			break
 		}
 
-		headerB, err := header.MarshalBinary()
-		if err != nil {
+		var headerB []byte
+		if headerB, err = header.MarshalBinary(); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 
-		bodyB, err := body.MarshalBinary()
-		if err != nil {
+		var bodyB []byte
+		if bodyB, err = body.MarshalBinary(); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 

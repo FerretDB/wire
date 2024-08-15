@@ -14,7 +14,9 @@
 
 package bsonproto
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // SizeBool is a size of the encoding of bool in bytes.
 const SizeBool = 1

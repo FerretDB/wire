@@ -35,13 +35,11 @@ func (raw RawArray) Encode() (RawArray, error) {
 	return raw, nil
 }
 
-// Decode decodes a single BSON array that takes the whole not-nil byte slice.
+// Decode decodes a single non-nil BSON array that takes the whole non-nil byte slice.
 //
 // Only top-level elements are decoded;
 // nested documents and arrays are converted to RawDocument and RawArray respectively,
 // using raw's subslices without copying.
-//
-// Receiver must not be nil.
 func (raw RawArray) Decode() (*Array, error) {
 	must.BeTrue(raw != nil)
 
@@ -53,7 +51,7 @@ func (raw RawArray) Decode() (*Array, error) {
 	return res, nil
 }
 
-// DecodeDeep decodes a single valid BSON array that takes the whole not-nil byte slice.
+// DecodeDeep decodes a single non-nil BSON array that takes the whole non-nil byte slice.
 //
 // All nested documents and arrays are decoded recursively.
 //

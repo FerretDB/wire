@@ -131,16 +131,16 @@ func WriteMessage(w *bufio.Writer, header *MsgHeader, msg MsgBody) error {
 	}
 
 	if header.OpCode == OpCodeMsg {
-		if err := validateChecksum(header, b); err != nil {
+		if err = validateChecksum(header, b); err != nil {
 			return lazyerrors.Error(err)
 		}
 	}
 
-	if err := header.writeTo(w); err != nil {
+	if err = header.writeTo(w); err != nil {
 		return lazyerrors.Error(err)
 	}
 
-	if _, err := w.Write(b); err != nil {
+	if _, err = w.Write(b); err != nil {
 		return lazyerrors.Error(err)
 	}
 
@@ -184,12 +184,12 @@ func validateChecksum(header *MsgHeader, body []byte) error {
 	// https://datatracker.ietf.org/doc/html/rfc4960#appendix-B
 	hasher := crc32.New(crc32.MakeTable(crc32.Castagnoli))
 
-	if err := binary.Write(hasher, binary.LittleEndian, header); err != nil {
+	if err = binary.Write(hasher, binary.LittleEndian, header); err != nil {
 		return lazyerrors.Error(err)
 	}
 
 	offset := len(body) - crc32.Size
-	if err := binary.Write(hasher, binary.LittleEndian, body[:offset]); err != nil {
+	if err = binary.Write(hasher, binary.LittleEndian, body[:offset]); err != nil {
 		return lazyerrors.Error(err)
 	}
 

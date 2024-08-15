@@ -14,7 +14,9 @@
 
 package wire
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // OpQueryFlagBit an integer bitmask for the operation.
 type OpQueryFlagBit flagBit

@@ -22,9 +22,6 @@ env:
   GOTOOLCHAIN: local
   MONGODB_URI: mongodb://localhost:27017/
 
-  # TODO https://github.com/FerretDB/wire/issues/9
-  GOEXPERIMENT: rangefunc
-
 jobs:
   test:
     name: Test
@@ -55,7 +52,7 @@ jobs:
       - name: Init
         run: bin/task init
 
-      - name: Generate and format
+      - name: Run code generators (and formatters)
         run: bin/task gen
 
       - name: Run short tests
@@ -67,10 +64,39 @@ jobs:
       - name: Run all tests
         run: bin/task test
 
-      - name: Fuzz
-        run: bin/task fuzz
+      - name: Run linters
+        run: bin/task lint
 
       - name: Check dirty
         run: |
           git status
           git diff --exit-code
+
+  fuzz:
+    name: Fuzz
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    # Do not run this job in parallel for any PR change or branch push.
+    concurrency:
+      group: ${{ github.workflow }}-fuzz-${{ github.head_ref || github.ref_name }}
+      cancel-in-progress: true
+
+    if: github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'not ready')
+
+    steps:
+      # TODO https://github.com/FerretDB/github-actions/issues/211
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: FerretDB/github-actions/setup-go@main
+        with:
+          cache-key: fuzz
+
+      - name: Install Task and tools
+        run: go generate -x
+        working-directory: tools
+
+      - name: Run fuzzers
+        run: bin/task fuzz

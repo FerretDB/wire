@@ -13,10 +13,9 @@
 // limitations under the License.
 
 // We should remove the build tag below once we use 1.23 everywhere.
-// See https://pkg.go.dev/internal/goexperiment
 // TODO https://github.com/FerretDB/wire/issues/9
 
-//go:build goexperiment.rangefunc
+//go:build go1.23
 
 package wirebson
 

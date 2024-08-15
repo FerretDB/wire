@@ -1,0 +1,24 @@
+---
+run:
+  timeout: 3m
+
+# https://golangci-lint.run/usage/linters/
+linters-settings:
+  govet:
+    enable-all: true
+    settings:
+      shadow:
+        strict: true
+
+linters:
+  disable-all: true
+  enable:
+    # TODO https://github.com/FerretDB/wire/issues/4
+    - govet
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  exclude-use-default: false
+  exclude-rules: []

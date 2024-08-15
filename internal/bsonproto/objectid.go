@@ -14,7 +14,9 @@
 
 package bsonproto
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // ObjectID represents BSON scalar type ObjectID.
 type ObjectID [12]byte

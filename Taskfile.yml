@@ -6,6 +6,7 @@ env:
   GOCOVERDIR: tmp/cover
 
 vars:
+  BENCH_TIME: 1s
   FUZZ_TIME: 15s
 
 tasks:
@@ -47,15 +48,22 @@ tasks:
       - docker compose --file=.dev/docker-compose.yml --project-name=wire down --remove-orphans --volumes
 
   gen:
-    desc: "Generate and format"
+    desc: "Run code generators (and formatters)"
     cmds:
       - go generate -x ./...
       - task: fmt
 
   fmt:
-    desc: "Format"
+    desc: "Run code formatters"
     cmds:
       - bin/gofumpt -w .
+
+  lint:
+    desc: "Run linters"
+    cmds:
+      - bin/go-consistent -pedantic . ./wirebson ./wireclient ./internal/...
+      - bin/golangci-lint run --config=.golangci.yml
+      - bin/govulncheck -test -show=verbose,color ./...
 
   test-short:
     desc: "Run short tests"
@@ -69,8 +77,15 @@ tasks:
     env:
       MONGODB_URI: mongodb://localhost:27017/
 
+  bench:
+    desc: "Run benchmarks"
+    cmds:
+      - go test -list='Benchmark.*' ./...
+      - go test -count=10 -bench=BenchmarkDocument -benchtime={{.BENCH_TIME}} ./wirebson | tee -a new.txt
+      - bin/benchstat old.txt new.txt
+
   fuzz:
-    desc: "Fuzz for about 1 minute (with default FUZZ_TIME)"
+    desc: "Run fuzzers for about 1 minute (with default FUZZ_TIME)"
     cmds:
       - go test -list='Fuzz.*' ./...
       - go test -run=XXX -fuzz=FuzzDocument -fuzztime={{.FUZZ_TIME}} ./wirebson
@@ -81,4 +96,4 @@ tasks:
   godocs:
     desc: "Serve Go code documentation"
     cmds:
-      - bin/pkgsite{{exeExt}} -http=127.0.0.1:6060 -open
+      - bin/pkgsite -http=127.0.0.1:6060 -open

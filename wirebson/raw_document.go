@@ -34,13 +34,11 @@ func (raw RawDocument) Encode() (RawDocument, error) {
 	return raw, nil
 }
 
-// Decode decodes a single BSON document that takes the whole not-nil byte slice.
+// Decode decodes a single non-nil BSON document that takes the whole non-nil byte slice.
 //
 // Only top-level fields are decoded;
 // nested documents and arrays are converted to RawDocument and RawArray respectively,
 // using raw's subslices without copying.
-//
-// Receiver must not be nil.
 func (raw RawDocument) Decode() (*Document, error) {
 	must.BeTrue(raw != nil)
 
@@ -52,11 +50,9 @@ func (raw RawDocument) Decode() (*Document, error) {
 	return res, nil
 }
 
-// DecodeDeep decodes a single valid BSON document that takes the whole not-nil byte slice.
+// DecodeDeep decodes a single non-nil BSON document that takes the whole non-nil byte slice.
 //
 // All nested documents and arrays are decoded recursively.
-//
-// Receiver must not be nil.
 func (raw RawDocument) DecodeDeep() (*Document, error) {
 	must.BeTrue(raw != nil)
 
@@ -84,7 +80,7 @@ func (raw RawDocument) decode(mode decodeMode) (*Document, error) {
 	offset := 4
 
 	for {
-		if err := decodeCheckOffset(raw, offset, 1); err != nil {
+		if err = decodeCheckOffset(raw, offset, 1); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 
@@ -99,12 +95,12 @@ func (raw RawDocument) decode(mode decodeMode) (*Document, error) {
 
 		offset++
 
-		if err := decodeCheckOffset(raw, offset, 1); err != nil {
+		if err = decodeCheckOffset(raw, offset, 1); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 
-		name, err := DecodeCString(raw[offset:])
-		if err != nil {
+		var name string
+		if name, err = DecodeCString(raw[offset:]); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 

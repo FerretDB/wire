@@ -86,7 +86,7 @@ func (msg *MsgHeader) writeTo(w *bufio.Writer) error {
 		return lazyerrors.Error(err)
 	}
 
-	if _, err := w.Write(v); err != nil {
+	if _, err = w.Write(v); err != nil {
 		return lazyerrors.Error(err)
 	}
 

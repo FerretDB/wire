@@ -56,10 +56,10 @@ func slogValue(v any, depth int) slog.Value {
 			return slog.StringValue("Document<...>")
 		}
 
-		var attrs []slog.Attr
+		attrs := make([]slog.Attr, len(v.fields))
 
-		for _, f := range v.fields {
-			attrs = append(attrs, slog.Attr{Key: f.name, Value: slogValue(f.value, depth+1)})
+		for i, f := range v.fields {
+			attrs[i] = slog.Attr{Key: f.name, Value: slogValue(f.value, depth+1)}
 		}
 
 		return slog.GroupValue(attrs...)
@@ -80,10 +80,10 @@ func slogValue(v any, depth int) slog.Value {
 			return slog.StringValue("Array<...>")
 		}
 
-		var attrs []slog.Attr
+		attrs := make([]slog.Attr, len(v.elements))
 
 		for i, v := range v.elements {
-			attrs = append(attrs, slog.Attr{Key: strconv.Itoa(i), Value: slogValue(v, depth+1)})
+			attrs[i] = slog.Attr{Key: strconv.Itoa(i), Value: slogValue(v, depth+1)}
 		}
 
 		return slog.GroupValue(attrs...)
@@ -169,8 +169,7 @@ func LogMessageFlow(v any) string {
 // The result is optimized for large values such as full request documents.
 // All information is preserved.
 //
-// TODO https://github.com/FerretDB/FerretDB/issues/3759
-// That function should be benchmarked and optimized.
+// TODO https://github.com/FerretDB/wire/issues/23
 func logMessage(v any, maxFlowLength int, indent string, depth int) string {
 	switch v := v.(type) {
 	case *Document:
