@@ -106,13 +106,13 @@ func loadRecordFile(file string) ([]Record, error) {
 			break
 		}
 
-		headerB, err := header.MarshalBinary()
-		if err != nil {
+		var headerB []byte
+		if headerB, err = header.MarshalBinary(); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 
-		bodyB, err := body.MarshalBinary()
-		if err != nil {
+		var bodyB []byte
+		if bodyB, err = body.MarshalBinary(); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 

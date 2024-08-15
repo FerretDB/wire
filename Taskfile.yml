@@ -61,9 +61,9 @@ tasks:
   lint:
     desc: "Run linters"
     cmds:
-      - bin/govulncheck -test -show=verbose,color ./...
       - bin/go-consistent -pedantic . ./wirebson ./wireclient ./internal/...
       - bin/golangci-lint run --config=.golangci.yml
+      - bin/govulncheck -test -show=verbose,color ./...
 
   test-short:
     desc: "Run short tests"

@@ -320,18 +320,18 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
-		_, resBody, err := c.Request(ctx, body)
-		if err != nil {
+		var resBody wire.MsgBody
+		if _, resBody, err = c.Request(ctx, body); err != nil {
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
-		resRaw, err := resBody.(*wire.OpMsg).RawDocument()
-		if err != nil {
+		var resRaw wirebson.RawDocument
+		if resRaw, err = resBody.(*wire.OpMsg).RawDocument(); err != nil {
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
-		res, err := resRaw.Decode()
-		if err != nil {
+		var res *wirebson.Document
+		if res, err = resRaw.Decode(); err != nil {
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
