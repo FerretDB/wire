@@ -2,7 +2,7 @@ module github.com/FerretDB/wire
 
 go 1.22
 
-toolchain go1.22.5
+toolchain go1.22.6
 
 require (
 	github.com/stretchr/testify v1.9.0

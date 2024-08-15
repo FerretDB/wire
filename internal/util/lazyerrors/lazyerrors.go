@@ -18,6 +18,8 @@
 // If the chain is needed, don't forget to add links manually.
 package lazyerrors
 
+// TODO https://github.com/FerretDB/wire/issues/22
+
 import (
 	"errors"
 	"fmt"
