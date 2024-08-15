@@ -22,9 +22,6 @@ env:
   GOTOOLCHAIN: local
   MONGODB_URI: mongodb://localhost:27017/
 
-  # TODO https://github.com/FerretDB/wire/issues/9
-  GOEXPERIMENT: rangefunc
-
 jobs:
   test:
     name: Test
