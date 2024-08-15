@@ -16,6 +16,6 @@ services:
       - FERRETDB_SETUP_DATABASE=database
       - FERRETDB_TEST_ENABLE_NEW_AUTH=true
       - FERRETDB_HANDLER=sqlite
-      - FERRETDB_SQLITE_URL=file:/tmp/
+      - FERRETDB_SQLITE_URL=file:/db/
     volumes:
-      - ./tmp:/tmp
+      - ./db:/db
