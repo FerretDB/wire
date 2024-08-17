@@ -25,7 +25,7 @@ const SizeTime = 8
 
 // EncodeTime encodes [time.Time] value v into b.
 //
-// b must be at least 8 ([SizeTime]) byte long; otherwise, EncodeTime will panic.
+// "b" must be at least 8 ([SizeTime]) byte long; otherwise, EncodeTime will panic.
 // Only b[0:8] bytes are modified.
 func EncodeTime(b []byte, v time.Time) {
 	binary.LittleEndian.PutUint64(b, uint64(v.UnixMilli()))

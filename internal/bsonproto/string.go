@@ -26,7 +26,7 @@ func SizeString(v string) int {
 
 // EncodeString encodes string value v into b.
 //
-// b must be at least len(v)+5 ([SizeString]) bytes long; otherwise, EncodeString will panic.
+// "b" must be at least len(v)+5 ([SizeString]) bytes long; otherwise, EncodeString will panic.
 // Only b[0:len(v)+5] bytes are modified.
 func EncodeString(b []byte, v string) {
 	i := len(v) + 1

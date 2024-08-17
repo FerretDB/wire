@@ -1,24 +1,255 @@
 ---
+# Linters that should pass for all FerretDB and tools code.
+
 run:
   timeout: 3m
 
-# https://golangci-lint.run/usage/linters/
 linters-settings:
+  # asciicheck
+  depguard:
+    rules:
+      old-packages:
+        files:
+          - $all
+        deny:
+          - pkg: golang.org/x/net/context
+            desc: use `context` package instead
+          - pkg: golang.org/x/exp/slices
+            desc: use `slices` package instead
+          - pkg: maps
+            desc: use `golang.org/x/exp/maps` package instead
+          - pkg: github.com/jackc/pgconn
+            desc: use `github.com/jackc/pgx/v5/pgconn` package instead
+          - pkg: github.com/jackc/pgproto3
+            desc: use `github.com/jackc/pgx/v5/pgproto3` package instead
+          - pkg: github.com/jackc/pgtype
+            desc: use `github.com/jackc/pgx/v5/pgtype` package instead
+          - pkg: github.com/jackc/pgx$
+            desc: use `github.com/jackc/pgx/v5` package instead
+          - pkg: github.com/jackc/pgx/v4
+            desc: use `github.com/jackc/pgx/v5` package instead
+
+      wire-in-tools:
+        files:
+          - "**/tools/**/*.go"
+        deny:
+          - pkg: github.com/FerretDB/FerretDB/internal/
+            desc: tools should not import FerretDB code
+
+      types:
+        files:
+          - "**/internal/util/logging/*.go"
+        deny:
+          - pkg: github.com/FerretDB/FerretDB/internal/types
+      sjson:
+        files:
+          - $all
+          - "!**/internal/backends/sqlite/*.go"
+          - "!**/internal/backends/postgresql/*.go"
+          - "!**/internal/backends/postgresql/metadata/*.go"
+          - "!**/internal/backends/mysql/*.go"
+          - "!**/internal/backends/mysql/metadata/*.go"
+          - "!**/internal/backends/hana/*.go"
+        deny:
+          - pkg: github.com/FerretDB/FerretDB/internal/handler/sjson
+      common:
+        files:
+          - "**/internal/backends/**.go"
+          - "**/internal/clientconn/cursor/*.go"
+        deny:
+          - pkg: github.com/FerretDB/FerretDB/internal/handler/common
+      handlererrors:
+        files:
+          - $all
+          - "!**/internal/clientconn/*.go"
+          - "!**/internal/handler/**.go"
+        deny:
+          - pkg: github.com/FerretDB/FerretDB/internal/handler/handlererrors
+      backends:
+        files:
+          - "**/internal/clientconn/cursor/*.go"
+        deny:
+          - pkg: github.com/FerretDB/FerretDB/internal/backends
+  exhaustive:
+    default-signifies-exhaustive: false
+  forbidigo:
+    forbid:
+      - p: ^\Qpgxpool.Pool.AcquireFunc\E$
+        pkg: ^\Qgithub.com/jackc/pgx/v5/pgxpool\E$
+        msg: Use `Acquire` with `defer Release()` instead.
+
+      # integration tests use a different configuration file
+      - p: ^\Qbson.E\E$
+        pkg: ^\Qgo.mongodb.org/mongo-driver/bson\E$
+        msg: Use `*types.Document` or `*types.Array` instead.
+      - p: ^\Qprimitive.E\E$
+        pkg: ^\Qgo.mongodb.org/mongo-driver/bson/primitive\E$
+        msg: Use `*types.Document` or `*types.Array` instead.
+      - p: ^\Qbson.D\E$
+        pkg: ^\Qgo.mongodb.org/mongo-driver/bson\E$
+        msg: Use `*types.Document` instead.
+      - p: ^\Qprimitive.D\E$
+        pkg: ^\Qgo.mongodb.org/mongo-driver/bson/primitive\E$
+        msg: Use `*types.Document` instead.
+      - p: ^\Qbson.M\E$
+        pkg: ^\Qgo.mongodb.org/mongo-driver/bson\E$
+        msg: Use `*types.Document` instead.
+      - p: ^\Qprimitive.M\E$
+        pkg: ^\Qgo.mongodb.org/mongo-driver/bson/primitive\E$
+        msg: Use `*types.Document` instead.
+      - p: ^\Qbson.A\E$
+        pkg: ^\Qgo.mongodb.org/mongo-driver/bson\E$
+        msg: Use `*types.Array` instead.
+      - p: ^\Qprimitive.A\E$
+        pkg: ^\Qgo.mongodb.org/mongo-driver/bson/primitive\E$
+        msg: Use `*types.Array` instead.
+    exclude-godoc-examples: true
+    analyze-types: true
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/FerretDB/FerretDB)
+  goconst:
+    min-occurrences: 5
+    ignore-tests: true
+  godot:
+    scope: toplevel
+    exclude:
+      - check interfaces
+    capital: true
+  godox:
+    keywords:
+      - BUG
+      - FIXME
+      - HACK
+  goheader:
+    # Please do not update it, including bumping a year.
+    template: |-
+      Copyright 2021 FerretDB Inc.
+
+      Licensed under the Apache License, Version 2.0 (the "License");
+      you may not use this file except in compliance with the License.
+      You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+      Unless required by applicable law or agreed to in writing, software
+      distributed under the License is distributed on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+      See the License for the specific language governing permissions and
+      limitations under the License.
+  goimports:
+    local-prefixes: github.com/FerretDB/FerretDB
+  gomodguard:
+    blocked:
+      modules: []
+  gosimple:
+    checks: ["all"]
   govet:
     enable-all: true
-    settings:
-      shadow:
-        strict: true
+    disable:
+      - fieldalignment
+      - nilness
+      - shadow
+  importas:
+    no-unaliased: false
+    no-extra-aliases: true
+    alias:
+      - pkg: github.com/prometheus/client_model/go
+        alias: dto
+      - pkg: modernc.org/sqlite
+        alias: sqlite3
+      - pkg: modernc.org/sqlite/lib
+        alias: sqlite3lib
+      - pkg: go.opentelemetry.io/otel/attribute
+        alias: otelattribute
+      - pkg: go.opentelemetry.io/otel/codes
+        alias: otelcodes
+      - pkg: go.opentelemetry.io/otel/trace
+        alias: oteltrace
+      - pkg: go.opentelemetry.io/otel/sdk/resource
+        alias: otelsdkresource
+      - pkg: go.opentelemetry.io/otel/sdk/trace
+        alias: otelsdktrace
+      - pkg: go.opentelemetry.io/otel/semconv/v1.21.0
+        alias: otelsemconv
+      - pkg: github.com/FerretDB/FerretDB/internal/backends/mysql/metadata/pool
+        alias: mysqlpool
+  # ineffassign
+  lll:
+    line-length: 130
+    tab-width: 4
+  misspell:
+    ignore-words:
+      - guiness # present in the test dataset
+    extra-words: # https://go.dev/wiki/Spelling, https://github.com/golangci/misspell/issues/11
+      - typo: "iff"
+        correction: "if"
+      - typo: "cancelation"
+        correction: "cancellation"
+  nolintlint:
+    allow-unused: false
+    allow-no-explanation: []
+    require-explanation: true
+    require-specific: true
+  revive:
+    ignore-generated-header: true
+    severity: error
+    rules: []
+  sloglint:
+    no-mixed-args: true
+    kv-only: false
+    attr-only: true
+    no-global: "all"
+    context: "scope"
+    static-msg: false # TODO https://github.com/FerretDB/FerretDB/issues/3421
+    no-raw-keys: false # TODO https://github.com/FerretDB/FerretDB/issues/3421
+    key-naming-case: snake
+    args-on-sep-lines: false
+  staticcheck:
+    checks:
+      - all
+      - -SA1019 # ignore deprecation errors in existing code; new code is checked by the other configuration
+  # unused
+  whitespace:
+    multi-if: false
+    multi-func: false
 
 linters:
   disable-all: true
   enable:
-    # TODO https://github.com/FerretDB/wire/issues/4
+    - asciicheck
+    - depguard
+    - exhaustive
+    - forbidigo
+    - gci
+    - gochecksumtype
+    - goconst
+    - godot
+    - godox
+    - goheader
+    - goimports
+    - gomodguard
+    - gosimple
     - govet
+    - importas
+    - ineffassign
+    - lll
+    - misspell
+    - nolintlint
+    - revive
+    - sloglint
+    - staticcheck
+    - unused
+    - whitespace
 
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
 
   exclude-use-default: false
-  exclude-rules: []
+  exclude-rules:
+    # we don't want to introduce that constant
+    - linters: [goconst]
+      text: "^string `_id` has \\d+ occurrences, make it a constant"

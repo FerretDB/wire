@@ -24,7 +24,7 @@ const SizeInt64 = 8
 
 // EncodeInt64 encodes int64 value v into b.
 //
-// b must be at least 8 ([SizeInt64]) bytes long; otherwise, EncodeInt64 will panic.
+// "b" must be at least 8 ([SizeInt64]) bytes long; otherwise, EncodeInt64 will panic.
 // Only b[0:8] bytes are modified.
 func EncodeInt64(b []byte, v int64) {
 	binary.LittleEndian.PutUint64(b, uint64(v))

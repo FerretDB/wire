@@ -31,7 +31,7 @@ func SizeRegex(v Regex) int {
 
 // EncodeRegex encodes [Regex] value v into b.
 //
-// b must be at least len(v.Pattern)+len(v.Options)+2 ([SizeRegex]) bytes long; otherwise, EncodeRegex will panic.
+// "b" must be at least len(v.Pattern)+len(v.Options)+2 ([SizeRegex]) bytes long; otherwise, EncodeRegex will panic.
 // Only b[0:len(v.Pattern)+len(v.Options)+2] bytes are modified.
 func EncodeRegex(b []byte, v Regex) {
 	// ensure b length early

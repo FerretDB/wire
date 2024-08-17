@@ -25,7 +25,7 @@ const SizeFloat64 = 8
 
 // EncodeFloat64 encodes float64 value v into b.
 //
-// b must be at least 8 ([SizeFloat64]) bytes long; otherwise, EncodeFloat64 will panic.
+// "b" must be at least 8 ([SizeFloat64]) bytes long; otherwise, EncodeFloat64 will panic.
 // Only b[0:8] bytes are modified.
 //
 // Infinities, NaNs, negative zeros are preserved.

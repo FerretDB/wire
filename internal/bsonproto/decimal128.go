@@ -30,7 +30,7 @@ const SizeDecimal128 = 16
 
 // EncodeDecimal128 encodes [Decimal128] value v into b.
 //
-// b must be at least 16 ([SizeDecimal128]) bytes long; otherwise, EncodeDecimal128 will panic.
+// "b" must be at least 16 ([SizeDecimal128]) bytes long; otherwise, EncodeDecimal128 will panic.
 // Only b[0:16] bytes are modified.
 func EncodeDecimal128(b []byte, v Decimal128) {
 	binary.LittleEndian.PutUint64(b, uint64(v.L))
@@ -44,7 +44,10 @@ func DecodeDecimal128(b []byte) (Decimal128, error) {
 	var res Decimal128
 
 	if len(b) < SizeDecimal128 {
-		return res, fmt.Errorf("DecodeDecimal128: expected at least %d bytes, got %d: %w", SizeDecimal128, len(b), ErrDecodeShortInput)
+		return res, fmt.Errorf(
+			"DecodeDecimal128: expected at least %d bytes, got %d: %w",
+			SizeDecimal128, len(b), ErrDecodeShortInput,
+		)
 	}
 
 	res.L = binary.LittleEndian.Uint64(b[:8])

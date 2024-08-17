@@ -26,7 +26,7 @@ func SizeCString(v string) int {
 
 // EncodeCString encodes cstring value v into b.
 //
-// b must be at least len(v)+1 ([SizeCString]) bytes long; otherwise, EncodeString will panic.
+// "b" must be at least len(v)+1 ([SizeCString]) bytes long; otherwise, EncodeString will panic.
 // Only b[0:len(v)+1] bytes are modified.
 func EncodeCString(b []byte, v string) {
 	// ensure b length early

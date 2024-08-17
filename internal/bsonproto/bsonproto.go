@@ -69,7 +69,7 @@ func SizeAny(v any) int {
 
 // Encode encodes value v into b.
 //
-// b must be at least Size(v) bytes long; otherwise, Encode will panic.
+// "b" must be at least Size(v) bytes long; otherwise, Encode will panic.
 // Only b[0:Size(v)] bytes are modified.
 func Encode[T ScalarType](b []byte, v T) {
 	EncodeAny(b, v)
@@ -77,7 +77,7 @@ func Encode[T ScalarType](b []byte, v T) {
 
 // EncodeAny encodes value v into b.
 //
-// b must be at least Size(v) bytes long; otherwise, EncodeAny will panic.
+// "b" must be at least Size(v) bytes long; otherwise, EncodeAny will panic.
 // Only b[0:Size(v)] bytes are modified.
 //
 // It panics if v is not a [ScalarType] (including CString).

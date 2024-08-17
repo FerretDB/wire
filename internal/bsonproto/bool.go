@@ -23,7 +23,7 @@ const SizeBool = 1
 
 // EncodeBool encodes bool value v into b.
 //
-// b must be at least 1 ([SizeBool]) byte long; otherwise, EncodeBool will panic.
+// "b" must be at least 1 ([SizeBool]) byte long; otherwise, EncodeBool will panic.
 // Only b[0] is modified.
 func EncodeBool(b []byte, v bool) {
 	if v {

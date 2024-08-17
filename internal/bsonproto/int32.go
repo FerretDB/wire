@@ -24,7 +24,7 @@ const SizeInt32 = 4
 
 // EncodeInt32 encodes int32 value v into b.
 //
-// b must be at least 4 ([SizeInt32]) bytes long; otherwise, EncodeInt32 will panic.
+// "b" must be at least 4 ([SizeInt32]) bytes long; otherwise, EncodeInt32 will panic.
 // Only b[0:4] bytes are modified.
 func EncodeInt32(b []byte, v int32) {
 	binary.LittleEndian.PutUint32(b, uint32(v))

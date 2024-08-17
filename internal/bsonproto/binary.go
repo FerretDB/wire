@@ -28,7 +28,7 @@ const (
 	// BinaryGeneric represents a BSON Binary generic subtype.
 	BinaryGeneric = BinarySubtype(0x00) // generic
 
-	// BinaryFunction represents a BSON Binary function subtype
+	// BinaryFunction represents a BSON Binary function subtype.
 	BinaryFunction = BinarySubtype(0x01) // function
 
 	// BinaryGenericOld represents a BSON Binary generic-old subtype.
@@ -63,7 +63,7 @@ func SizeBinary(v Binary) int {
 
 // EncodeBinary encodes [Binary] value v into b.
 //
-// b must be at least len(v.B)+5 ([SizeBinary]) bytes long; otherwise, EncodeBinary will panic.
+// "b" must be at least len(v.B)+5 ([SizeBinary]) bytes long; otherwise, EncodeBinary will panic.
 // Only b[0:len(v.B)+5] bytes are modified.
 func EncodeBinary(b []byte, v Binary) {
 	i := len(v.B)

@@ -108,7 +108,7 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 
 // ConnectPing uses a combination of [Connect] and [Conn.Ping] to establish a working connection.
 //
-// nil is returned on context expiration.
+// Nil is returned on context expiration.
 func ConnectPing(ctx context.Context, uri string, l *slog.Logger) *Conn {
 	for ctx.Err() == nil {
 		conn, err := Connect(ctx, uri, l)
@@ -309,7 +309,7 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 		"$db", authDB,
 	)
 
-	for step := range 3 {
+	for step := 0; step < 3; step++ {
 		c.l.DebugContext(
 			ctx, "Login",
 			slog.Int("step", step), slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
