@@ -32,7 +32,7 @@ tasks:
         docker compose --file=.dev/docker-compose.yml --project-name=wire
         build --pull
       - rm -fr .dev/db/
-      - mkdir .dev/db/
+      - mkdir -m 0777 .dev/db/
       - >
         docker compose --file=.dev/docker-compose.yml --project-name=wire
         up --always-recreate-deps --force-recreate --remove-orphans --renew-anon-volumes --timeout=0 --detach
