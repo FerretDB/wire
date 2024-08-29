@@ -1,1 +1,1 @@
-FROM ghcr.io/ferretdb/ferretdb:1.23.0
+FROM ghcr.io/ferretdb/ferretdb:1.23.1

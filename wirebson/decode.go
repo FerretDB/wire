@@ -16,9 +16,33 @@ package wirebson
 
 import (
 	"encoding/binary"
+	"errors"
 
-	"github.com/FerretDB/wire/internal/bsonproto"
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
+)
+
+var (
+	// ErrDecodeShortInput is returned wrapped by Decode functions if the input bytes slice is too short.
+	ErrDecodeShortInput = errors.New("wirebson: short input")
+
+	// ErrDecodeInvalidInput is returned wrapped by Decode functions if the input bytes slice is invalid.
+	ErrDecodeInvalidInput = errors.New("wirebson: invalid input")
+)
+
+// decodeMode represents a mode for decoding BSON.
+type decodeMode int
+
+const (
+	_ decodeMode = iota
+
+	// DecodeShallow represents a mode in which only top-level fields/elements are decoded;
+	// nested documents and arrays are converted to RawDocument and RawArray respectively,
+	// using raw's subslices without copying.
+	decodeShallow
+
+	// DecodeDeep represents a mode in which nested documents and arrays are decoded recursively;
+	// RawDocuments and RawArrays are never returned.
+	decodeDeep
 )
 
 // FindRaw finds the first raw BSON document or array in b and returns its length l.
@@ -64,64 +88,64 @@ func decodeScalarField(b []byte, t tag) (v any, size int, err error) {
 
 	case tagFloat64:
 		var f float64
-		f, err = bsonproto.DecodeFloat64(b)
+		f, err = decodeFloat64(b)
 		v = f
-		size = bsonproto.SizeFloat64
+		size = sizeFloat64
 
 	case tagString:
 		var s string
-		s, err = bsonproto.DecodeString(b)
+		s, err = decodeString(b)
 		v = s
-		size = bsonproto.SizeString(s)
+		size = sizeString(s)
 
 	case tagBinary:
 		var bin Binary
-		bin, err = bsonproto.DecodeBinary(b)
+		bin, err = decodeBinary(b)
 		v = bin
-		size = bsonproto.SizeBinary(bin)
+		size = sizeBinary(bin)
 
 	case tagUndefined:
 		err = lazyerrors.Errorf("unsupported tag %s: %w", t, ErrDecodeInvalidInput)
 
 	case tagObjectID:
-		v, err = bsonproto.DecodeObjectID(b)
-		size = bsonproto.SizeObjectID
+		v, err = decodeObjectID(b)
+		size = sizeObjectID
 
 	case tagBool:
-		v, err = bsonproto.DecodeBool(b)
-		size = bsonproto.SizeBool
+		v, err = decodeBool(b)
+		size = sizeBool
 
 	case tagTime:
-		v, err = bsonproto.DecodeTime(b)
-		size = bsonproto.SizeTime
+		v, err = decodeTime(b)
+		size = sizeTime
 
 	case tagNull:
 		v = Null
 
 	case tagRegex:
 		var re Regex
-		re, err = bsonproto.DecodeRegex(b)
+		re, err = decodeRegex(b)
 		v = re
-		size = bsonproto.SizeRegex(re)
+		size = sizeRegex(re)
 
 	case tagDBPointer, tagJavaScript, tagSymbol, tagJavaScriptScope:
 		err = lazyerrors.Errorf("unsupported tag %s: %w", t, ErrDecodeInvalidInput)
 
 	case tagInt32:
-		v, err = bsonproto.DecodeInt32(b)
-		size = bsonproto.SizeInt32
+		v, err = decodeInt32(b)
+		size = sizeInt32
 
 	case tagTimestamp:
-		v, err = bsonproto.DecodeTimestamp(b)
-		size = bsonproto.SizeTimestamp
+		v, err = decodeTimestamp(b)
+		size = sizeTimestamp
 
 	case tagInt64:
-		v, err = bsonproto.DecodeInt64(b)
-		size = bsonproto.SizeInt64
+		v, err = decodeInt64(b)
+		size = sizeInt64
 
 	case tagDecimal128:
-		v, err = bsonproto.DecodeDecimal128(b)
-		size = bsonproto.SizeDecimal128
+		v, err = decodeDecimal128(b)
+		size = sizeDecimal128
 
 	case tagMinKey, tagMaxKey:
 		err = lazyerrors.Errorf("unsupported tag %s: %w", t, ErrDecodeInvalidInput)

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bsonproto
+package wirebson
 
 import (
 	"bytes"
@@ -26,7 +26,7 @@ func SizeCString(v string) int {
 
 // EncodeCString encodes cstring value v into b.
 //
-// b must be at least len(v)+1 ([SizeCString]) bytes long; otherwise, EncodeString will panic.
+// Slice must be at least len(v)+1 ([SizeCString]) bytes long; otherwise, EncodeString will panic.
 // Only b[0:len(v)+1] bytes are modified.
 func EncodeCString(b []byte, v string) {
 	// ensure b length early

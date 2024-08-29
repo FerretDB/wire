@@ -32,6 +32,10 @@ labels:
 
   # the rest sorted alphabetically
 
+  - name: community
+    color: "#297252"
+    description: Issues and PRs assigned to community members
+
   - name: conflict
     color: "#FF0000"
     description: PRs that have merge conflicts
@@ -44,6 +48,24 @@ labels:
     color: "#0052CC"
     description: PRs that should not be merged
 
+  - name: good first issue
+    color: "#5319E7"
+    description: Good issues for new external contributors
+
+  # until the next time
+  # - name: hacktoberfest
+  #   color: "#FEFBA2"
+  #   description: Good issues for Hacktoberfest
+
+  - name: help wanted
+    color: "#006B75"
+    description: Issues that require extra attention
+
   - name: not ready
     color: "#000000"
     description: Issues that are not ready to be worked on; PRs that should skip CI
+
+  # https://hacktoberfest.com/participation/#spam
+  - name: spam
+    color: "#C5DEF5"
+    description: Spam issues and PRs

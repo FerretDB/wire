@@ -106,7 +106,7 @@ func (query *OpQuery) UnmarshalBinaryNocopy(b []byte) error {
 		query.returnFieldsSelector = b[selectorLow:]
 	}
 
-	if debugbuild {
+	if Debug {
 		if err = query.check(); err != nil {
 			return lazyerrors.Error(err)
 		}
@@ -117,7 +117,7 @@ func (query *OpQuery) UnmarshalBinaryNocopy(b []byte) error {
 
 // MarshalBinary implements [MsgBody].
 func (query *OpQuery) MarshalBinary() ([]byte, error) {
-	if debugbuild {
+	if Debug {
 		if err := query.check(); err != nil {
 			return nil, lazyerrors.Error(err)
 		}

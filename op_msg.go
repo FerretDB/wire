@@ -75,7 +75,7 @@ func (msg *OpMsg) SetSections(sections ...OpMsgSection) error {
 
 	msg.sections = sections
 
-	if debugbuild || CheckNaNs {
+	if Debug || CheckNaNs {
 		if err := msg.check(); err != nil {
 			return lazyerrors.Error(err)
 		}
@@ -253,7 +253,7 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 		return lazyerrors.Error(err)
 	}
 
-	if debugbuild || CheckNaNs {
+	if Debug || CheckNaNs {
 		if err := msg.check(); err != nil {
 			return lazyerrors.Error(err)
 		}
@@ -268,7 +268,7 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	if debugbuild {
+	if Debug {
 		if err := msg.check(); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
