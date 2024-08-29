@@ -123,7 +123,7 @@ func (arr *Array) Replace(index int, value any) error {
 func (arr *Array) Encode() (RawArray, error) {
 	must.NotBeZero(arr)
 
-	size := sizeAny(arr)
+	size := sizeArray(arr)
 	buf := bytes.NewBuffer(make([]byte, 0, size))
 
 	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {

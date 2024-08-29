@@ -211,7 +211,7 @@ func (doc *Document) Command() string {
 func (doc *Document) Encode() (RawDocument, error) {
 	must.NotBeZero(doc)
 
-	size := sizeAny(doc)
+	size := sizeDocument(doc)
 	buf := bytes.NewBuffer(make([]byte, 0, size))
 
 	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
