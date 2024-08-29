@@ -24,16 +24,16 @@ type Regex struct {
 	Options string
 }
 
-// SizeRegex returns a size of the encoding of v [Regex] in bytes.
-func SizeRegex(v Regex) int {
+// sizeRegex returns a size of the encoding of v [Regex] in bytes.
+func sizeRegex(v Regex) int {
 	return len(v.Pattern) + len(v.Options) + 2
 }
 
-// EncodeRegex encodes [Regex] value v into b.
+// encodeRegex encodes [Regex] value v into b.
 //
-// b must be at least len(v.Pattern)+len(v.Options)+2 ([SizeRegex]) bytes long; otherwise, EncodeRegex will panic.
+// b must be at least len(v.Pattern)+len(v.Options)+2 ([sizeRegex]) bytes long; otherwise, encodeRegex will panic.
 // Only b[0:len(v.Pattern)+len(v.Options)+2] bytes are modified.
-func EncodeRegex(b []byte, v Regex) {
+func encodeRegex(b []byte, v Regex) {
 	// ensure b length early
 	b[len(v.Pattern)+len(v.Options)+1] = 0
 
@@ -42,11 +42,11 @@ func EncodeRegex(b []byte, v Regex) {
 	copy(b[len(v.Pattern)+1:], v.Options)
 }
 
-// DecodeRegex decodes [Regex] value from b.
+// decodeRegex decodes [Regex] value from b.
 //
-// If there is not enough bytes, DecodeRegex will return a wrapped [ErrDecodeShortInput].
+// If there is not enough bytes, decodeRegex will return a wrapped [ErrDecodeShortInput].
 // If the input is otherwise invalid, a wrapped [ErrDecodeInvalidInput] is returned.
-func DecodeRegex(b []byte) (Regex, error) {
+func decodeRegex(b []byte) (Regex, error) {
 	var res Regex
 
 	if len(b) < 2 {
