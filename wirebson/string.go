@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bsonproto
+package wirebson
 
 import (
 	"encoding/binary"
 	"fmt"
 )
 
-// SizeString returns a size of the encoding of v string in bytes.
-func SizeString(v string) int {
+// sizeString returns a size of the encoding of v string in bytes.
+func sizeString(v string) int {
 	return len(v) + 5
 }
 
-// EncodeString encodes string value v into b.
+// encodeString encodes string value v into b.
 //
-// b must be at least len(v)+5 ([SizeString]) bytes long; otherwise, EncodeString will panic.
+// b must be at least len(v)+5 ([sizeString]) bytes long; otherwise, encodeString will panic.
 // Only b[0:len(v)+5] bytes are modified.
-func EncodeString(b []byte, v string) {
+func encodeString(b []byte, v string) {
 	i := len(v) + 1
 
 	// ensure b length early
@@ -38,11 +38,11 @@ func EncodeString(b []byte, v string) {
 	copy(b[4:4+i-1], v)
 }
 
-// DecodeString decodes string value from b.
+// decodeString decodes string value from b.
 //
-// If there is not enough bytes, DecodeString will return a wrapped [ErrDecodeShortInput].
+// If there is not enough bytes, decodeString will return a wrapped [ErrDecodeShortInput].
 // If the input is otherwise invalid, a wrapped [ErrDecodeInvalidInput] is returned.
-func DecodeString(b []byte) (string, error) {
+func decodeString(b []byte) (string, error) {
 	if len(b) < 5 {
 		return "", fmt.Errorf("DecodeString: expected at least 5 bytes, got %d: %w", len(b), ErrDecodeShortInput)
 	}

@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bsonproto
+package wirebson
 
 import (
 	"encoding/binary"
 	"fmt"
 )
-
-//go:generate ../../bin/stringer -linecomment -output stringers.go -type BinarySubtype
 
 // BinarySubtype represents BSON Binary's subtype.
 type BinarySubtype byte
@@ -28,7 +26,7 @@ const (
 	// BinaryGeneric represents a BSON Binary generic subtype.
 	BinaryGeneric = BinarySubtype(0x00) // generic
 
-	// BinaryFunction represents a BSON Binary function subtype
+	// BinaryFunction represents a BSON Binary function subtype.
 	BinaryFunction = BinarySubtype(0x01) // function
 
 	// BinaryGenericOld represents a BSON Binary generic-old subtype.
@@ -56,16 +54,16 @@ type Binary struct {
 	Subtype BinarySubtype
 }
 
-// SizeBinary returns a size of the encoding of v [Binary] in bytes.
-func SizeBinary(v Binary) int {
+// sizeBinary returns a size of the encoding of v [Binary] in bytes.
+func sizeBinary(v Binary) int {
 	return len(v.B) + 5
 }
 
-// EncodeBinary encodes [Binary] value v into b.
+// encodeBinary encodes [Binary] value v into b.
 //
-// b must be at least len(v.B)+5 ([SizeBinary]) bytes long; otherwise, EncodeBinary will panic.
+// b must be at least len(v.B)+5 ([sizeBinary]) bytes long; otherwise, encodeBinary will panic.
 // Only b[0:len(v.B)+5] bytes are modified.
-func EncodeBinary(b []byte, v Binary) {
+func encodeBinary(b []byte, v Binary) {
 	i := len(v.B)
 
 	binary.LittleEndian.PutUint32(b, uint32(i))
@@ -73,11 +71,11 @@ func EncodeBinary(b []byte, v Binary) {
 	copy(b[5:5+i], v.B)
 }
 
-// DecodeBinary decodes [Binary] value from b.
+// decodeBinary decodes [Binary] value from b.
 //
-// If there is not enough bytes, DecodeBinary will return a wrapped [ErrDecodeShortInput].
+// If there is not enough bytes, decodeBinary will return a wrapped [ErrDecodeShortInput].
 // If the input is otherwise invalid, a wrapped [ErrDecodeInvalidInput] is returned.
-func DecodeBinary(b []byte) (Binary, error) {
+func decodeBinary(b []byte) (Binary, error) {
 	var res Binary
 
 	if len(b) < 5 {

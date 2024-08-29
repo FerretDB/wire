@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/FerretDB/wire/internal/bsonproto"
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 )
 
@@ -149,12 +148,49 @@ func encodeScalarField(buf *bytes.Buffer, name string, v any) error {
 		return lazyerrors.Error(err)
 	}
 
-	b = make([]byte, bsonproto.SizeAny(v))
-	bsonproto.EncodeAny(b, v)
+	b = make([]byte, sizeScalar(v))
+	encodeScalarValue(b, v)
 
 	if _, err := buf.Write(b); err != nil {
 		return lazyerrors.Error(err)
 	}
 
 	return nil
+}
+
+// encodeScalarValue encodes value v into b.
+//
+// b must be at least Size(v) bytes long; otherwise, encodeScalarValue will panic.
+// Only b[0:Size(v)] bytes are modified.
+//
+// It panics if v is not a [ScalarType] (including CString).
+func encodeScalarValue(b []byte, v any) {
+	switch v := v.(type) {
+	case float64:
+		encodeFloat64(b, v)
+	case string:
+		encodeString(b, v)
+	case Binary:
+		encodeBinary(b, v)
+	case ObjectID:
+		encodeObjectID(b, v)
+	case bool:
+		encodeBool(b, v)
+	case time.Time:
+		encodeTime(b, v)
+	case NullType:
+		// nothing
+	case Regex:
+		encodeRegex(b, v)
+	case int32:
+		encodeInt32(b, v)
+	case Timestamp:
+		encodeTimestamp(b, v)
+	case int64:
+		encodeInt64(b, v)
+	case Decimal128:
+		encodeDecimal128(b, v)
+	default:
+		panic(fmt.Sprintf("unsupported type %T", v))
+	}
 }

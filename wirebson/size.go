@@ -15,9 +15,9 @@
 package wirebson
 
 import (
+	"fmt"
 	"strconv"
-
-	"github.com/FerretDB/wire/internal/bsonproto"
+	"time"
 )
 
 // sizeAny returns a size of the encoding of value v in bytes.
@@ -34,7 +34,7 @@ func sizeAny(v any) int {
 	case RawArray:
 		return len(v)
 	default:
-		return bsonproto.SizeAny(v)
+		return sizeScalar(v)
 	}
 }
 
@@ -58,4 +58,38 @@ func sizeArray(arr *Array) int {
 	}
 
 	return size
+}
+
+// sizeScalar returns a size of the encoding of scalar value v in bytes.
+//
+// It panics if v is not a [ScalarType] (including CString).
+func sizeScalar(v any) int {
+	switch v := v.(type) {
+	case float64:
+		return sizeFloat64
+	case string:
+		return sizeString(v)
+	case Binary:
+		return sizeBinary(v)
+	case ObjectID:
+		return sizeObjectID
+	case bool:
+		return sizeBool
+	case time.Time:
+		return sizeTime
+	case NullType:
+		return 0
+	case Regex:
+		return sizeRegex(v)
+	case int32:
+		return sizeInt32
+	case Timestamp:
+		return sizeTimestamp
+	case int64:
+		return sizeInt64
+	case Decimal128:
+		return sizeDecimal128
+	default:
+		panic(fmt.Sprintf("unsupported type %T", v))
+	}
 }

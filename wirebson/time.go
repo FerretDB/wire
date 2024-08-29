@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bsonproto
+package wirebson
 
 import (
 	"encoding/binary"
@@ -20,25 +20,25 @@ import (
 	"time"
 )
 
-// SizeTime is a size of the encoding of [time.Time] in bytes.
-const SizeTime = 8
+// sizeTime is a size of the encoding of [time.Time] in bytes.
+const sizeTime = 8
 
-// EncodeTime encodes [time.Time] value v into b.
+// encodeTime encodes [time.Time] value v into b.
 //
-// b must be at least 8 ([SizeTime]) byte long; otherwise, EncodeTime will panic.
+// b must be at least 8 ([sizeTime]) byte long; otherwise, encodeTime will panic.
 // Only b[0:8] bytes are modified.
-func EncodeTime(b []byte, v time.Time) {
+func encodeTime(b []byte, v time.Time) {
 	binary.LittleEndian.PutUint64(b, uint64(v.UnixMilli()))
 }
 
-// DecodeTime decodes [time.Time] value from b.
+// decodeTime decodes [time.Time] value from b.
 //
-// If there is not enough bytes, DecodeTime will return a wrapped [ErrDecodeShortInput].
-func DecodeTime(b []byte) (time.Time, error) {
+// If there is not enough bytes, decodeTime will return a wrapped [ErrDecodeShortInput].
+func decodeTime(b []byte) (time.Time, error) {
 	var res time.Time
 
-	if len(b) < SizeTime {
-		return res, fmt.Errorf("DecodeTime: expected at least %d bytes, got %d: %w", SizeTime, len(b), ErrDecodeShortInput)
+	if len(b) < sizeTime {
+		return res, fmt.Errorf("DecodeTime: expected at least %d bytes, got %d: %w", sizeTime, len(b), ErrDecodeShortInput)
 	}
 
 	res = time.UnixMilli(int64(binary.LittleEndian.Uint64(b))).UTC()

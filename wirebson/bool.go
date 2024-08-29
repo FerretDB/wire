@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bsonproto
+package wirebson
 
 import (
 	"fmt"
 )
 
-// SizeBool is a size of the encoding of bool in bytes.
-const SizeBool = 1
+// sizeBool is a size of the encoding of bool in bytes.
+const sizeBool = 1
 
-// EncodeBool encodes bool value v into b.
+// encodeBool encodes bool value v into b.
 //
-// b must be at least 1 ([SizeBool]) byte long; otherwise, EncodeBool will panic.
+// b must be at least 1 ([sizeBool]) byte long; otherwise, encodeBool will panic.
 // Only b[0] is modified.
-func EncodeBool(b []byte, v bool) {
+func encodeBool(b []byte, v bool) {
 	if v {
 		b[0] = 0x01
 	} else {
@@ -33,10 +33,10 @@ func EncodeBool(b []byte, v bool) {
 	}
 }
 
-// DecodeBool decodes bool value from b.
+// decodeBool decodes bool value from b.
 //
-// If there is not enough bytes, DecodeBool will return a wrapped [ErrDecodeShortInput].
-func DecodeBool(b []byte) (bool, error) {
+// If there is not enough bytes, decodeBool will return a wrapped [ErrDecodeShortInput].
+func decodeBool(b []byte) (bool, error) {
 	if len(b) == 0 {
 		return false, fmt.Errorf("DecodeBool: expected at least 1 byte, got 0: %w", ErrDecodeShortInput)
 	}
