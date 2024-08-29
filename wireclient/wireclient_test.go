@@ -76,6 +76,7 @@ func TestConn(t *testing.T) {
 		})
 
 		assert.Error(t, conn.Login(ctx, "invalid", "invalid", "admin"))
+		assert.Error(t, conn.Login(ctx, "username", "password", "database"))
 		assert.NoError(t, conn.Login(ctx, "username", "password", "admin"))
 	})
 }
