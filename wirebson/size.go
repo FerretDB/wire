@@ -16,8 +16,6 @@ package wirebson
 
 import (
 	"strconv"
-
-	"github.com/FerretDB/wire/internal/bsonproto"
 )
 
 // sizeAny returns a size of the encoding of value v in bytes.
@@ -34,7 +32,7 @@ func sizeAny(v any) int {
 	case RawArray:
 		return len(v)
 	default:
-		return bsonproto.SizeAny(v)
+		return SizeAny(v)
 	}
 }
 

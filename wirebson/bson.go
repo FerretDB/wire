@@ -20,91 +20,183 @@
 //
 //	BSON                Go
 //
-//	Document/Object     *bson.Document or bson.RawDocument
-//	Array               *bson.Array    or bson.RawArray
+//	Document/Object     *Document or RawDocument
+//	Array               *Array    or RawArray
 //
 //	Double              float64
 //	String              string
-//	Binary data         bson.Binary
-//	ObjectId            bson.ObjectID
+//	Binary data         Binary
+//	ObjectId            ObjectID
 //	Boolean             bool
 //	Date                time.Time
-//	Null                bson.NullType
-//	Regular Expression  bson.Regex
+//	Null                NullType
+//	Regular Expression  Regex
 //	32-bit integer      int32
-//	Timestamp           bson.Timestamp
+//	Timestamp           Timestamp
 //	64-bit integer      int64
-//	Decimal128          bson.Decimal128
+//	Decimal128          Decimal128
 //
 // Composite types (Document and Array) are passed by pointers.
 // Raw composite type and scalars are passed by values.
 package wirebson
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
-	"github.com/FerretDB/wire/internal/bsonproto"
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 )
 
-//go:generate ../bin/stringer -linecomment -output stringers.go -type decodeMode,tag
+//go:generate ../bin/stringer -linecomment -output stringers.go -type decodeMode,tag,BinarySubtype
 
-type (
-	// ScalarType represents a BSON scalar type.
-	//
-	// CString is not included as it is not a real BSON type.
-	ScalarType = bsonproto.ScalarType
+// ScalarType represents a BSON scalar type.
+//
+// CString is not included as it is not a real BSON type.
+type ScalarType interface {
+	float64 | string | Binary | ObjectID | bool | time.Time | NullType | Regex | int32 | Timestamp | int64 | Decimal128
+}
 
-	// Binary represents BSON scalar type binary.
-	Binary = bsonproto.Binary
+// Size returns a size of the encoding of value v in bytes.
+func Size[T ScalarType](v T) int {
+	return SizeAny(v)
+}
 
-	// BinarySubtype represents BSON Binary's subtype.
-	BinarySubtype = bsonproto.BinarySubtype
+// SizeAny returns a size of the encoding of value v in bytes.
+//
+// It panics if v is not a [ScalarType] (including CString).
+// FIXME
+func SizeAny(v any) int {
+	switch v := v.(type) {
+	case float64:
+		return SizeFloat64
+	case string:
+		return SizeString(v)
+	case Binary:
+		return SizeBinary(v)
+	case ObjectID:
+		return SizeObjectID
+	case bool:
+		return SizeBool
+	case time.Time:
+		return SizeTime
+	case NullType:
+		return 0
+	case Regex:
+		return SizeRegex(v)
+	case int32:
+		return SizeInt32
+	case Timestamp:
+		return SizeTimestamp
+	case int64:
+		return SizeInt64
+	case Decimal128:
+		return SizeDecimal128
+	default:
+		panic(fmt.Sprintf("unsupported type %T", v))
+	}
+}
 
-	// NullType represents BSON scalar type null.
-	NullType = bsonproto.NullType
+// Encode encodes value v into b.
+//
+// b must be at least Size(v) bytes long; otherwise, Encode will panic.
+// Only b[0:Size(v)] bytes are modified.
+func Encode[T ScalarType](b []byte, v T) {
+	EncodeAny(b, v)
+}
 
-	// ObjectID represents BSON scalar type ObjectID.
-	ObjectID = bsonproto.ObjectID
+// EncodeAny encodes value v into b.
+//
+// b must be at least Size(v) bytes long; otherwise, EncodeAny will panic.
+// Only b[0:Size(v)] bytes are modified.
+//
+// It panics if v is not a [ScalarType] (including CString).
+func EncodeAny(b []byte, v any) {
+	switch v := v.(type) {
+	case float64:
+		EncodeFloat64(b, v)
+	case string:
+		EncodeString(b, v)
+	case Binary:
+		EncodeBinary(b, v)
+	case ObjectID:
+		EncodeObjectID(b, v)
+	case bool:
+		EncodeBool(b, v)
+	case time.Time:
+		EncodeTime(b, v)
+	case NullType:
+		// nothing
+	case Regex:
+		EncodeRegex(b, v)
+	case int32:
+		EncodeInt32(b, v)
+	case Timestamp:
+		EncodeTimestamp(b, v)
+	case int64:
+		EncodeInt64(b, v)
+	case Decimal128:
+		EncodeDecimal128(b, v)
+	default:
+		panic(fmt.Sprintf("unsupported type %T", v))
+	}
+}
 
-	// Regex represents BSON scalar type regular expression.
-	Regex = bsonproto.Regex
+// Decode decodes value from b into v.
+//
+// If there is not enough bytes, Decode will return a wrapped [ErrDecodeShortInput].
+// If the input is otherwise invalid, a wrapped [ErrDecodeInvalidInput] is returned.
+func Decode[T ScalarType](b []byte, v *T) error {
+	return DecodeAny(b, v)
+}
 
-	// Timestamp represents BSON scalar type timestamp.
-	Timestamp = bsonproto.Timestamp
+// DecodeAny decodes value from b into v.
+//
+// If there is not enough bytes, DecodeAny will return a wrapped [ErrDecodeShortInput].
+// If the input is otherwise invalid, a wrapped [ErrDecodeInvalidInput] is returned.
+//
+// It panics if v is not a pointer to [ScalarType] (including CString).
+func DecodeAny(b []byte, v any) error {
+	var err error
+	switch v := v.(type) {
+	case *float64:
+		*v, err = DecodeFloat64(b)
+	case *string:
+		*v, err = DecodeString(b)
+	case *Binary:
+		*v, err = DecodeBinary(b)
+	case *ObjectID:
+		*v, err = DecodeObjectID(b)
+	case *bool:
+		*v, err = DecodeBool(b)
+	case *time.Time:
+		*v, err = DecodeTime(b)
+	case *NullType:
+		// nothing
+	case *Regex:
+		*v, err = DecodeRegex(b)
+	case *int32:
+		*v, err = DecodeInt32(b)
+	case *Timestamp:
+		*v, err = DecodeTimestamp(b)
+	case *int64:
+		*v, err = DecodeInt64(b)
+	case *Decimal128:
+		*v, err = DecodeDecimal128(b)
+	default:
+		panic(fmt.Sprintf("unsupported type %T", v))
+	}
 
-	// Decimal128 represents BSON scalar type decimal128.
-	Decimal128 = bsonproto.Decimal128
+	return err
+}
+
+var (
+	// ErrDecodeShortInput is returned wrapped by Decode functions if the input bytes slice is too short.
+	ErrDecodeShortInput = errors.New("wirebson: short input")
+
+	// ErrDecodeInvalidInput is returned wrapped by Decode functions if the input bytes slice is invalid.
+	ErrDecodeInvalidInput = errors.New("wirebson: invalid input")
 )
-
-const (
-	// BinaryGeneric represents a BSON Binary generic subtype.
-	BinaryGeneric = bsonproto.BinaryGeneric
-
-	// BinaryFunction represents a BSON Binary function subtype.
-	BinaryFunction = bsonproto.BinaryFunction
-
-	// BinaryGenericOld represents a BSON Binary generic-old subtype.
-	BinaryGenericOld = bsonproto.BinaryGenericOld
-
-	// BinaryUUIDOld represents a BSON Binary UUID old subtype.
-	BinaryUUIDOld = bsonproto.BinaryUUIDOld
-
-	// BinaryUUID represents a BSON Binary UUID subtype.
-	BinaryUUID = bsonproto.BinaryUUID
-
-	// BinaryMD5 represents a BSON Binary MD5 subtype.
-	BinaryMD5 = bsonproto.BinaryMD5
-
-	// BinaryEncrypted represents a BSON Binary encrypted subtype.
-	BinaryEncrypted = bsonproto.BinaryEncrypted
-
-	// BinaryUser represents a BSON Binary user-defined subtype.
-	BinaryUser = bsonproto.BinaryUser
-)
-
-// Null represents BSON scalar value null.
-var Null = bsonproto.Null
 
 // decodeMode represents a mode for decoding BSON.
 type decodeMode int
@@ -121,35 +213,6 @@ const (
 	// RawDocuments and RawArrays are never returned.
 	decodeDeep
 )
-
-var (
-	// ErrDecodeShortInput is returned wrapped by Decode functions if the input bytes slice is too short.
-	ErrDecodeShortInput = bsonproto.ErrDecodeShortInput
-
-	// ErrDecodeInvalidInput is returned wrapped by Decode functions if the input bytes slice is invalid.
-	ErrDecodeInvalidInput = bsonproto.ErrDecodeInvalidInput
-)
-
-// SizeCString returns a size of the encoding of v cstring in bytes.
-func SizeCString(s string) int {
-	return bsonproto.SizeCString(s)
-}
-
-// EncodeCString encodes cstring value v into b.
-//
-// Slice must be at least len(v)+1 ([SizeCString]) bytes long; otherwise, EncodeString will panic.
-// Only b[0:len(v)+1] bytes are modified.
-func EncodeCString(b []byte, v string) {
-	bsonproto.EncodeCString(b, v)
-}
-
-// DecodeCString decodes cstring value from b.
-//
-// If there is not enough bytes, DecodeCString will return a wrapped [ErrDecodeShortInput].
-// If the input is otherwise invalid, a wrapped [ErrDecodeInvalidInput] is returned.
-func DecodeCString(b []byte) (string, error) {
-	return bsonproto.DecodeCString(b)
-}
 
 // Type represents a BSON type.
 type Type interface {

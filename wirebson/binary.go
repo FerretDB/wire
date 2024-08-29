@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bsonproto
+package wirebson
 
 import (
 	"encoding/binary"
 	"fmt"
 )
-
-//go:generate ../../bin/stringer -linecomment -output stringers.go -type BinarySubtype
 
 // BinarySubtype represents BSON Binary's subtype.
 type BinarySubtype byte
@@ -28,7 +26,7 @@ const (
 	// BinaryGeneric represents a BSON Binary generic subtype.
 	BinaryGeneric = BinarySubtype(0x00) // generic
 
-	// BinaryFunction represents a BSON Binary function subtype
+	// BinaryFunction represents a BSON Binary function subtype.
 	BinaryFunction = BinarySubtype(0x01) // function
 
 	// BinaryGenericOld represents a BSON Binary generic-old subtype.

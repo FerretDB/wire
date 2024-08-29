@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/FerretDB/wire/internal/bsonproto"
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 )
 
@@ -149,8 +148,8 @@ func encodeScalarField(buf *bytes.Buffer, name string, v any) error {
 		return lazyerrors.Error(err)
 	}
 
-	b = make([]byte, bsonproto.SizeAny(v))
-	bsonproto.EncodeAny(b, v)
+	b = make([]byte, SizeAny(v))
+	EncodeAny(b, v)
 
 	if _, err := buf.Write(b); err != nil {
 		return lazyerrors.Error(err)
