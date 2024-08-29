@@ -82,7 +82,7 @@ func (reply *OpReply) UnmarshalBinaryNocopy(b []byte) error {
 		return lazyerrors.Errorf("numberReturned=%d, document=%v", numberReturned, reply.document)
 	}
 
-	if debugbuild {
+	if Debug {
 		if err := reply.check(); err != nil {
 			return lazyerrors.Error(err)
 		}
@@ -93,7 +93,7 @@ func (reply *OpReply) UnmarshalBinaryNocopy(b []byte) error {
 
 // MarshalBinary implements [MsgBody].
 func (reply *OpReply) MarshalBinary() ([]byte, error) {
-	if debugbuild {
+	if Debug {
 		if err := reply.check(); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
