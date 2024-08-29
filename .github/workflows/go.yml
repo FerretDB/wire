@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dockerfile: [mongo] # TODO ferretdb
+        dockerfile: [mongo, ferretdb]
 
     steps:
       # TODO https://github.com/FerretDB/github-actions/issues/211
@@ -70,6 +70,10 @@ jobs:
 
       - name: Run all tests
         run: bin/task test
+
+      - name: Get logs
+        if: always()
+        run: bin/task env-logs
 
       - name: Run linters
         run: bin/task lint
