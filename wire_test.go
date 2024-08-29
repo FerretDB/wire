@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -28,6 +29,12 @@ import (
 	"github.com/FerretDB/wire/internal/util/testutil"
 	"github.com/FerretDB/wire/wirebson"
 )
+
+func TestMain(m *testing.M) {
+	Debug = true
+
+	os.Exit(m.Run())
+}
 
 // makeRawDocument creates a new RawDocument from the given pairs of field names and values.
 func makeRawDocument(pairs ...any) wirebson.RawDocument {
