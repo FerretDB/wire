@@ -38,13 +38,17 @@ tasks:
 
   env-logs:
     cmds:
+      - docker compose --file=.dev/docker-compose.yml --project-name=wire logs
+
+  env-logs-follow:
+    cmds:
       - docker compose --file=.dev/docker-compose.yml --project-name=wire logs --follow
 
   env-up:
     desc: "Start development environment"
     deps: [env-up-detach]
     cmds:
-      - task: env-logs
+      - task: env-logs-follow
 
   env-down:
     desc: "Stop development environment"

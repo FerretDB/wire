@@ -71,6 +71,10 @@ jobs:
       - name: Run all tests
         run: bin/task test
 
+      - name: Get logs
+        if: always()
+        run: bin/task env-logs
+
       - name: Run linters
         run: bin/task lint
 
