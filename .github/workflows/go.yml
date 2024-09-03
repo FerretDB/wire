@@ -78,6 +78,12 @@ jobs:
       - name: Run linters
         run: bin/task lint
 
+      - name: Upload coverage information to coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          file: ./cover.txt
+          flag-name: test
+
       - name: Check dirty
         run: |
           git status
