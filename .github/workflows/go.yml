@@ -82,7 +82,7 @@ jobs:
       # If secrets are unavailable (for example, for a pull request from a fork), it fallbacks to the tokenless uploads.
       #
       # Unfortunately, it seems that tokenless uploads fail too often.
-      # See https://github.com/codecov/codecov-action/issues/837.
+      # See https://github.com/codecov/feedback/issues/301.
       #
       # We also can't use ${{ vars.CODECOV_TOKEN }}: https://github.com/orgs/community/discussions/44322
       - name: Upload coverage information to codecov
