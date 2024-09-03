@@ -95,6 +95,12 @@ jobs:
           fail_ci_if_error: true
           verbose: true
 
+      - name: Upload coverage information to coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          file: ./cover.txt
+          flag-name: test
+
       - name: Check dirty
         run: |
           git status
