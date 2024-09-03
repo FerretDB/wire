@@ -91,7 +91,7 @@ jobs:
         with:
           token: 44625ce5-0586-4c09-93b3-8135f5fc2fb5
           files: ./cover.txt
-          flags: unit
+          flags: test
           fail_ci_if_error: true
           verbose: true
 
