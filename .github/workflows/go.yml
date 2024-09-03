@@ -89,7 +89,7 @@ jobs:
         if: always()
         uses: codecov/codecov-action@v4
         with:
-          token: 44625ce5-0586-4c09-93b3-8135f5fc2fb5
+          token: 69371c38-548a-488e-8843-bfbbf32810bd
           files: ./cover.txt
           flags: test
           fail_ci_if_error: true
