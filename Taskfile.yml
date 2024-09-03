@@ -75,12 +75,12 @@ tasks:
   test-short:
     desc: "Run short tests"
     cmds:
-      - go test -short -race ./...
+      - go test -short -race -coverpkg=./... -coverprofile=cover.txt ./...
 
   test:
     desc: "Run all tests (requires MONGODB_URI set)"
     cmds:
-      - go test -race -count=1 ./...
+      - go test -race -count=1 -coverpkg=./... -coverprofile=cover.txt ./...
     env:
       MONGODB_URI: mongodb://localhost:27017/
 
