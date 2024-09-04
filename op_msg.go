@@ -38,13 +38,14 @@ type OpMsg struct {
 
 // NewOpMsg creates a message with a single section of kind 0 with a single document.
 func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
-	raw, err := doc.Encode()
-	if err != nil {
+	raw := make([]byte, wirebson.Size(doc))
+
+	if err := doc.Encode(raw); err != nil {
 		return nil, lazyerrors.Error(err)
 	}
 
 	var msg OpMsg
-	if err = msg.SetSections(OpMsgSection{documents: []wirebson.RawDocument{raw}}); err != nil {
+	if err := msg.SetSections(OpMsgSection{documents: []wirebson.RawDocument{raw}}); err != nil {
 		return nil, lazyerrors.Error(err)
 	}
 

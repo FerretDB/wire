@@ -37,8 +37,9 @@ type OpReply struct {
 
 // NewOpReply creates a new OpReply message.
 func NewOpReply(doc wirebson.AnyDocument) (*OpReply, error) {
-	raw, err := doc.Encode()
-	if err != nil {
+	raw := make([]byte, wirebson.Size(doc))
+
+	if err := doc.Encode(raw); err != nil {
 		return nil, lazyerrors.Error(err)
 	}
 
@@ -131,9 +132,9 @@ func (reply *OpReply) RawDocument() wirebson.RawDocument {
 
 // SetDocument sets reply document.
 func (reply *OpReply) SetDocument(doc *wirebson.Document) {
-	var err error
-	reply.document, err = doc.Encode()
-	if err != nil {
+	reply.document = make([]byte, wirebson.Size(doc))
+
+	if err := doc.Encode(reply.document); err != nil {
 		panic(err)
 	}
 }

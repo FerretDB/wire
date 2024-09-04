@@ -211,24 +211,24 @@ func (doc *Document) Command() string {
 func (doc *Document) Encode(d RawDocument) error {
 	must.NotBeZero(doc)
 
-	size := sizeDocument(doc)
-	buf := bytes.NewBuffer(make([]byte, 0, size))
+	size := Size(doc)
+	buf := bytes.NewBuffer(d)
 
 	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
-		return nil, lazyerrors.Error(err)
+		return lazyerrors.Error(err)
 	}
 
 	for _, f := range doc.fields {
 		if err := encodeField(buf, f.name, f.value); err != nil {
-			return nil, lazyerrors.Error(err)
+			return lazyerrors.Error(err)
 		}
 	}
 
 	if err := binary.Write(buf, binary.LittleEndian, byte(0)); err != nil {
-		return nil, lazyerrors.Error(err)
+		return lazyerrors.Error(err)
 	}
 
-	return buf.Bytes(), nil
+	return nil
 }
 
 // Decode returns itself to implement [AnyDocument].

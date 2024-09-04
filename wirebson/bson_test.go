@@ -621,8 +621,10 @@ func TestNormal(t *testing.T) {
 				assert.NotEmpty(t, LogMessageBlock(doc))
 				assert.NotEmpty(t, LogMessageFlow(doc))
 
-				raw, err := doc.Encode()
+				raw := make([]byte, Size(doc))
+				err = doc.Encode(raw)
 				require.NoError(t, err)
+
 				assert.Equal(t, tc.raw, raw)
 			})
 
@@ -638,7 +640,8 @@ func TestNormal(t *testing.T) {
 				assert.NotEmpty(t, LogMessageBlock(doc))
 				assert.NotEmpty(t, LogMessageFlow(doc))
 
-				raw, err := doc.Encode()
+				raw := make([]byte, Size(doc))
+				err = doc.Encode(raw)
 				require.NoError(t, err)
 				assert.Equal(t, tc.raw, raw)
 			})
@@ -723,7 +726,8 @@ func BenchmarkDocument(b *testing.B) {
 				b.ResetTimer()
 
 				for range b.N {
-					raw, err = doc.Encode()
+					raw = make([]byte, Size(doc))
+					err = doc.Encode(raw)
 				}
 
 				b.StopTimer()
@@ -787,7 +791,8 @@ func BenchmarkDocument(b *testing.B) {
 				b.ResetTimer()
 
 				for range b.N {
-					raw, err = doc.Encode()
+					raw := make([]byte, Size(doc))
+					err = doc.Encode(raw)
 				}
 
 				b.StopTimer()
@@ -867,7 +872,9 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		assert.NotEmpty(t, LogMessageBlock(doc))
 		assert.NotEmpty(t, LogMessageFlow(doc))
 
-		raw, err := doc.Encode()
+		raw := make([]byte, Size(doc))
+		err = doc.Encode(raw)
+
 		if err == nil {
 			assert.Equal(t, rawDoc, raw)
 		}
@@ -887,7 +894,8 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		assert.NotEmpty(t, LogMessageBlock(doc))
 		assert.NotEmpty(t, LogMessageFlow(doc))
 
-		raw, err := doc.Encode()
+		raw := make([]byte, Size(doc))
+		err = doc.Encode(raw)
 		require.NoError(t, err)
 		assert.Equal(t, rawDoc, raw)
 	})

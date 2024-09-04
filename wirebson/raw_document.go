@@ -29,9 +29,11 @@ type RawDocument []byte
 // Encode returns itself to implement the [AnyDocument] interface.
 //
 // Receiver must not be nil.
-func (raw RawDocument) Encode() (RawDocument, error) {
+func (raw RawDocument) Encode(d RawDocument) error {
 	must.BeTrue(raw != nil)
-	return raw, nil
+	d = raw
+
+	return nil
 }
 
 // Decode decodes a single non-nil BSON document that takes the whole non-nil byte slice.
