@@ -214,9 +214,11 @@ func (doc *Document) Encode(d RawDocument) error {
 	size := Size(doc)
 	buf := bytes.NewBuffer(d)
 
-	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
-		return lazyerrors.Error(err)
-	}
+	binary.LittleEndian.PutUint32(d, uint32(size))
+
+	//if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
+	//	return lazyerrors.Error(err)
+	//}
 
 	for _, f := range doc.fields {
 		if err := encodeField(buf, f.name, f.value); err != nil {

@@ -31,7 +31,7 @@ type RawDocument []byte
 // Receiver must not be nil.
 func (raw RawDocument) Encode(d RawDocument) error {
 	must.BeTrue(raw != nil)
-	d = raw
+	copy(d, raw)
 
 	return nil
 }
