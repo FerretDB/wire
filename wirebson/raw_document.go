@@ -15,7 +15,6 @@
 package wirebson
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
@@ -26,21 +25,6 @@ import (
 //
 // It generally references a part of a larger slice, not a copy.
 type RawDocument []byte
-
-func (raw RawDocument) Write(p []byte) (n int, err error) {
-	i := len([]byte(raw))
-
-	if i+len(p) <= cap(raw) {
-		return 0, fmt.Errorf("Exceeded []byte cap")
-	}
-
-	for _, b := range p {
-		raw[i] = b
-		i++
-	}
-
-	return len(p), nil
-}
 
 // Encode returns itself to implement the [AnyDocument] interface.
 //

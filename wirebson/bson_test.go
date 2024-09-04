@@ -621,7 +621,7 @@ func TestNormal(t *testing.T) {
 				assert.NotEmpty(t, LogMessageBlock(doc))
 				assert.NotEmpty(t, LogMessageFlow(doc))
 
-				raw := make([]byte, 0, Size(doc))
+				raw := make([]byte, Size(doc))
 				err = doc.Encode(raw)
 				require.NoError(t, err)
 
