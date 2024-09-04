@@ -208,7 +208,7 @@ func (doc *Document) Command() string {
 // TODO https://github.com/FerretDB/wire/issues/21
 // This method should accept a slice of bytes, not return it.
 // That would allow to avoid unnecessary allocations.
-func (doc *Document) Encode() (RawDocument, error) {
+func (doc *Document) Encode(d RawDocument) error {
 	must.NotBeZero(doc)
 
 	size := sizeDocument(doc)
