@@ -78,6 +78,23 @@ jobs:
       - name: Run linters
         run: bin/task lint
 
+      # The token is not required but should make uploads more stable.
+      # If secrets are unavailable (for example, for a pull request from a fork), it fallbacks to the tokenless uploads.
+      #
+      # Unfortunately, it seems that tokenless uploads fail too often.
+      # See https://github.com/codecov/feedback/issues/301.
+      #
+      # We also can't use ${{ vars.CODECOV_TOKEN }}: https://github.com/orgs/community/discussions/44322
+      - name: Upload coverage information to codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          token: 69371c38-548a-488e-8843-bfbbf32810bd
+          files: ./cover.txt
+          flags: test
+          fail_ci_if_error: true
+          verbose: true
+
       - name: Upload coverage information to coveralls
         uses: coverallsapp/github-action@v2
         with:
