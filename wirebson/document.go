@@ -80,15 +80,15 @@ func MakeDocument(cap int) *Document {
 	}
 }
 
-// Freeze prevents document from further field modifications.
-// Any methods that would modify document fields will panic.
+// Freeze prevents Document from further field modifications.
+// Any methods that would modify Document fields will panic.
 //
 // It is safe to call Freeze multiple times.
 func (doc *Document) Freeze() {
 	doc.frozen = true
 }
 
-// checkFrozen panics if document is frozen.
+// checkFrozen panics if Document is frozen.
 func (doc *Document) checkFrozen() {
 	if doc.frozen {
 		panic("document is frozen and can't be modified")
@@ -102,7 +102,7 @@ func (doc *Document) Len() int {
 
 // FieldNames returns a slice of field names in the Document in the original order.
 //
-// If document contains duplicate field names, the same name will appear multiple times.
+// If Document contains duplicate field names, the same name will appear multiple times.
 func (doc *Document) FieldNames() []string {
 	fields := make([]string, len(doc.fields))
 	for i, f := range doc.fields {
@@ -116,7 +116,7 @@ func (doc *Document) FieldNames() []string {
 //
 // It returns nil if the field is not found.
 //
-// If document contains duplicate field names, it returns the first one.
+// If Document contains duplicate field names, it returns the first one.
 // To get other fields, a for/range loop can be used with [Document.Len] and [Document.GetByIndex].
 // Or iterators.
 // TODO https://github.com/FerretDB/wire/issues/9
@@ -194,7 +194,7 @@ func (doc *Document) Replace(name string, value any) error {
 }
 
 // Command returns the first field name. This is often used as a command name.
-// It returns an empty string if document is nil or empty.
+// It returns an empty string if Document is nil or empty.
 func (doc *Document) Command() string {
 	if doc == nil || len(doc.fields) == 0 {
 		return ""
@@ -203,7 +203,7 @@ func (doc *Document) Command() string {
 	return doc.fields[0].name
 }
 
-// Encode encodes non-nil BSON document.
+// Encode encodes non-nil Document.
 //
 // TODO https://github.com/FerretDB/wire/issues/21
 // This method should accept a slice of bytes, not return it.
