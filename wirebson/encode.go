@@ -15,7 +15,6 @@
 package wirebson
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 
@@ -109,7 +108,7 @@ func encodeField(d []byte, name string, v any) error {
 		write(d, v)
 
 	default:
-		return encodeScalarField(buf, name, v)
+		return encodeScalarField(d, name, v)
 	}
 
 	return nil
@@ -118,32 +117,32 @@ func encodeField(d []byte, name string, v any) error {
 // encodeScalarField encodes scalar document field.
 //
 // It panics if v is not a scalar value.
-func encodeScalarField(buf *bytes.Buffer, name string, v any) error {
+func encodeScalarField(d []byte, name string, v any) error {
 	switch v := v.(type) {
 	case float64:
-		buf.WriteByte(byte(tagFloat64))
+		writeByte(d, byte(tagFloat64))
 	case string:
-		buf.WriteByte(byte(tagString))
+		writeByte(d, byte(tagString))
 	case Binary:
-		buf.WriteByte(byte(tagBinary))
+		writeByte(d, byte(tagBinary))
 	case ObjectID:
-		buf.WriteByte(byte(tagObjectID))
+		writeByte(d, byte(tagObjectID))
 	case bool:
-		buf.WriteByte(byte(tagBool))
+		writeByte(d, byte(tagBool))
 	case time.Time:
-		buf.WriteByte(byte(tagTime))
+		writeByte(d, byte(tagTime))
 	case NullType:
-		buf.WriteByte(byte(tagNull))
+		writeByte(d, byte(tagNull))
 	case Regex:
-		buf.WriteByte(byte(tagRegex))
+		writeByte(d, byte(tagRegex))
 	case int32:
-		buf.WriteByte(byte(tagInt32))
+		writeByte(d, byte(tagInt32))
 	case Timestamp:
-		buf.WriteByte(byte(tagTimestamp))
+		writeByte(d, byte(tagTimestamp))
 	case int64:
-		buf.WriteByte(byte(tagInt64))
+		writeByte(d, byte(tagInt64))
 	case Decimal128:
-		buf.WriteByte(byte(tagDecimal128))
+		writeByte(d, byte(tagDecimal128))
 	default:
 		panic(fmt.Sprintf("invalid BSON type %T", v))
 	}
