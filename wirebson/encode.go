@@ -90,7 +90,9 @@ func encodeField(d []byte, name string, v any) error {
 
 		write(d, b)
 
-		b, err := v.Encode()
+		b = make([]byte, 0, Size(v))
+
+		err := v.Encode(b)
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
@@ -150,16 +152,12 @@ func encodeScalarField(d []byte, name string, v any) error {
 	b := make([]byte, SizeCString(name))
 	EncodeCString(b, name)
 
-	if _, err := buf.Write(b); err != nil {
-		return lazyerrors.Error(err)
-	}
+	write(d, b)
 
 	b = make([]byte, sizeScalar(v))
 	encodeScalarValue(b, v)
 
-	if _, err := buf.Write(b); err != nil {
-		return lazyerrors.Error(err)
-	}
+	write(d, b)
 
 	return nil
 }

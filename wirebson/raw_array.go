@@ -30,9 +30,10 @@ type RawArray []byte
 // Encode returns itself to implement the [AnyArray] interface.
 //
 // Receiver must not be nil.
-func (raw RawArray) Encode() (RawArray, error) {
+func (raw RawArray) Encode(d RawArray) error {
 	must.BeTrue(raw != nil)
-	return raw, nil
+	d = raw
+	return nil
 }
 
 // Decode decodes a single non-nil BSON array that takes the whole non-nil byte slice.
