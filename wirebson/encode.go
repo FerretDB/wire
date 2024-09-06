@@ -23,18 +23,20 @@ import (
 
 func writeByte(d []byte, b byte) {
 	// TODO handle overflow
-	d[getIndex(d)] = b
+	d[getIndex(d, 1)] = b
 }
 
 func write(d []byte, b []byte) {
 	// TODO handle overflow
-	i := getIndex(d)
+	i := getIndex(d, len(b))
 	copy(d[i:], b)
 }
 
-func getIndex(d []byte) int {
+func getIndex(d []byte, l int) int {
 	// TODO handle overflow
-	return cap(d) - len(d)
+	i := len(d)
+	d = d[:l]
+	return i
 }
 
 // encodeField encodes document/array field.

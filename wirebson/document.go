@@ -212,7 +212,10 @@ func (doc *Document) Encode(d RawDocument) error {
 
 	size := Size(doc)
 
-	binary.LittleEndian.PutUint32(d, uint32(size))
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, uint32(size))
+
+	write(d, b)
 
 	//if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
 	//	return lazyerrors.Error(err)
