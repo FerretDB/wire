@@ -22,85 +22,91 @@ import (
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 )
 
+func writeByte(d []byte, b byte) {
+	// TODO handle overflow
+	d[getIndex(d)] = b
+}
+
+func write(d []byte, b []byte) {
+	// TODO handle overflow
+	i := getIndex(d)
+	copy(d[i:], b)
+}
+
+func getIndex(d []byte) int {
+	// TODO handle overflow
+	return cap(d) - len(d)
+}
+
 // encodeField encodes document/array field.
 //
 // It panics if v is not a valid type.
-func encodeField(buf *bytes.Buffer, name string, v any) error {
+func encodeField(d []byte, name string, v any) error {
 	switch v := v.(type) {
 	case *Document:
-		if err := buf.WriteByte(byte(tagDocument)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(d, byte(tagDocument))
+		//if err := buf.WriteByte(byte(tagDocument)); err != nil {
+		//	return lazyerrors.Error(err)
+		//}
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(d, b)
 
-		b = make([]byte, Size(v))
+		v.Encode(b)
 
-		if err := v.Encode(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		b = make([]byte, 0, Size(v))
+		write(d, b)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		//if _, err := buf.Write(b); err != nil {
+		//	return lazyerrors.Error(err)
+		//}
+
+		//b = make([]byte, Size(v))
+
+		//if err := v.Encode(b); err != nil {
+		//	return lazyerrors.Error(err)
+		//}
+
+		//if _, err := buf.Write(b); err != nil {
+		//	return lazyerrors.Error(err)
+		//}
 
 	case RawDocument:
-		if err := buf.WriteByte(byte(tagDocument)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(d, byte(tagDocument))
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(d, b)
 
-		if _, err := buf.Write(v); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(d, v)
 
 	case *Array:
-		if err := buf.WriteByte(byte(tagArray)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(d, byte(tagArray))
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(d, b)
 
 		b, err := v.Encode()
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
 
-		if _, err = buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(d, b)
 
 	case RawArray:
-		if err := buf.WriteByte(byte(tagArray)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(d, byte(tagArray))
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(d, b)
 
-		if _, err := buf.Write(v); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(d, v)
 
 	default:
 		return encodeScalarField(buf, name, v)

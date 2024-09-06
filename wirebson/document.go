@@ -218,13 +218,14 @@ func (doc *Document) Encode(d RawDocument) error {
 	//	return lazyerrors.Error(err)
 	//}
 
-	//for _, f := range doc.fields {
-	//	if err := encodeField(buf, f.name, f.value); err != nil {
-	//		return lazyerrors.Error(err)
-	//	}
-	//}
+	for _, f := range doc.fields {
+		if err := encodeField(d, f.name, f.value); err != nil {
+			return lazyerrors.Error(err)
+		}
+	}
 
-	d = append(d, byte(0))
+	// TODO
+	//d = append(d, byte(0))
 
 	return nil
 }
