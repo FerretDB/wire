@@ -110,13 +110,13 @@ func encodeField(buf *bytes.Buffer, name string, v any) error {
 
 func writeByte(b *[]byte, v byte) {
 	i := len(*b)
-	*b = (*b)[:1]
+	*b = (*b)[:1+i]
 	(*b)[i] = v
 }
 
 func write(b *[]byte, v []byte) {
 	i := len(*b)
-	*b = (*b)[:len(v)]
+	*b = (*b)[:len(v)+i]
 	copy((*b)[i:], v)
 }
 
