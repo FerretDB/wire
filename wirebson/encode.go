@@ -102,58 +102,66 @@ func encodeField(buf *bytes.Buffer, name string, v any) error {
 		}
 
 	default:
-		return encodeScalarField(buf, name, v)
+		//return encodeScalarField(buf, name, v)
 	}
 
 	return nil
 }
 
+func writeByte(b *[]byte, v byte) {
+	i := len(*b)
+	*b = (*b)[:1]
+	(*b)[i] = v
+}
+
+func write(b *[]byte, v []byte) {
+	i := len(*b)
+	*b = (*b)[:len(v)]
+	copy((*b)[i:], v)
+}
+
 // encodeScalarField encodes scalar document field.
 //
 // It panics if v is not a scalar value.
-func encodeScalarField(buf *bytes.Buffer, name string, v any) error {
+func encodeScalarField(b *[]byte, name string, v any) error {
 	switch v := v.(type) {
 	case float64:
-		buf.WriteByte(byte(tagFloat64))
+		writeByte(b, byte(tagFloat64))
 	case string:
-		buf.WriteByte(byte(tagString))
+		writeByte(b, byte(tagString))
 	case Binary:
-		buf.WriteByte(byte(tagBinary))
+		writeByte(b, byte(tagBinary))
 	case ObjectID:
-		buf.WriteByte(byte(tagObjectID))
+		writeByte(b, byte(tagObjectID))
 	case bool:
-		buf.WriteByte(byte(tagBool))
+		writeByte(b, byte(tagBool))
 	case time.Time:
-		buf.WriteByte(byte(tagTime))
+		writeByte(b, byte(tagTime))
 	case NullType:
-		buf.WriteByte(byte(tagNull))
+		writeByte(b, byte(tagNull))
 	case Regex:
-		buf.WriteByte(byte(tagRegex))
+		writeByte(b, byte(tagRegex))
 	case int32:
-		buf.WriteByte(byte(tagInt32))
+		writeByte(b, byte(tagInt32))
 	case Timestamp:
-		buf.WriteByte(byte(tagTimestamp))
+		writeByte(b, byte(tagTimestamp))
 	case int64:
-		buf.WriteByte(byte(tagInt64))
+		writeByte(b, byte(tagInt64))
 	case Decimal128:
-		buf.WriteByte(byte(tagDecimal128))
+		writeByte(b, byte(tagDecimal128))
 	default:
 		panic(fmt.Sprintf("invalid BSON type %T", v))
 	}
 
-	b := make([]byte, SizeCString(name))
-	EncodeCString(b, name)
+	bb := make([]byte, SizeCString(name))
+	EncodeCString(bb, name)
 
-	if _, err := buf.Write(b); err != nil {
-		return lazyerrors.Error(err)
-	}
+	write(b, bb)
 
-	b = make([]byte, sizeScalar(v))
-	encodeScalarValue(b, v)
+	bb = make([]byte, sizeScalar(v))
+	encodeScalarValue(bb, v)
 
-	if _, err := buf.Write(b); err != nil {
-		return lazyerrors.Error(err)
-	}
+	write(b, bb)
 
 	return nil
 }
