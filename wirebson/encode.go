@@ -108,60 +108,61 @@ func encodeField(buf *bytes.Buffer, name string, v any) error {
 	return nil
 }
 
-func writeByte(b *[]byte, v byte) {
-	i := len(*b)
-	*b = (*b)[:1+i]
-	(*b)[i] = v
+func writeByte(b []byte, v byte, offset int) {
+	b[offset] = v
 }
 
-func write(b *[]byte, v []byte) {
-	i := len(*b)
-	*b = (*b)[:len(v)+i]
-	copy((*b)[i:], v)
+// returns number of bytes written
+func write(b []byte, v []byte, offset int) int {
+	copy(b[offset:], v)
+	return len(v)
 }
 
 // encodeScalarField encodes scalar document field.
 //
 // It panics if v is not a scalar value.
-func encodeScalarField(b *[]byte, name string, v any) error {
+func encodeScalarField(b []byte, name string, v any) error {
+	var i int
+
 	switch v := v.(type) {
 	case float64:
-		writeByte(b, byte(tagFloat64))
+		writeByte(b, byte(tagFloat64), i)
 	case string:
-		writeByte(b, byte(tagString))
+		writeByte(b, byte(tagString), i)
 	case Binary:
-		writeByte(b, byte(tagBinary))
+		writeByte(b, byte(tagBinary), i)
 	case ObjectID:
-		writeByte(b, byte(tagObjectID))
+		writeByte(b, byte(tagObjectID), i)
 	case bool:
-		writeByte(b, byte(tagBool))
+		writeByte(b, byte(tagBool), i)
 	case time.Time:
-		writeByte(b, byte(tagTime))
+		writeByte(b, byte(tagTime), i)
 	case NullType:
-		writeByte(b, byte(tagNull))
+		writeByte(b, byte(tagNull), i)
 	case Regex:
-		writeByte(b, byte(tagRegex))
+		writeByte(b, byte(tagRegex), i)
 	case int32:
-		writeByte(b, byte(tagInt32))
+		writeByte(b, byte(tagInt32), i)
 	case Timestamp:
-		writeByte(b, byte(tagTimestamp))
+		writeByte(b, byte(tagTimestamp), i)
 	case int64:
-		writeByte(b, byte(tagInt64))
+		writeByte(b, byte(tagInt64), i)
 	case Decimal128:
-		writeByte(b, byte(tagDecimal128))
+		writeByte(b, byte(tagDecimal128), i)
 	default:
 		panic(fmt.Sprintf("invalid BSON type %T", v))
 	}
+	i++
 
 	bb := make([]byte, SizeCString(name))
 	EncodeCString(bb, name)
 
-	write(b, bb)
+	i += write(b, bb, i)
 
 	bb = make([]byte, sizeScalar(v))
 	encodeScalarValue(bb, v)
 
-	write(b, bb)
+	i += write(b, bb, i)
 
 	return nil
 }
