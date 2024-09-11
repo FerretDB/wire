@@ -15,7 +15,6 @@
 package wirebson
 
 import (
-	"bytes"
 	"encoding/binary"
 	"log/slog"
 	"strconv"
@@ -124,7 +123,7 @@ func (arr *Array) Encode() (RawArray, error) {
 	must.NotBeZero(arr)
 
 	size := sizeArray(arr)
-	buf := bytes.NewBuffer(make([]byte, 0, size))
+	buf := make([]byte, 0, size)
 
 	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
 		return nil, lazyerrors.Error(err)

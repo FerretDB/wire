@@ -15,7 +15,6 @@
 package wirebson
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 
@@ -25,84 +24,74 @@ import (
 // encodeField encodes document/array field.
 //
 // It panics if v is not a valid type.
-func encodeField(buf *bytes.Buffer, name string, v any) error {
+func encodeField(buf []byte, name string, v any) error {
+	var i int
+
 	switch v := v.(type) {
 	case *Document:
-		if err := buf.WriteByte(byte(tagDocument)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(buf, byte(tagDocument), i)
+		i++
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
 		b, err := v.Encode()
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
 
-		if _, err = buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
 	case RawDocument:
-		if err := buf.WriteByte(byte(tagDocument)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(buf, byte(tagDocument), i)
+		i++
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
-		if _, err := buf.Write(v); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, v, i)
+		i += len(b)
 
 	case *Array:
-		if err := buf.WriteByte(byte(tagArray)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(buf, byte(tagArray), i)
+		i++
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
 		b, err := v.Encode()
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
 
-		if _, err = buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
 	case RawArray:
-		if err := buf.WriteByte(byte(tagArray)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(buf, byte(tagArray), i)
+		i++
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
-		if _, err := buf.Write(v); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, v, i)
+		i += len(b)
 
 	default:
-		//return encodeScalarField(buf, name, v)
+		return encodeScalarField(i, buf, name, v)
 	}
 
 	return nil
@@ -121,9 +110,7 @@ func write(b []byte, v []byte, offset int) int {
 // encodeScalarField encodes scalar document field.
 //
 // It panics if v is not a scalar value.
-func encodeScalarField(b []byte, name string, v any) error {
-	var i int
-
+func encodeScalarField(i int, b []byte, name string, v any) error {
 	switch v := v.(type) {
 	case float64:
 		writeByte(b, byte(tagFloat64), i)
