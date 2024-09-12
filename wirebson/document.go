@@ -207,28 +207,25 @@ func (doc *Document) Command() string {
 // TODO https://github.com/FerretDB/wire/issues/21
 // This method should accept a slice of bytes, not return it.
 // That would allow to avoid unnecessary allocations.
-func (doc *Document) Encode() (RawDocument, error) {
+func (doc *Document) Encode(raw RawDocument) error {
 	must.NotBeZero(doc)
-
-	size := sizeDocument(doc)
-	buf := make([]byte, size)
 
 	var index int
 
-	binary.LittleEndian.PutUint32(buf, uint32(size))
+	binary.LittleEndian.PutUint32(raw, uint32(sizeDocument(doc)))
 	index += 4
 
 	var err error
 	for _, f := range doc.fields {
-		if index, err = encodeField(index, buf, f.name, f.value); err != nil {
-			return nil, lazyerrors.Error(err)
+		if index, err = encodeField(index, raw, f.name, f.value); err != nil {
+			return lazyerrors.Error(err)
 		}
 	}
 
-	writeByte(buf, byte(0), index)
+	writeByte(raw, byte(0), index)
 	index++
 
-	return buf, nil
+	return nil
 }
 
 // Decode returns itself to implement [AnyDocument].

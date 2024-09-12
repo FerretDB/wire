@@ -36,7 +36,10 @@ func encodeField(i int, buf []byte, name string, v any) (int, error) {
 		write(buf, b, i)
 		i += len(b)
 
-		b, err := v.Encode()
+		size := sizeDocument(v)
+		b = make([]byte, size)
+
+		err := v.Encode(b)
 		if err != nil {
 			return 0, lazyerrors.Error(err)
 		}
