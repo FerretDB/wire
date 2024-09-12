@@ -15,3 +15,6 @@ func TestEncodeScalarField(t *testing.T) {
 
 	assert.Equal(t, expected, actual)
 }
+
+func TestEncodeField(t *testing.T) {
+}
