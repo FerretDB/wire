@@ -15,7 +15,6 @@
 package wirebson
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 
@@ -25,135 +24,132 @@ import (
 // encodeField encodes document/array field.
 //
 // It panics if v is not a valid type.
-func encodeField(buf *bytes.Buffer, name string, v any) error {
+func encodeField(buf []byte, name string, v any) error {
+	var i int
+
 	switch v := v.(type) {
 	case *Document:
-		if err := buf.WriteByte(byte(tagDocument)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(buf, byte(tagDocument), i)
+		i++
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
 		b, err := v.Encode()
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
 
-		if _, err = buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
 	case RawDocument:
-		if err := buf.WriteByte(byte(tagDocument)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(buf, byte(tagDocument), i)
+		i++
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
-		if _, err := buf.Write(v); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, v, i)
+		i += len(b)
 
 	case *Array:
-		if err := buf.WriteByte(byte(tagArray)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(buf, byte(tagArray), i)
+		i++
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
 		b, err := v.Encode()
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
 
-		if _, err = buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
 	case RawArray:
-		if err := buf.WriteByte(byte(tagArray)); err != nil {
-			return lazyerrors.Error(err)
-		}
+		writeByte(buf, byte(tagArray), i)
+		i++
 
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		if _, err := buf.Write(b); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, b, i)
+		i += len(b)
 
-		if _, err := buf.Write(v); err != nil {
-			return lazyerrors.Error(err)
-		}
+		write(buf, v, i)
+		i += len(b)
 
 	default:
-		return encodeScalarField(buf, name, v)
+		return encodeScalarField(i, buf, name, v)
 	}
 
 	return nil
 }
 
+func writeByte(b []byte, v byte, offset int) {
+	b[offset] = v
+}
+
+// returns number of bytes written
+func write(b []byte, v []byte, offset int) int {
+	copy(b[offset:], v)
+	return len(v)
+}
+
 // encodeScalarField encodes scalar document field.
 //
 // It panics if v is not a scalar value.
-func encodeScalarField(buf *bytes.Buffer, name string, v any) error {
+func encodeScalarField(i int, b []byte, name string, v any) error {
 	switch v := v.(type) {
 	case float64:
-		buf.WriteByte(byte(tagFloat64))
+		writeByte(b, byte(tagFloat64), i)
 	case string:
-		buf.WriteByte(byte(tagString))
+		writeByte(b, byte(tagString), i)
 	case Binary:
-		buf.WriteByte(byte(tagBinary))
+		writeByte(b, byte(tagBinary), i)
 	case ObjectID:
-		buf.WriteByte(byte(tagObjectID))
+		writeByte(b, byte(tagObjectID), i)
 	case bool:
-		buf.WriteByte(byte(tagBool))
+		writeByte(b, byte(tagBool), i)
 	case time.Time:
-		buf.WriteByte(byte(tagTime))
+		writeByte(b, byte(tagTime), i)
 	case NullType:
-		buf.WriteByte(byte(tagNull))
+		writeByte(b, byte(tagNull), i)
 	case Regex:
-		buf.WriteByte(byte(tagRegex))
+		writeByte(b, byte(tagRegex), i)
 	case int32:
-		buf.WriteByte(byte(tagInt32))
+		writeByte(b, byte(tagInt32), i)
 	case Timestamp:
-		buf.WriteByte(byte(tagTimestamp))
+		writeByte(b, byte(tagTimestamp), i)
 	case int64:
-		buf.WriteByte(byte(tagInt64))
+		writeByte(b, byte(tagInt64), i)
 	case Decimal128:
-		buf.WriteByte(byte(tagDecimal128))
+		writeByte(b, byte(tagDecimal128), i)
 	default:
 		panic(fmt.Sprintf("invalid BSON type %T", v))
 	}
+	i++
 
-	b := make([]byte, SizeCString(name))
-	EncodeCString(b, name)
+	bb := make([]byte, SizeCString(name))
+	EncodeCString(bb, name)
 
-	if _, err := buf.Write(b); err != nil {
-		return lazyerrors.Error(err)
-	}
+	i += write(b, bb, i)
 
-	b = make([]byte, sizeScalar(v))
-	encodeScalarValue(b, v)
+	bb = make([]byte, sizeScalar(v))
+	encodeScalarValue(bb, v)
 
-	if _, err := buf.Write(b); err != nil {
-		return lazyerrors.Error(err)
-	}
+	i += write(b, bb, i)
 
 	return nil
 }
