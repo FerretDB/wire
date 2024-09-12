@@ -15,7 +15,6 @@
 package wirebson
 
 import (
-	"bytes"
 	"encoding/binary"
 	"log/slog"
 	"slices"
@@ -212,23 +211,24 @@ func (doc *Document) Encode() (RawDocument, error) {
 	must.NotBeZero(doc)
 
 	size := sizeDocument(doc)
-	buf := bytes.NewBuffer(make([]byte, 0, size))
+	buf := make([]byte, size)
 
-	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
-		return nil, lazyerrors.Error(err)
-	}
+	var index int
 
+	binary.LittleEndian.PutUint32(buf, uint32(size))
+	index += 4
+
+	var err error
 	for _, f := range doc.fields {
-		if err := encodeField(buf, f.name, f.value); err != nil {
+		if index, err = encodeField(index, buf, f.name, f.value); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 	}
 
-	if err := binary.Write(buf, binary.LittleEndian, byte(0)); err != nil {
-		return nil, lazyerrors.Error(err)
-	}
+	writeByte(buf, byte(0), index)
+	index++
 
-	return buf.Bytes(), nil
+	return buf, nil
 }
 
 // Decode returns itself to implement [AnyDocument].

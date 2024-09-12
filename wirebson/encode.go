@@ -24,9 +24,7 @@ import (
 // encodeField encodes document/array field.
 //
 // It panics if v is not a valid type.
-func encodeField(buf []byte, name string, v any) error {
-	var i int
-
+func encodeField(i int, buf []byte, name string, v any) (int, error) {
 	switch v := v.(type) {
 	case *Document:
 		writeByte(buf, byte(tagDocument), i)
@@ -40,7 +38,7 @@ func encodeField(buf []byte, name string, v any) error {
 
 		b, err := v.Encode()
 		if err != nil {
-			return lazyerrors.Error(err)
+			return 0, lazyerrors.Error(err)
 		}
 
 		write(buf, b, i)
@@ -71,7 +69,7 @@ func encodeField(buf []byte, name string, v any) error {
 
 		b, err := v.Encode()
 		if err != nil {
-			return lazyerrors.Error(err)
+			return 0, lazyerrors.Error(err)
 		}
 
 		write(buf, b, i)
@@ -91,10 +89,10 @@ func encodeField(buf []byte, name string, v any) error {
 		i += len(b)
 
 	default:
-		return encodeScalarField(i, buf, name, v)
+		return i, encodeScalarField(i, buf, name, v)
 	}
 
-	return nil
+	return i, nil
 }
 
 func writeByte(b []byte, v byte, offset int) {

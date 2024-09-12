@@ -123,23 +123,25 @@ func (arr *Array) Encode() (RawArray, error) {
 	must.NotBeZero(arr)
 
 	size := sizeArray(arr)
-	buf := make([]byte, 0, size)
+	buf := make([]byte, size)
 
-	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
-		return nil, lazyerrors.Error(err)
-	}
+	var index int
 
+	binary.LittleEndian.PutUint32(buf, uint32(size))
+	index += 4
+
+	var err error
 	for i, v := range arr.elements {
-		if err := encodeField(buf, strconv.Itoa(i), v); err != nil {
+		if index, err = encodeField(index, buf, strconv.Itoa(i), v); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
 	}
 
-	if err := binary.Write(buf, binary.LittleEndian, byte(0)); err != nil {
-		return nil, lazyerrors.Error(err)
-	}
+	writeByte(buf, byte(0), index)
+	index++
 
-	return buf.Bytes(), nil
+	//return buf.Bytes(), nil
+	return buf, nil
 }
 
 // Decode returns itself to implement [AnyArray].
