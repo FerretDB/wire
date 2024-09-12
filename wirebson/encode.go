@@ -92,7 +92,7 @@ func encodeField(i int, buf []byte, name string, v any) (int, error) {
 		i += len(b)
 
 	default:
-		return i, encodeScalarField(i, buf, name, v)
+		return encodeScalarField(i, buf, name, v)
 	}
 
 	return i, nil
@@ -111,7 +111,7 @@ func write(b []byte, v []byte, offset int) int {
 // encodeScalarField encodes scalar document field.
 //
 // It panics if v is not a scalar value.
-func encodeScalarField(i int, b []byte, name string, v any) error {
+func encodeScalarField(i int, b []byte, name string, v any) (int, error) {
 	switch v := v.(type) {
 	case float64:
 		writeByte(b, byte(tagFloat64), i)
@@ -152,7 +152,7 @@ func encodeScalarField(i int, b []byte, name string, v any) error {
 
 	i += write(b, bb, i)
 
-	return nil
+	return i, nil
 }
 
 // encodeScalarValue encodes value v into b.
