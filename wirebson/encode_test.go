@@ -1,9 +1,11 @@
 package wirebson
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEncodeScalarField(t *testing.T) {
@@ -17,4 +19,21 @@ func TestEncodeScalarField(t *testing.T) {
 }
 
 func TestEncodeField(t *testing.T) {
+	buf := bytes.NewBuffer(make([]byte, 0, 10))
+
+	err := encodeField(buf, "foo", "bar")
+	require.NoError(t, err)
+
+	actual := buf.Bytes()
+
+	expected := []byte{0x2, 0x66, 0x6f, 0x6f, 0x0, 0x4, 0x0, 0x0, 0x0, 0x62, 0x61, 0x72, 0x0}
+	assert.Equal(t, expected, actual)
+
+	err = encodeField(buf, "foo", int32(1))
+	require.NoError(t, err)
+
+	actual = buf.Bytes()
+
+	expected = append(expected, []byte{0x10, 0x66, 0x6f, 0x6f, 0x0, 0x1, 0x0, 0x0, 0x0}...)
+	assert.Equal(t, expected, actual)
 }
