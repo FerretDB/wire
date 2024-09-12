@@ -41,7 +41,6 @@ func makeRawDocument(pairs ...any) wirebson.RawDocument {
 	d := wirebson.MustDocument(pairs...)
 
 	raw, err := d.Encode()
-
 	if err != nil {
 		panic(err)
 	}

@@ -15,6 +15,7 @@
 package wirebson
 
 import (
+	"bytes"
 	"encoding/binary"
 	"log/slog"
 	"slices"
@@ -207,30 +208,27 @@ func (doc *Document) Command() string {
 // TODO https://github.com/FerretDB/wire/issues/21
 // This method should accept a slice of bytes, not return it.
 // That would allow to avoid unnecessary allocations.
-func (doc *Document) Encode(d RawDocument) error {
+func (doc *Document) Encode() (RawDocument, error) {
 	must.NotBeZero(doc)
 
-	size := Size(doc)
+	size := sizeDocument(doc)
+	buf := bytes.NewBuffer(make([]byte, 0, size))
 
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(size))
-
-	write(d, b)
-
-	//if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
-	//	return lazyerrors.Error(err)
-	//}
+	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
+		return nil, lazyerrors.Error(err)
+	}
 
 	for _, f := range doc.fields {
-		if err := encodeField(d, f.name, f.value); err != nil {
-			return lazyerrors.Error(err)
+		if err := encodeField(buf, f.name, f.value); err != nil {
+			return nil, lazyerrors.Error(err)
 		}
 	}
 
-	// TODO
-	//d = append(d, byte(0))
+	if err := binary.Write(buf, binary.LittleEndian, byte(0)); err != nil {
+		return nil, lazyerrors.Error(err)
+	}
 
-	return nil
+	return buf.Bytes(), nil
 }
 
 // Decode returns itself to implement [AnyDocument].

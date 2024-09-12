@@ -15,6 +15,7 @@
 package wirebson
 
 import (
+	"bytes"
 	"encoding/binary"
 	"log/slog"
 	"strconv"
@@ -119,26 +120,27 @@ func (arr *Array) Replace(index int, value any) error {
 // TODO https://github.com/FerretDB/wire/issues/21
 // This method should accept a slice of bytes, not return it.
 // That would allow to avoid unnecessary allocations.
-func (arr *Array) Encode(d RawArray) error {
+func (arr *Array) Encode() (RawArray, error) {
 	must.NotBeZero(arr)
 
 	size := sizeArray(arr)
+	buf := bytes.NewBuffer(make([]byte, 0, size))
 
-	binary.LittleEndian.PutUint32(d, uint32(size))
+	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
+		return nil, lazyerrors.Error(err)
+	}
 
 	for i, v := range arr.elements {
-		if err := encodeField(d, strconv.Itoa(i), v); err != nil {
-			return lazyerrors.Error(err)
+		if err := encodeField(buf, strconv.Itoa(i), v); err != nil {
+			return nil, lazyerrors.Error(err)
 		}
 	}
 
-	writeByte(d, byte(0))
-	// TODO
-	//if err := binary.Write(buf, binary.LittleEndian, byte(0)); err != nil {
-	//	return nil, lazyerrors.Error(err)
-	//}
+	if err := binary.Write(buf, binary.LittleEndian, byte(0)); err != nil {
+		return nil, lazyerrors.Error(err)
+	}
 
-	return nil
+	return buf.Bytes(), nil
 }
 
 // Decode returns itself to implement [AnyArray].
