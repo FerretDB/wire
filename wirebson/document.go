@@ -137,11 +137,22 @@ func (doc *Document) GetByIndex(i int) (string, any) {
 	return f.name, f.value
 }
 
-// All returns an iterator over all field name/value pairs of the document.
+// All returns an iterator over all field name/value pairs of the Document.
 func (doc *Document) All() iter.Seq2[string, any] {
 	return func(yield func(string, any) bool) {
 		for _, f := range doc.fields {
 			if !yield(f.name, f.value) {
+				return
+			}
+		}
+	}
+}
+
+// Fields returns an iterator over all field names of the Document.
+func (doc *Document) Fields() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for _, f := range doc.fields {
+			if !yield(f.name) {
 				return
 			}
 		}

@@ -15,12 +15,14 @@
 package wirebson
 
 import (
+	"maps"
+	"slices"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestDocumentAll(t *testing.T) {
+func TestDocument(t *testing.T) {
 	t.Parallel()
 
 	doc := MustDocument(
@@ -29,14 +31,22 @@ func TestDocumentAll(t *testing.T) {
 		"baz", int64(3),
 	)
 
-	var ks []string
-	var vs []any
+	t.Run("All", func(t *testing.T) {
+		t.Parallel()
 
-	for k, v := range doc.All() {
-		ks = append(ks, k)
-		vs = append(vs, v)
-	}
+		expected := map[string]any{
+			"foo": int32(1),
+			"bar": int32(2),
+			"baz": int64(3),
+		}
 
-	require.Equal(t, []string{"foo", "bar", "baz"}, ks)
-	require.Equal(t, []any{int32(1), int32(2), int64(3)}, vs)
+		assert.Equal(t, expected, maps.Collect(doc.All()))
+	})
+
+	t.Run("Fields", func(t *testing.T) {
+		t.Parallel()
+
+		expected := []string{"foo", "bar", "baz"}
+		assert.Equal(t, expected, slices.Collect(doc.Fields()))
+	})
 }
