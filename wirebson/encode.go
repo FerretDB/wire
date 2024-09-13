@@ -76,8 +76,7 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		i += write(buf[i:], v)
 
 	default:
-		written, err := encodeScalarField(buf[i:], name, v)
-		return i + written, err
+		return i + encodeScalarField(buf[i:], name, v), nil
 	}
 
 	return i, nil
@@ -86,7 +85,7 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 // write writes bytes from dst to src.
 // It returns number of bytes written.
 func write(dst []byte, src []byte) int {
-	if len(dst) > len(src) {
+	if len(src) > len(dst) {
 		panic(fmt.Sprintf("length of dst should be at least %d bytes, got %d", len(src), len(dst)))
 	}
 
@@ -98,7 +97,7 @@ func write(dst []byte, src []byte) int {
 //
 // It returns the number of bytes written.
 // It panics if v is not a scalar value.
-func encodeScalarField(b []byte, name string, v any) (int, error) {
+func encodeScalarField(b []byte, name string, v any) int {
 	var i int
 	switch v := v.(type) {
 	case float64:
@@ -136,7 +135,7 @@ func encodeScalarField(b []byte, name string, v any) (int, error) {
 	encodeScalarValue(b[i:], v)
 	i += sizeScalar(v)
 
-	return i, nil
+	return i
 }
 
 // encodeScalarValue encodes value v into b.
