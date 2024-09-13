@@ -76,9 +76,9 @@ func slogValue(v any, depth int) slog.Value {
 			return slog.StringValue("Array<...>")
 		}
 
-		attrs := make([]slog.Attr, len(v.elements))
+		attrs := make([]slog.Attr, len(v.values))
 
-		for i, v := range v.elements {
+		for i, v := range v.values {
 			attrs[i] = slog.Attr{Key: strconv.Itoa(i), Value: slogValue(v, depth+1)}
 		}
 
@@ -215,7 +215,7 @@ func logMessage(v any, indent, depth int) string {
 			return "[<nil>]"
 		}
 
-		l := len(v.elements)
+		l := len(v.values)
 		if l == 0 {
 			return "[]"
 		}
@@ -227,7 +227,7 @@ func logMessage(v any, indent, depth int) string {
 		if indent < 0 {
 			res := "["
 
-			for i, e := range v.elements {
+			for i, e := range v.values {
 				res += logMessage(e, -1, depth+1)
 
 				if i != l-1 {
@@ -242,7 +242,7 @@ func logMessage(v any, indent, depth int) string {
 
 		res := "[\n"
 
-		for _, e := range v.elements {
+		for _, e := range v.values {
 			res += strings.Repeat("  ", indent+1)
 			res += logMessage(e, indent+1, depth+1) + ",\n"
 		}
