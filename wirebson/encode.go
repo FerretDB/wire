@@ -58,12 +58,12 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		EncodeCString(buf[i:], name)
 		i += SizeCString(name)
 
-		b, err := v.Encode()
+		err := v.Encode(buf[i:])
 		if err != nil {
 			return 0, lazyerrors.Error(err)
 		}
 
-		i += write(buf[i:], b)
+		i += sizeArray(v)
 
 	case RawArray:
 		buf[i] = byte(tagArray)

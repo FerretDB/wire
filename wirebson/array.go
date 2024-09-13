@@ -119,32 +119,25 @@ func (arr *Array) Replace(index int, value any) error {
 // TODO https://github.com/FerretDB/wire/issues/21
 // This method should accept a slice of bytes, not return it.
 // That would allow to avoid unnecessary allocations.
-func (arr *Array) Encode() (RawArray, error) {
+func (arr *Array) Encode(raw RawArray) error {
 	must.NotBeZero(arr)
 
-	size := sizeArray(arr)
-	buf := make([]byte, size)
+	binary.LittleEndian.PutUint32(raw[0:4], uint32(sizeArray(arr)))
 
-	var index int
-
-	binary.LittleEndian.PutUint32(buf, uint32(size))
-	index += 4
-
+	index := 4
 	for i, v := range arr.elements {
-		written, err := encodeField(buf[index:], strconv.Itoa(i), v)
+		written, err := encodeField(raw[index:], strconv.Itoa(i), v)
 		if err != nil {
-			return nil, lazyerrors.Error(err)
+			return lazyerrors.Error(err)
 		}
 
 		index += written
 	}
 
-	buf[index] = byte(0)
-
+	raw[index] = byte(0)
 	index++
 
-	//return buf.Bytes(), nil
-	return buf, nil
+	return nil
 }
 
 // Decode returns itself to implement [AnyArray].
