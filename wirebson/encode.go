@@ -142,15 +142,11 @@ func encodeScalarField(i int, b []byte, name string, v any) (int, error) {
 	}
 	i++
 
-	bb := make([]byte, SizeCString(name))
-	EncodeCString(bb, name)
+	EncodeCString(b[i:], name)
+	i += SizeCString(name)
 
-	i += write(b, bb, i)
-
-	bb = make([]byte, sizeScalar(v))
-	encodeScalarValue(bb, v)
-
-	i += write(b, bb, i)
+	encodeScalarValue(b[i:], v)
+	i += sizeScalar(v)
 
 	return i, nil
 }
