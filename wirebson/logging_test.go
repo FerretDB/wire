@@ -30,11 +30,13 @@ import (
 func TestLoggingNil(t *testing.T) {
 	var doc *Document
 	assert.Equal(t, doc.LogValue().String(), "Document<nil>")
-	assert.Equal(t, LogMessage(doc), "{<nil>}")
+	assert.Equal(t, LogMessageBlock(doc), "{<nil>}")
+	assert.Equal(t, LogMessageFlow(doc), "{<nil>}")
 
 	var arr *Array
 	assert.Equal(t, arr.LogValue().String(), "Array<nil>")
-	assert.Equal(t, LogMessage(arr), "[<nil>]")
+	assert.Equal(t, LogMessageBlock(arr), "[<nil>]")
+	assert.Equal(t, LogMessageFlow(arr), "[<nil>]")
 }
 
 func TestLogging(t *testing.T) {
@@ -69,8 +71,8 @@ func TestLogging(t *testing.T) {
 		doc  any
 		t    string
 		j    string
-		m    string
 		b    string
+		f    string
 	}{
 		{
 			name: "Numbers",
@@ -81,22 +83,12 @@ func TestLogging(t *testing.T) {
 				"zero", math.Copysign(0, 1),
 				"neg_zero", math.Copysign(0, -1),
 				"nan", float64(math.NaN()),
+				"nan_weird", float64(math.Float64frombits(0x7FF8000F000F0001)),
 				"i32", int32(42),
 				"i64", int64(42),
 			),
-			t: `v.f64=42 v.inf=+Inf v.neg_inf=-Inf v.zero=0 v.neg_zero=-0 v.nan=NaN v.i32=42 v.i64=42`,
-			j: `{"v":{"f64":42,"inf":"+Inf","neg_inf":"-Inf","zero":0,"neg_zero":-0,"nan":"NaN","i32":42,"i64":42}}`,
-			m: `
-			{
-			  "f64": 42.0,
-			  "inf": +Inf,
-			  "neg_inf": -Inf,
-			  "zero": 0.0,
-			  "neg_zero": -0.0,
-			  "nan": NaN,
-			  "i32": 42,
-			  "i64": int64(42),
-			}`,
+			t: `v.f64=42 v.inf=+Inf v.neg_inf=-Inf v.zero=0 v.neg_zero=-0 v.nan=NaN v.nan_weird=NaN v.i32=42 v.i64=42`,
+			j: `{"v":{"f64":42,"inf":"+Inf","neg_inf":"-Inf","zero":0,"neg_zero":-0,"nan":"NaN","nan_weird":"NaN","i32":42,"i64":42}}`,
 			b: `
 			{
 			  "f64": 42.0,
@@ -105,9 +97,13 @@ func TestLogging(t *testing.T) {
 			  "zero": 0.0,
 			  "neg_zero": -0.0,
 			  "nan": NaN,
+			  "nan_weird": NaN(111111111111000000000000000111100000000000011110000000000000001),
 			  "i32": 42,
 			  "i64": int64(42),
 			}`,
+			f: `{"f64": 42.0, "inf": +Inf, "neg_inf": -Inf, "zero": 0.0, "neg_zero": -0.0, "nan": NaN, ` +
+				`"nan_weird": NaN(111111111111000000000000000111100000000000011110000000000000001), ` +
+				`"i32": 42, "i64": int64(42)}`,
 		},
 		{
 			name: "Scalars",
@@ -119,13 +115,6 @@ func TestLogging(t *testing.T) {
 			),
 			t: `v.null=<nil> v.id=ObjectID(420000000000000000000000) v.bool=true v.time=2023-03-06T09:14:42.123Z`,
 			j: `{"v":{"null":null,"id":"ObjectID(420000000000000000000000)","bool":true,"time":"2023-03-06T09:14:42.123Z"}}`,
-			m: `
-			{
-			  "null": null,
-			  "id": ObjectID(420000000000000000000000),
-			  "bool": true,
-			  "time": 2023-03-06T09:14:42.123Z,
-			}`,
 			b: `
 			{
 			  "null": null,
@@ -133,6 +122,7 @@ func TestLogging(t *testing.T) {
 			  "bool": true,
 			  "time": 2023-03-06T09:14:42.123Z,
 			}`,
+			f: `{"null": null, "id": ObjectID(420000000000000000000000), "bool": true, "time": 2023-03-06T09:14:42.123Z}`,
 		},
 		{
 			name: "Composites",
@@ -153,32 +143,26 @@ func TestLogging(t *testing.T) {
 				`v.array.0=foo v.array.1=bar v.array.2.0=baz v.array.2.1=qux`,
 			j: `{"v":{"doc":{"foo":"bar","baz":{"qux":"quux"}},"doc_raw":"RawDocument<1>",` +
 				`"array":{"0":"foo","1":"bar","2":{"0":"baz","1":"qux"}}}}`,
-			m: `
-			{
-			  "doc": {"foo": "bar", "baz": {"qux": "quux"}},
-			  "doc_raw": RawDocument<1>,
-			  "doc_empty": {},
-			  "array": ["foo", "bar", ["baz", "qux"]],
-			}`,
 			b: `
-			{
-			  "doc": {
-			    "foo": "bar",
-			    "baz": {
-			      "qux": "quux",
-			    },
-			  },
-			  "doc_raw": RawDocument<1>,
-			  "doc_empty": {},
-			  "array": [
-			    "foo",
-			    "bar",
-			    [
-			      "baz",
-			      "qux",
-			    ],
-			  ],
-			}`,
+				{
+				  "doc": {
+				    "foo": "bar",
+				    "baz": {
+				      "qux": "quux",
+				    },
+				  },
+				  "doc_raw": RawDocument<1>,
+				  "doc_empty": {},
+				  "array": [
+				    "foo",
+				    "bar",
+				    [
+				      "baz",
+				      "qux",
+				    ],
+				  ],
+				}`,
+			f: `{"doc": {"foo": "bar", "baz": {"qux": "quux"}}, "doc_raw": RawDocument<1>, "doc_empty": {}, "array": ["foo", "bar", ["baz", "qux"]]}`,
 		},
 		{
 			name: "Nested",
@@ -186,64 +170,57 @@ func TestLogging(t *testing.T) {
 			t:    `v.f.0.f.0.f.0.f.0.f.0.f.0.f.0.f.0.f.0.f.0=<nil>`,
 			j: `{"v":{"f":{"0":{"f":{"0":{"f":{"0":{"f":{"0":{"f":{"0":{"f":{"0":` +
 				`{"f":{"0":{"f":{"0":{"f":{"0":{"f":{"0":null}}}}}}}}}}}}}}}}}}}}}`,
-			m: `
-			{
-			  "f": [
-			    {
-			      "f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [null]}]}]}]}]}]}]}]}],
-			    },
-			  ],
-			}`,
 			b: `
-			{
-			  "f": [
-			    {
-			      "f": [
-			        {
-			          "f": [
-			            {
-			              "f": [
-			                {
-			                  "f": [
-			                    {
-			                      "f": [
-			                        {
-			                          "f": [
-			                            {
-			                              "f": [
-			                                {
-			                                  "f": [
-			                                    {
-			                                      "f": [
-			                                        null,
-			                                      ],
-			                                    },
-			                                  ],
-			                                },
-			                              ],
-			                            },
-			                          ],
-			                        },
-			                      ],
-			                    },
-			                  ],
-			                },
-			              ],
-			            },
-			          ],
-			        },
-			      ],
-			    },
-			  ],
-			}`,
+				{
+				  "f": [
+				    {
+				      "f": [
+				        {
+				          "f": [
+				            {
+				              "f": [
+				                {
+				                  "f": [
+				                    {
+				                      "f": [
+				                        {
+				                          "f": [
+				                            {
+				                              "f": [
+				                                {
+				                                  "f": [
+				                                    {
+				                                      "f": [
+				                                        null,
+				                                      ],
+				                                    },
+				                                  ],
+				                                },
+				                              ],
+				                            },
+				                          ],
+				                        },
+				                      ],
+				                    },
+				                  ],
+				                },
+				              ],
+				            },
+				          ],
+				        },
+				      ],
+				    },
+				  ],
+				}`,
+			f: `{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [null]}]}]}]}]}]}]}]}]}]}`,
 		},
 		{
 			name: "Raw",
 			doc:  RawDocument{42, 7},
 			t:    `v=RawDocument<2>`,
 			j:    `{"v":"RawDocument<2>"}`,
-			m:    `RawDocument<2>`,
 			b:    `RawDocument<2>`,
+			f:    `RawDocument<2>`,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -255,11 +232,11 @@ func TestLogging(t *testing.T) {
 			assert.Equal(t, tc.j+"\n", jbuf.String(), "json output mismatch")
 			jbuf.Reset()
 
-			m := LogMessage(tc.doc)
-			assert.Equal(t, testutil.Unindent(tc.m), m, "actual LogMessage result:\n%s", m)
-
 			b := LogMessageBlock(tc.doc)
 			assert.Equal(t, testutil.Unindent(tc.b), b, "actual LogMessageBlock result:\n%s", b)
+
+			f := LogMessageFlow(tc.doc)
+			assert.Equal(t, testutil.Unindent(tc.f), f, "actual LogMessageFlow result:\n%s", f)
 		})
 	}
 }

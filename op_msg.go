@@ -367,11 +367,6 @@ func (msg *OpMsg) logMessage(logFunc func(v any) string) string {
 	return logFunc(m)
 }
 
-// String returns a string representation for logging.
-func (msg *OpMsg) String() string {
-	return msg.logMessage(wirebson.LogMessage)
-}
-
 // StringBlock returns an indented string representation for logging.
 func (msg *OpMsg) StringBlock() string {
 	return msg.logMessage(wirebson.LogMessageBlock)

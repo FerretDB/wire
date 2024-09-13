@@ -188,11 +188,6 @@ func (query *OpQuery) logMessage(logFunc func(v any) string) string {
 	return logFunc(m)
 }
 
-// String returns a string representation for logging.
-func (query *OpQuery) String() string {
-	return query.logMessage(wirebson.LogMessage)
-}
-
 // StringBlock returns an indented string representation for logging.
 func (query *OpQuery) StringBlock() string {
 	return query.logMessage(wirebson.LogMessageBlock)
