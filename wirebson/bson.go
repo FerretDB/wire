@@ -86,10 +86,8 @@ type AnyArray interface {
 // validBSONType checks if v is a valid BSON type (including raw types).
 func validBSONType(v any) error {
 	switch v := v.(type) {
-	case *Document:
-	case RawDocument:
-	case *Array:
-	case RawArray:
+	case AnyDocument:
+	case AnyArray:
 	case float64:
 	case string:
 	case Binary:

@@ -17,6 +17,7 @@ package wirebson
 import (
 	"encoding/binary"
 	"log/slog"
+	"sort"
 	"strconv"
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
@@ -61,15 +62,15 @@ func MakeArray(cap int) *Array {
 	}
 }
 
-// Freeze prevents array from further modifications.
-// Any methods that would modify the array will panic.
+// Freeze prevents Array from further modifications.
+// Any methods that would modify the Array will panic.
 //
 // It is safe to call Freeze multiple times.
 func (arr *Array) Freeze() {
 	arr.frozen = true
 }
 
-// checkFrozen panics if array is frozen.
+// checkFrozen panics if Array is frozen.
 func (arr *Array) checkFrozen() {
 	if arr.frozen {
 		panic("array is frozen and can't be modified")
@@ -114,7 +115,17 @@ func (arr *Array) Replace(index int, value any) error {
 	return nil
 }
 
-// Encode encodes non-nil BSON array into raw.
+// SortInterface returns [sort.Interface] that can be used to sort Array in place.
+// Passed function should return true is a < b, false otherwise.
+// It should be able to handle values of different types.
+func (arr *Array) SortInterface(less func(a, b any) bool) sort.Interface {
+	return arraySort{
+		arr:  arr,
+		less: less,
+	}
+}
+
+// Encode encodes non-nil Array.
 //
 // The function operates directly on raw RawArray.
 // It doesn't reallocate memory, hence raw needs to have the proper length.
