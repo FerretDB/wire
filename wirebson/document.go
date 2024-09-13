@@ -215,11 +215,13 @@ func (doc *Document) Encode(raw RawDocument) error {
 	binary.LittleEndian.PutUint32(raw, uint32(sizeDocument(doc)))
 	index += 4
 
-	var err error
 	for _, f := range doc.fields {
-		if index, err = encodeField(index, raw, f.name, f.value); err != nil {
+		written, err := encodeField(raw[index:], f.name, f.value)
+		if err != nil {
 			return lazyerrors.Error(err)
 		}
+
+		index += written
 	}
 
 	writeByte(raw, byte(0), index)

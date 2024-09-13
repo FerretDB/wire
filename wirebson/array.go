@@ -130,11 +130,13 @@ func (arr *Array) Encode() (RawArray, error) {
 	binary.LittleEndian.PutUint32(buf, uint32(size))
 	index += 4
 
-	var err error
 	for i, v := range arr.elements {
-		if index, err = encodeField(index, buf, strconv.Itoa(i), v); err != nil {
+		written, err := encodeField(buf[index:], strconv.Itoa(i), v)
+		if err != nil {
 			return nil, lazyerrors.Error(err)
 		}
+
+		index += written
 	}
 
 	writeByte(buf, byte(0), index)

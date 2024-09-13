@@ -24,7 +24,8 @@ import (
 // encodeField encodes document/array field.
 //
 // It panics if v is not a valid type.
-func encodeField(i int, buf []byte, name string, v any) (int, error) {
+func encodeField(buf []byte, name string, v any) (int, error) {
+	var i int
 	switch v := v.(type) {
 	case *Document:
 		writeByte(buf, byte(tagDocument), i)
