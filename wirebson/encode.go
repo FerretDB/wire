@@ -34,8 +34,7 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		write(buf, b, i)
-		i += len(b)
+		i += write(buf[i:], b)
 
 		size := sizeDocument(v)
 		b = make([]byte, size)
@@ -45,8 +44,7 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 			return 0, lazyerrors.Error(err)
 		}
 
-		write(buf, b, i)
-		i += len(b)
+		i += write(buf[i:], b)
 
 	case RawDocument:
 
@@ -56,11 +54,9 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		write(buf, b, i)
-		i += len(b)
+		i += write(buf[i:], b)
 
-		write(buf, v, i)
-		i += len(b)
+		i += write(buf[i:], v)
 
 	case *Array:
 		buf[i] = byte(tagArray)
@@ -69,16 +65,14 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		write(buf, b, i)
-		i += len(b)
+		i += write(buf[i:], b)
 
 		b, err := v.Encode()
 		if err != nil {
 			return 0, lazyerrors.Error(err)
 		}
 
-		write(buf, b, i)
-		i += len(b)
+		i += write(buf[i:], b)
 
 	case RawArray:
 		buf[i] = byte(tagArray)
@@ -87,11 +81,9 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		b := make([]byte, SizeCString(name))
 		EncodeCString(b, name)
 
-		write(buf, b, i)
-		i += len(b)
+		i += write(buf[i:], b)
 
-		write(buf, v, i)
-		i += len(b)
+		i += write(buf[i:], v)
 
 	default:
 		written, err := encodeScalarField(buf[i:], name, v)
@@ -102,8 +94,12 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 }
 
 // returns number of bytes written
-func write(b []byte, v []byte, offset int) int {
-	copy(b[offset:], v)
+func write(b []byte, v []byte) int {
+	if len(v) > len(b) {
+		panic("write impossible")
+	}
+
+	copy(b, v)
 	return len(v)
 }
 
