@@ -83,18 +83,20 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 	return i, nil
 }
 
-// returns number of bytes written
-func write(b []byte, v []byte) int {
-	if len(v) > len(b) {
-		panic("write impossible")
+// write writes bytes from dst to src.
+// It returns number of bytes written.
+func write(dst []byte, src []byte) int {
+	if len(dst) > len(src) {
+		panic(fmt.Sprintf("length of dst should be at least %d bytes, got %d", len(src), len(dst)))
 	}
 
-	copy(b, v)
-	return len(v)
+	copy(dst, src)
+	return len(src)
 }
 
 // encodeScalarField encodes scalar document field.
 //
+// It returns the number of bytes written.
 // It panics if v is not a scalar value.
 func encodeScalarField(b []byte, name string, v any) (int, error) {
 	var i int
