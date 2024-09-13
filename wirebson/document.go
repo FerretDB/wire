@@ -204,9 +204,8 @@ func (doc *Document) Command() string {
 
 // Encode encodes non-nil BSON document.
 //
-// TODO https://github.com/FerretDB/wire/issues/21
-// This method should accept a slice of bytes, not return it.
-// That would allow to avoid unnecessary allocations.
+// The function operates directly on raw RawDocument.
+// It doesn't reallocate memory, hence raw needs to have the proper length.
 func (doc *Document) Encode(raw RawDocument) error {
 	must.NotBeZero(doc)
 

@@ -116,8 +116,8 @@ func (arr *Array) Replace(index int, value any) error {
 
 // Encode encodes non-nil BSON array into raw.
 //
-// TODO: comment about len of raw (panic or error?)
-// The provided raw array must have
+// The function operates directly on raw RawArray.
+// It doesn't reallocate memory, hence raw needs to have the proper length.
 func (arr *Array) Encode(raw RawArray) error {
 	must.NotBeZero(arr)
 

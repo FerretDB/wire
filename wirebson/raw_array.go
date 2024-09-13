@@ -32,7 +32,7 @@ type RawArray []byte
 // Receiver must not be nil.
 func (raw RawArray) Encode(out RawArray) error {
 	must.BeTrue(raw != nil)
-	out = raw
+	copy(out, raw)
 	return nil
 }
 
