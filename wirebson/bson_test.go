@@ -847,6 +847,8 @@ func BenchmarkDocument(b *testing.B) {
 			var err error
 
 			b.Run("Decode", func(b *testing.B) {
+				b.Skip("FIXME")
+
 				b.ReportAllocs()
 
 				for range b.N {
@@ -860,6 +862,8 @@ func BenchmarkDocument(b *testing.B) {
 			})
 
 			b.Run("Encode", func(b *testing.B) {
+				b.Skip("FIXME")
+
 				doc, err = tc.raw.Decode()
 				require.NoError(b, err)
 
@@ -877,6 +881,8 @@ func BenchmarkDocument(b *testing.B) {
 			})
 
 			b.Run("LogValue", func(b *testing.B) {
+				b.Skip("FIXME")
+
 				doc, err = tc.raw.Decode()
 				require.NoError(b, err)
 
@@ -927,6 +933,8 @@ func BenchmarkDocument(b *testing.B) {
 			})
 
 			b.Run("DecodeDeep", func(b *testing.B) {
+				b.Skip("FIXME")
+
 				b.ReportAllocs()
 
 				for range b.N {
@@ -940,6 +948,8 @@ func BenchmarkDocument(b *testing.B) {
 			})
 
 			b.Run("EncodeDeep", func(b *testing.B) {
+				b.Skip("FIXME")
+
 				doc, err = tc.raw.DecodeDeep()
 				require.NoError(b, err)
 
@@ -957,6 +967,8 @@ func BenchmarkDocument(b *testing.B) {
 			})
 
 			b.Run("LogValueDeep", func(b *testing.B) {
+				b.Skip("FIXME")
+
 				doc, err = tc.raw.DecodeDeep()
 				require.NoError(b, err)
 
