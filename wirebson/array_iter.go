@@ -12,11 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// We should remove the build tag below once we use 1.23 everywhere.
-// TODO https://github.com/FerretDB/wire/issues/9
-
-//go:build go1.23
-
 package wirebson
 
 import (

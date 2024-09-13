@@ -83,7 +83,7 @@ func TestLogging(t *testing.T) {
 				"zero", math.Copysign(0, 1),
 				"neg_zero", math.Copysign(0, -1),
 				"nan", float64(math.NaN()),
-				"nan_weird", float64(math.Float64frombits(0x7FF8000F000F0001)),
+				"nan_weird", float64(math.Float64frombits(0x7ff8000f000f0001)),
 				"i32", int32(42),
 				"i64", int64(42),
 			),
