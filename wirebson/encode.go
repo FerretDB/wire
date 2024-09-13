@@ -25,17 +25,17 @@ import (
 //
 // It returns the number of bytes written.
 // It panics if v is not a valid type.
-func encodeField(buf []byte, name string, v any) (int, error) {
+func encodeField(dst []byte, name string, v any) (int, error) {
 	var i int
 	switch v := v.(type) {
 	case *Document:
-		buf[i] = byte(tagDocument)
+		dst[i] = byte(tagDocument)
 		i++
 
-		EncodeCString(buf[i:], name)
+		EncodeCString(dst[i:], name)
 		i += SizeCString(name)
 
-		err := v.Encode(buf[i:])
+		err := v.Encode(dst[i:])
 		if err != nil {
 			return 0, lazyerrors.Error(err)
 		}
@@ -44,22 +44,22 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 
 	case RawDocument:
 
-		buf[i] = byte(tagDocument)
+		dst[i] = byte(tagDocument)
 		i++
 
-		EncodeCString(buf[i:], name)
+		EncodeCString(dst[i:], name)
 		i += SizeCString(name)
 
-		i += write(buf[i:], v)
+		i += write(dst[i:], v)
 
 	case *Array:
-		buf[i] = byte(tagArray)
+		dst[i] = byte(tagArray)
 		i++
 
-		EncodeCString(buf[i:], name)
+		EncodeCString(dst[i:], name)
 		i += SizeCString(name)
 
-		err := v.Encode(buf[i:])
+		err := v.Encode(dst[i:])
 		if err != nil {
 			return 0, lazyerrors.Error(err)
 		}
@@ -67,16 +67,16 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		i += sizeArray(v)
 
 	case RawArray:
-		buf[i] = byte(tagArray)
+		dst[i] = byte(tagArray)
 		i++
 
-		EncodeCString(buf[i:], name)
+		EncodeCString(dst[i:], name)
 		i += SizeCString(name)
 
-		i += write(buf[i:], v)
+		i += write(dst[i:], v)
 
 	default:
-		return i + encodeScalarField(buf[i:], name, v), nil
+		return i + encodeScalarField(dst[i:], name, v), nil
 	}
 
 	return i, nil
@@ -97,42 +97,42 @@ func write(dst []byte, src []byte) int {
 //
 // It returns the number of bytes written.
 // It panics if v is not a scalar value.
-func encodeScalarField(b []byte, name string, v any) int {
+func encodeScalarField(dst []byte, name string, v any) int {
 	var i int
 	switch v := v.(type) {
 	case float64:
-		b[i] = byte(tagFloat64)
+		dst[i] = byte(tagFloat64)
 	case string:
-		b[i] = byte(tagString)
+		dst[i] = byte(tagString)
 	case Binary:
-		b[i] = byte(tagBinary)
+		dst[i] = byte(tagBinary)
 	case ObjectID:
-		b[i] = byte(tagObjectID)
+		dst[i] = byte(tagObjectID)
 	case bool:
-		b[i] = byte(tagBool)
+		dst[i] = byte(tagBool)
 	case time.Time:
-		b[i] = byte(tagTime)
+		dst[i] = byte(tagTime)
 	case NullType:
-		b[i] = byte(tagNull)
+		dst[i] = byte(tagNull)
 	case Regex:
-		b[i] = byte(tagRegex)
+		dst[i] = byte(tagRegex)
 	case int32:
-		b[i] = byte(tagInt32)
+		dst[i] = byte(tagInt32)
 	case Timestamp:
-		b[i] = byte(tagTimestamp)
+		dst[i] = byte(tagTimestamp)
 	case int64:
-		b[i] = byte(tagInt64)
+		dst[i] = byte(tagInt64)
 	case Decimal128:
-		b[i] = byte(tagDecimal128)
+		dst[i] = byte(tagDecimal128)
 	default:
 		panic(fmt.Sprintf("invalid BSON type %T", v))
 	}
 	i++
 
-	EncodeCString(b[i:], name)
+	EncodeCString(dst[i:], name)
 	i += SizeCString(name)
 
-	encodeScalarValue(b[i:], v)
+	encodeScalarValue(dst[i:], v)
 	i += sizeScalar(v)
 
 	return i
@@ -144,32 +144,32 @@ func encodeScalarField(b []byte, name string, v any) int {
 // Only b[0:Size(v)] bytes are modified.
 //
 // It panics if v is not a [ScalarType] (including CString).
-func encodeScalarValue(b []byte, v any) {
+func encodeScalarValue(dst []byte, v any) {
 	switch v := v.(type) {
 	case float64:
-		encodeFloat64(b, v)
+		encodeFloat64(dst, v)
 	case string:
-		encodeString(b, v)
+		encodeString(dst, v)
 	case Binary:
-		encodeBinary(b, v)
+		encodeBinary(dst, v)
 	case ObjectID:
-		encodeObjectID(b, v)
+		encodeObjectID(dst, v)
 	case bool:
-		encodeBool(b, v)
+		encodeBool(dst, v)
 	case time.Time:
-		encodeTime(b, v)
+		encodeTime(dst, v)
 	case NullType:
 		// nothing
 	case Regex:
-		encodeRegex(b, v)
+		encodeRegex(dst, v)
 	case int32:
-		encodeInt32(b, v)
+		encodeInt32(dst, v)
 	case Timestamp:
-		encodeTimestamp(b, v)
+		encodeTimestamp(dst, v)
 	case int64:
-		encodeInt64(b, v)
+		encodeInt64(dst, v)
 	case Decimal128:
-		encodeDecimal128(b, v)
+		encodeDecimal128(dst, v)
 	default:
 		panic(fmt.Sprintf("unsupported type %T", v))
 	}

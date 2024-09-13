@@ -8,6 +8,8 @@ import (
 )
 
 func TestEncodeScalarField(t *testing.T) {
+	t.Parallel()
+
 	actual := make([]byte, 13)
 	assert.Equal(t, 13, encodeScalarField(actual[0:], "foo", "bar"))
 
@@ -16,9 +18,10 @@ func TestEncodeScalarField(t *testing.T) {
 }
 
 func TestEncodeField(t *testing.T) {
-	actual := make([]byte, 22)
+	t.Parallel()
 
 	var i int
+	actual := make([]byte, 22)
 	written, err := encodeField(actual[i:], "foo", "bar")
 	require.NoError(t, err)
 
