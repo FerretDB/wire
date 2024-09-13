@@ -210,11 +210,9 @@ func (doc *Document) Command() string {
 func (doc *Document) Encode(raw RawDocument) error {
 	must.NotBeZero(doc)
 
-	var index int
+	binary.LittleEndian.PutUint32(raw[0:4], uint32(sizeDocument(doc)))
 
-	binary.LittleEndian.PutUint32(raw, uint32(sizeDocument(doc)))
-	index += 4
-
+	index := 4
 	for _, f := range doc.fields {
 		written, err := encodeField(raw[index:], f.name, f.value)
 		if err != nil {
