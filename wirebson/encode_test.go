@@ -8,38 +8,31 @@ import (
 )
 
 func TestEncodeScalarField(t *testing.T) {
-	buf := make([]byte, 13)
-	encodeScalarField(buf[0:], "foo", "bar")
+	actual := make([]byte, 13)
+	assert.Equal(t, 13, encodeScalarField(actual[0:], "foo", "bar"))
 
 	expected := []byte{0x02, 0x66, 0x6f, 0x6f, 0x0, 0x4, 0x0, 0x0, 0x0, 0x62, 0x61, 0x72, 0x0}
-	actual := buf
-
 	assert.Equal(t, expected, actual)
 }
 
 func TestEncodeField(t *testing.T) {
-	buf := make([]byte, 22)
+	actual := make([]byte, 22)
 
 	var i int
-
-	written, err := encodeField(buf[i:], "foo", "bar")
+	written, err := encodeField(actual[i:], "foo", "bar")
 	require.NoError(t, err)
 
+	assert.Equal(t, 13, written)
 	i += written
-
-	actual := buf
 
 	expected := []byte{0x2, 0x66, 0x6f, 0x6f, 0x0, 0x4, 0x0, 0x0, 0x0, 0x62, 0x61, 0x72, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
 	assert.Equal(t, expected, actual)
 
-	written, err = encodeField(buf[i:], "foo", int32(1))
+	written, err = encodeField(actual[i:], "foo", int32(1))
 	require.NoError(t, err)
 
+	assert.Equal(t, 9, written)
 	i += written
-
-	actual = buf
-
-	expected = append(expected, []byte{}...)
 
 	expected = []byte{0x2, 0x66, 0x6f, 0x6f, 0x0, 0x4, 0x0, 0x0, 0x0, 0x62, 0x61, 0x72, 0x0, 0x10, 0x66, 0x6f, 0x6f, 0x0, 0x1, 0x0, 0x0, 0x0}
 	assert.Equal(t, expected, actual)
