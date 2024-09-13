@@ -202,7 +202,7 @@ func (doc *Document) Command() string {
 	return doc.fields[0].name
 }
 
-// Encode encodes non-nil BSON document.
+// Encode encodes non-nil BSON document into raw.
 //
 // The function operates directly on raw RawDocument.
 // It doesn't reallocate memory, hence raw needs to have the proper length.
