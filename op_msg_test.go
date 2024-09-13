@@ -53,7 +53,7 @@ var msgTestCases = []testCase{
 			}},
 		},
 		command: "buildInfo",
-		m: `
+		b: `
 		{
 		  "FlagBits": "[]",
 		  "Checksum": int64(0),
@@ -62,7 +62,9 @@ var msgTestCases = []testCase{
 		      "Kind": 0,
 		      "Document": {
 		        "buildInfo": 1,
-		        "lsid": {"id": Binary(uuid:oxnytKF1QMe456OjLsJWvg==)},
+		        "lsid": {
+		          "id": Binary(uuid:oxnytKF1QMe456OjLsJWvg==),
+		        },
 		        "$db": "admin",
 		      },
 		    },
@@ -126,7 +128,7 @@ var msgTestCases = []testCase{
 			}},
 		},
 		command: "version",
-		m: `
+		b: `
 		{
 		  "FlagBits": "[]",
 		  "Checksum": int64(0),
@@ -140,7 +142,12 @@ var msgTestCases = []testCase{
 		        "allocator": "tcmalloc",
 		        "javascriptEngine": "mozjs",
 		        "sysInfo": "deprecated",
-		        "versionArray": [5, 0, 0, 0],
+		        "versionArray": [
+		          5,
+		          0,
+		          0,
+		          0,
+		        ],
 		        "openssl": {
 		          "running": "OpenSSL 1.1.1f  31 Mar 2020",
 		          "compiled": "OpenSSL 1.1.1f  31 Mar 2020",
@@ -160,7 +167,11 @@ var msgTestCases = []testCase{
 		        "bits": 64,
 		        "debug": false,
 		        "maxBsonObjectSize": 16777216,
-		        "storageEngines": ["devnull", "ephemeralForTest", "wiredTiger"],
+		        "storageEngines": [
+		          "devnull",
+		          "ephemeralForTest",
+		          "wiredTiger",
+		        ],
 		        "ok": 1.0,
 		      },
 		    },
@@ -210,7 +221,7 @@ var msgTestCases = []testCase{
 			},
 		},
 		command: "insert",
-		m: `
+		b: `
 		{
 		  "FlagBits": "[]",
 		  "Checksum": int64(0),
@@ -220,7 +231,9 @@ var msgTestCases = []testCase{
 		      "Document": {
 		        "insert": "actor",
 		        "ordered": true,
-		        "writeConcern": {"w": "majority"},
+		        "writeConcern": {
+		          "w": "majority",
+		        },
 		        "$db": "monila",
 		      },
 		    },
@@ -302,7 +315,7 @@ var msgTestCases = []testCase{
 			}},
 		},
 		command: "insert",
-		m: `
+		b: `
 		{
 		  "FlagBits": "[]",
 		  "Checksum": int64(0),
@@ -311,7 +324,12 @@ var msgTestCases = []testCase{
 		      "Kind": 0,
 		      "Document": {
 		        "insert": "values",
-		        "documents": [{"v": NaN, "_id": ObjectID(6377f213757c0babdebc2f6a)}],
+		        "documents": [
+		          {
+		            "v": NaN,
+		            "_id": ObjectID(6377f213757c0babdebc2f6a),
+		          },
+		        ],
 		        "ordered": true,
 		        "$db": "test",
 		      },
@@ -371,19 +389,28 @@ var msgTestCases = []testCase{
 			},
 		},
 		command: "insert",
-		m: `
+		b: `
 		{
 		  "FlagBits": "[]",
 		  "Checksum": int64(0),
 		  "Sections": [
 		    {
 		      "Kind": 0,
-		      "Document": {"insert": "TestInsertSimple", "ordered": true, "$db": "testinsertsimple"},
+		      "Document": {
+		        "insert": "TestInsertSimple",
+		        "ordered": true,
+		        "$db": "testinsertsimple",
+		      },
 		    },
 		    {
 		      "Kind": 1,
 		      "Identifier": "documents",
-		      "Documents": [{"_id": ObjectID(637cfad88dc3cecde38e1e6b), "v": -0.0}],
+		      "Documents": [
+		        {
+		          "_id": ObjectID(637cfad88dc3cecde38e1e6b),
+		          "v": -0.0,
+		        },
+		      ],
 		    },
 		  ],
 		}`,
@@ -448,7 +475,7 @@ var msgTestCases = []testCase{
 			checksum: 1737537506,
 		},
 		command: "insert",
-		m: `
+		b: `
 		{
 		  "FlagBits": "[checksumPresent]",
 		  "Checksum": int64(1737537506),
@@ -456,9 +483,21 @@ var msgTestCases = []testCase{
 		    {
 		      "Kind": 1,
 		      "Identifier": "documents",
-		      "Documents": [{"_id": ObjectID(638cec46aa778bf370105429), "a": 3.0}],
+		      "Documents": [
+		        {
+		          "_id": ObjectID(638cec46aa778bf370105429),
+		          "a": 3.0,
+		        },
+		      ],
 		    },
-		    {"Kind": 0, "Document": {"insert": "foo", "ordered": true, "$db": "test"}},
+		    {
+		      "Kind": 0,
+		      "Document": {
+		        "insert": "foo",
+		        "ordered": true,
+		        "$db": "test",
+		      },
+		    },
 		  ],
 		}`,
 	},
@@ -545,7 +584,7 @@ var msgTestCases = []testCase{
 			checksum: 2932997361,
 		},
 		command: "update",
-		m: `
+		b: `
 		{
 		  "FlagBits": "[checksumPresent]",
 		  "Checksum": int64(2932997361),
@@ -554,10 +593,28 @@ var msgTestCases = []testCase{
 		      "Kind": 1,
 		      "Identifier": "updates",
 		      "Documents": [
-		        {"q": {"a": 20.0}, "u": {"$inc": {"a": 1.0}}, "multi": false, "upsert": false},
+		        {
+		          "q": {
+		            "a": 20.0,
+		          },
+		          "u": {
+		            "$inc": {
+		              "a": 1.0,
+		            },
+		          },
+		          "multi": false,
+		          "upsert": false,
+		        },
 		      ],
 		    },
-		    {"Kind": 0, "Document": {"update": "foo", "ordered": true, "$db": "test"}},
+		    {
+		      "Kind": 0,
+		      "Document": {
+		        "update": "foo",
+		        "ordered": true,
+		        "$db": "test",
+		      },
+		    },
 		  ],
 		}`,
 	},

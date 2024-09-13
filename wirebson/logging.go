@@ -28,10 +28,6 @@ import (
 // logMaxDepth is the maximum depth of a recursive representation of a BSON value.
 const logMaxDepth = 20
 
-// logMaxFlowLength is the maximum length of a flow/inline/compact representation of a BSON value.
-// It may be set to 0 to always disable flow representation.
-const logMaxFlowLength = 80
-
 // nanBits is the most common pattern of a NaN float64 value, the same as math.Float64bits(math.NaN()).
 const nanBits = 0b111111111111000000000000000000000000000000000000000000000000001
 
@@ -149,17 +145,13 @@ func slogValue(v any, depth int) slog.Value {
 // LogMessage returns a representation as a string.
 // It may change over time.
 func LogMessage(v any) string {
-	return logMessage(v, logMaxFlowLength, "", 1)
+	return logMessage(v, -1, 1)
 }
 
-// LogMessageBlock is a variant of [LogMessage] that never uses a flow style.
-func LogMessageBlock(v any) string {
-	return logMessage(v, 0, "", 1)
-}
-
-// LogMessageFlow is a variant of [LogMessage] that always uses a flow style.
-func LogMessageFlow(v any) string {
-	return logMessage(v, math.MaxInt, "", 1)
+// LogMessageIndent returns a representation as an indented string.
+// It may change over time.
+func LogMessageIndent(v any) string {
+	return logMessage(v, 0, 1)
 }
 
 // logMessage returns an indented representation of any BSON value as a string,
@@ -170,7 +162,7 @@ func LogMessageFlow(v any) string {
 // All information is preserved.
 //
 // TODO https://github.com/FerretDB/wire/issues/23
-func logMessage(v any, maxFlowLength int, indent string, depth int) string {
+func logMessage(v any, indent, depth int) string {
 	switch v := v.(type) {
 	case *Document:
 		if v == nil {
@@ -186,38 +178,32 @@ func logMessage(v any, maxFlowLength int, indent string, depth int) string {
 			return "{...}"
 		}
 
-		if maxFlowLength > 0 {
+		if indent < 0 {
 			res := "{"
 
 			for i, f := range v.fields {
 				res += strconv.Quote(f.name) + `: `
-				res += logMessage(f.value, maxFlowLength, "", depth+1)
+				res += logMessage(f.value, -1, depth+1)
 
 				if i != l-1 {
 					res += ", "
-				}
-
-				if len(res) >= maxFlowLength {
-					break
 				}
 			}
 
 			res += `}`
 
-			if len(res) < maxFlowLength {
-				return res
-			}
+			return res
 		}
 
 		res := "{\n"
 
 		for _, f := range v.fields {
-			res += indent + "  "
+			res += strings.Repeat("  ", indent+1)
 			res += strconv.Quote(f.name) + `: `
-			res += logMessage(f.value, maxFlowLength, indent+"  ", depth+1) + ",\n"
+			res += logMessage(f.value, indent+1, depth+1) + ",\n"
 		}
 
-		res += indent + `}`
+		res += strings.Repeat("  ", indent) + `}`
 
 		return res
 
@@ -238,36 +224,30 @@ func logMessage(v any, maxFlowLength int, indent string, depth int) string {
 			return "[...]"
 		}
 
-		if maxFlowLength > 0 {
+		if indent < 0 {
 			res := "["
 
 			for i, e := range v.elements {
-				res += logMessage(e, maxFlowLength, "", depth+1)
+				res += logMessage(e, -1, depth+1)
 
 				if i != l-1 {
 					res += ", "
-				}
-
-				if len(res) >= maxFlowLength {
-					break
 				}
 			}
 
 			res += `]`
 
-			if len(res) < maxFlowLength {
-				return res
-			}
+			return res
 		}
 
 		res := "[\n"
 
 		for _, e := range v.elements {
-			res += indent + "  "
-			res += logMessage(e, maxFlowLength, indent+"  ", depth+1) + ",\n"
+			res += strings.Repeat("  ", indent+1)
+			res += logMessage(e, indent+1, depth+1) + ",\n"
 		}
 
-		res += indent + `]`
+		res += strings.Repeat("  ", indent) + `]`
 
 		return res
 

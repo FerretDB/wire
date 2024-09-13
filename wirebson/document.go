@@ -119,7 +119,6 @@ func (doc *Document) FieldNames() []string {
 // If Document contains duplicate field names, it returns the first one.
 // To get other fields, a for/range loop can be used with [Document.Len] and [Document.GetByIndex].
 // Or iterators.
-// TODO https://github.com/FerretDB/wire/issues/9
 func (doc *Document) Get(name string) any {
 	for _, f := range doc.fields {
 		if f.name == name {
