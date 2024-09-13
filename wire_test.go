@@ -40,7 +40,9 @@ func TestMain(m *testing.M) {
 func makeRawDocument(pairs ...any) wirebson.RawDocument {
 	d := wirebson.MustDocument(pairs...)
 
-	raw, err := d.Encode()
+	raw := make([]byte, wirebson.Size(d))
+
+	err := d.Encode(raw)
 	if err != nil {
 		panic(err)
 	}
