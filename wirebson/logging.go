@@ -145,13 +145,17 @@ func slogValue(v any, depth int) slog.Value {
 // LogMessage returns a representation as a string.
 // It may change over time.
 func LogMessage(v any) string {
-	return logMessage(v, -1, 1)
+	var b strings.Builder
+	logMessage(v, -1, 1, &b)
+	return b.String()
 }
 
 // LogMessageIndent returns a representation as an indented string.
 // It may change over time.
 func LogMessageIndent(v any) string {
-	return logMessage(v, 0, 1)
+	var b strings.Builder
+	logMessage(v, 0, 1, &b)
+	return b.String()
 }
 
 // logMessage returns an indented representation of any BSON value as a string,
@@ -160,154 +164,188 @@ func LogMessageIndent(v any) string {
 //
 // The result is optimized for large values such as full request documents.
 // All information is preserved.
-//
-// TODO https://github.com/FerretDB/wire/issues/23
-func logMessage(v any, indent, depth int) string {
+func logMessage(v any, indent, depth int, b *strings.Builder) {
 	switch v := v.(type) {
 	case *Document:
 		if v == nil {
-			return "{<nil>}"
+			b.WriteString("{<nil>}")
+			return
 		}
 
 		l := len(v.fields)
 		if l == 0 {
-			return "{}"
+			b.WriteString("{}")
+			return
 		}
 
 		if depth > logMaxDepth {
-			return "{...}"
+			b.WriteString("{...}")
+			return
 		}
 
 		if indent < 0 {
-			res := "{"
+			b.WriteByte('{')
 
 			for i, f := range v.fields {
-				res += strconv.Quote(f.name) + `: `
-				res += logMessage(f.value, -1, depth+1)
+				b.WriteString(strconv.Quote(f.name))
+				b.WriteString(": ")
+
+				logMessage(f.value, -1, depth+1, b)
 
 				if i != l-1 {
-					res += ", "
+					b.WriteString(", ")
 				}
 			}
 
-			res += `}`
-
-			return res
+			b.WriteByte('}')
+			return
 		}
 
-		res := "{\n"
+		b.WriteString("{\n")
 
 		for _, f := range v.fields {
-			res += strings.Repeat("  ", indent+1)
-			res += strconv.Quote(f.name) + `: `
-			res += logMessage(f.value, indent+1, depth+1) + ",\n"
+			b.WriteString(strings.Repeat("  ", indent+1))
+
+			b.WriteString(strconv.Quote(f.name))
+			b.WriteString(": ")
+
+			logMessage(f.value, indent+1, depth+1, b)
+
+			b.WriteString(",\n")
 		}
 
-		res += strings.Repeat("  ", indent) + `}`
-
-		return res
+		b.WriteString(strings.Repeat("  ", indent))
+		b.WriteByte('}')
 
 	case RawDocument:
-		return "RawDocument<" + strconv.FormatInt(int64(len(v)), 10) + ">"
+		b.WriteString("RawDocument<")
+		b.WriteString(strconv.FormatInt(int64(len(v)), 10))
+		b.WriteByte('>')
 
 	case *Array:
 		if v == nil {
-			return "[<nil>]"
+			b.WriteString("[<nil>]")
+			return
 		}
 
 		l := len(v.values)
 		if l == 0 {
-			return "[]"
+			b.WriteString("[]")
+			return
 		}
 
 		if depth > logMaxDepth {
-			return "[...]"
+			b.WriteString("[...]")
+			return
 		}
 
 		if indent < 0 {
-			res := "["
+			b.WriteByte('[')
 
 			for i, e := range v.values {
-				res += logMessage(e, -1, depth+1)
+				logMessage(e, -1, depth+1, b)
 
 				if i != l-1 {
-					res += ", "
+					b.WriteString(", ")
 				}
 			}
 
-			res += `]`
-
-			return res
+			b.WriteRune(']')
+			return
 		}
 
-		res := "[\n"
+		b.WriteString("[\n")
 
 		for _, e := range v.values {
-			res += strings.Repeat("  ", indent+1)
-			res += logMessage(e, indent+1, depth+1) + ",\n"
+			b.WriteString(strings.Repeat("  ", indent+1))
+
+			logMessage(e, indent+1, depth+1, b)
+
+			b.WriteString(",\n")
 		}
 
-		res += strings.Repeat("  ", indent) + `]`
-
-		return res
+		b.WriteString(strings.Repeat("  ", indent))
+		b.WriteByte(']')
 
 	case RawArray:
-		return "RawArray<" + strconv.FormatInt(int64(len(v)), 10) + ">"
+		b.WriteString("RawArray<")
+		b.WriteString(strconv.FormatInt(int64(len(v)), 10))
+		b.WriteByte('>')
 
 	case float64:
 		switch {
 		case math.IsNaN(v):
 			if bits := math.Float64bits(v); bits != nanBits {
-				return fmt.Sprintf("NaN(%b)", bits)
+				b.WriteString(fmt.Sprintf("NaN(%b)", bits))
+				return
 			}
 
-			return "NaN"
+			b.WriteString("NaN")
 
 		case math.IsInf(v, 1):
-			return "+Inf"
+			b.WriteString("+Inf")
+
 		case math.IsInf(v, -1):
-			return "-Inf"
+			b.WriteString("-Inf")
+
 		default:
 			res := strconv.FormatFloat(v, 'f', -1, 64)
 			if !strings.Contains(res, ".") {
 				res += ".0"
 			}
 
-			return res
+			b.WriteString(res)
 		}
 
 	case string:
-		return strconv.Quote(v)
+		b.WriteString(strconv.Quote(v))
 
 	case Binary:
-		return "Binary(" + v.Subtype.String() + ":" + base64.StdEncoding.EncodeToString(v.B) + ")"
+		b.WriteString("Binary(")
+		b.WriteString(v.Subtype.String())
+		b.WriteByte(':')
+		b.WriteString(base64.StdEncoding.EncodeToString(v.B))
+		b.WriteByte(')')
 
 	case ObjectID:
-		return "ObjectID(" + hex.EncodeToString(v[:]) + ")"
+		b.WriteString("ObjectID(")
+		b.WriteString(hex.EncodeToString(v[:]))
+		b.WriteByte(')')
 
 	case bool:
-		return strconv.FormatBool(v)
+		b.WriteString(strconv.FormatBool(v))
 
 	case time.Time:
-		return v.Truncate(time.Millisecond).UTC().Format(time.RFC3339Nano)
+		b.WriteString(v.Truncate(time.Millisecond).UTC().Format(time.RFC3339Nano))
 
 	case NullType:
-		return "null"
+		b.WriteString("null")
 
 	case Regex:
-		return "/" + v.Pattern + "/" + v.Options
+		b.WriteByte('/')
+		b.WriteString(v.Pattern)
+		b.WriteByte('/')
+		b.WriteString(v.Options)
 
 	case int32:
-		return strconv.FormatInt(int64(v), 10)
+		b.WriteString(strconv.FormatInt(int64(v), 10))
 
 	case Timestamp:
-		return "Timestamp(" + strconv.FormatUint(uint64(v), 10) + ")"
+		b.WriteString("Timestamp(")
+		b.WriteString(strconv.FormatUint(uint64(v), 10))
+		b.WriteByte(')')
 
 	case int64:
-		return "int64(" + strconv.FormatInt(int64(v), 10) + ")"
+		b.WriteString("int64(")
+		b.WriteString(strconv.FormatInt(int64(v), 10))
+		b.WriteByte(')')
 
 	case Decimal128:
-		return "Decimal128(" + strconv.FormatUint(uint64(v.L), 10) + "," + strconv.FormatUint(uint64(v.H), 10) + ")"
+		b.WriteString("Decimal128(")
+		b.WriteString(strconv.FormatUint(uint64(v.L), 10))
+		b.WriteByte(',')
+		b.WriteString(strconv.FormatUint(uint64(v.H), 10))
+		b.WriteByte(')')
 
 	default:
 		panic(fmt.Sprintf("invalid BSON type %T", v))
