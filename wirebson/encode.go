@@ -23,6 +23,7 @@ import (
 
 // encodeField encodes document/array field.
 //
+// It returns the number of bytes written.
 // It panics if v is not a valid type.
 func encodeField(buf []byte, name string, v any) (int, error) {
 	var i int

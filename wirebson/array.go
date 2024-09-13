@@ -123,18 +123,18 @@ func (arr *Array) Encode(raw RawArray) error {
 
 	binary.LittleEndian.PutUint32(raw[0:4], uint32(sizeArray(arr)))
 
-	index := 4
-	for i, v := range arr.elements {
-		written, err := encodeField(raw[index:], strconv.Itoa(i), v)
+	i := 4
+	for n, v := range arr.elements {
+		written, err := encodeField(raw[i:], strconv.Itoa(n), v)
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
 
-		index += written
+		i += written
 	}
 
-	raw[index] = byte(0)
-	index++
+	raw[i] = byte(0)
+	i++
 
 	return nil
 }

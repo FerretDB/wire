@@ -211,18 +211,18 @@ func (doc *Document) Encode(raw RawDocument) error {
 
 	binary.LittleEndian.PutUint32(raw[0:4], uint32(sizeDocument(doc)))
 
-	index := 4
+	i := 4
 	for _, f := range doc.fields {
-		written, err := encodeField(raw[index:], f.name, f.value)
+		written, err := encodeField(raw[i:], f.name, f.value)
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
 
-		index += written
+		i += written
 	}
 
-	raw[index] = byte(0)
-	index++
+	raw[i] = byte(0)
+	i++
 
 	return nil
 }
