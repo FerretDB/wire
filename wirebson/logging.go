@@ -143,18 +143,18 @@ func slogValue(v any, depth int) slog.Value {
 }
 
 // LogMessage returns a representation as a string.
-// It always uses a flow style.
+// It may change over time.
 func LogMessage(v any) string {
 	var b strings.Builder
-	logMessage(v, true, "", 1, &b)
+	logMessage(v, -1, 1, &b)
 	return b.String()
 }
 
-// LogMessageIndent returns a representation as a string.
-// It never uses a flow style.
+// LogMessageIndent returns a representation as an indented string.
+// It may change over time.
 func LogMessageIndent(v any) string {
 	var b strings.Builder
-	logMessage(v, false, "", 1, &b)
+	logMessage(v, 0, 1, &b)
 	return b.String()
 }
 
@@ -164,9 +164,7 @@ func LogMessageIndent(v any) string {
 //
 // The result is optimized for large values such as full request documents.
 // All information is preserved.
-//
-// TODO https://github.com/FerretDB/wire/issues/23
-func logMessage(v any, flow bool, indent string, depth int, b *strings.Builder) {
+func logMessage(v any, indent, depth int, b *strings.Builder) {
 	switch v := v.(type) {
 	case *Document:
 		if v == nil {
@@ -185,14 +183,14 @@ func logMessage(v any, flow bool, indent string, depth int, b *strings.Builder) 
 			return
 		}
 
-		if flow {
+		if indent < 0 {
 			b.WriteByte('{')
 
 			for i, f := range v.fields {
 				b.WriteString(strconv.Quote(f.name))
 				b.WriteString(": ")
 
-				logMessage(f.value, flow, "", depth+1, b)
+				logMessage(f.value, -1, depth+1, b)
 
 				if i != l-1 {
 					b.WriteString(", ")
@@ -206,18 +204,17 @@ func logMessage(v any, flow bool, indent string, depth int, b *strings.Builder) 
 		b.WriteString("{\n")
 
 		for _, f := range v.fields {
-			b.WriteString(indent)
-			b.WriteString("  ")
+			b.WriteString(strings.Repeat("  ", indent+1))
 
 			b.WriteString(strconv.Quote(f.name))
 			b.WriteString(": ")
 
-			logMessage(f.value, flow, indent+"  ", depth+1, b)
+			logMessage(f.value, indent+1, depth+1, b)
 
 			b.WriteString(",\n")
 		}
 
-		b.WriteString(indent)
+		b.WriteString(strings.Repeat("  ", indent))
 		b.WriteByte('}')
 
 	case RawDocument:
@@ -242,11 +239,11 @@ func logMessage(v any, flow bool, indent string, depth int, b *strings.Builder) 
 			return
 		}
 
-		if flow {
+		if indent < 0 {
 			b.WriteByte('[')
 
 			for i, e := range v.values {
-				logMessage(e, flow, "", depth+1, b)
+				logMessage(e, -1, depth+1, b)
 
 				if i != l-1 {
 					b.WriteString(", ")
@@ -260,15 +257,14 @@ func logMessage(v any, flow bool, indent string, depth int, b *strings.Builder) 
 		b.WriteString("[\n")
 
 		for _, e := range v.values {
-			b.WriteString(indent)
-			b.WriteString("  ")
+			b.WriteString(strings.Repeat("  ", indent+1))
 
-			logMessage(e, flow, indent+"  ", depth+1, b)
+			logMessage(e, indent+1, depth+1, b)
 
 			b.WriteString(",\n")
 		}
 
-		b.WriteString(indent)
+		b.WriteString(strings.Repeat("  ", indent))
 		b.WriteByte(']')
 
 	case RawArray:
