@@ -53,7 +53,7 @@ func sizeDocument(doc *Document) int {
 func sizeArray(arr *Array) int {
 	res := 5
 
-	for i, v := range arr.elements {
+	for i, v := range arr.values {
 		res += 1 + SizeCString(strconv.Itoa(i)) + size(v)
 	}
 
