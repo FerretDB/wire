@@ -31,30 +31,23 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		buf[i] = byte(tagDocument)
 		i++
 
-		b := make([]byte, SizeCString(name))
-		EncodeCString(b, name)
+		EncodeCString(buf[i:], name)
+		i += SizeCString(name)
 
-		i += write(buf[i:], b)
-
-		size := sizeDocument(v)
-		b = make([]byte, size)
-
-		err := v.Encode(b)
+		err := v.Encode(buf[i:])
 		if err != nil {
 			return 0, lazyerrors.Error(err)
 		}
 
-		i += write(buf[i:], b)
+		i += sizeDocument(v)
 
 	case RawDocument:
 
 		buf[i] = byte(tagDocument)
 		i++
 
-		b := make([]byte, SizeCString(name))
-		EncodeCString(b, name)
-
-		i += write(buf[i:], b)
+		EncodeCString(buf[i:], name)
+		i += SizeCString(name)
 
 		i += write(buf[i:], v)
 
@@ -62,10 +55,8 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		buf[i] = byte(tagArray)
 		i++
 
-		b := make([]byte, SizeCString(name))
-		EncodeCString(b, name)
-
-		i += write(buf[i:], b)
+		EncodeCString(buf[i:], name)
+		i += SizeCString(name)
 
 		b, err := v.Encode()
 		if err != nil {
@@ -78,10 +69,8 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		buf[i] = byte(tagArray)
 		i++
 
-		b := make([]byte, SizeCString(name))
-		EncodeCString(b, name)
-
-		i += write(buf[i:], b)
+		EncodeCString(buf[i:], name)
+		i += SizeCString(name)
 
 		i += write(buf[i:], v)
 
