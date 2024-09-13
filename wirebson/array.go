@@ -114,11 +114,10 @@ func (arr *Array) Replace(index int, value any) error {
 	return nil
 }
 
-// Encode encodes non-nil BSON array.
+// Encode encodes non-nil BSON array into raw.
 //
-// TODO https://github.com/FerretDB/wire/issues/21
-// This method should accept a slice of bytes, not return it.
-// That would allow to avoid unnecessary allocations.
+// TODO: comment about len of raw (panic or error?)
+// The provided raw array must have
 func (arr *Array) Encode(raw RawArray) error {
 	must.NotBeZero(arr)
 
