@@ -367,14 +367,14 @@ func (msg *OpMsg) logMessage(logFunc func(v any) string) string {
 	return logFunc(m)
 }
 
-// StringBlock returns an indented string representation for logging.
-func (msg *OpMsg) StringBlock() string {
-	return msg.logMessage(wirebson.LogMessageBlock)
+// String returns an string representation for logging.
+func (msg *OpMsg) String() string {
+	return msg.logMessage(wirebson.LogMessage)
 }
 
-// StringFlow returns an unindented string representation for logging.
-func (msg *OpMsg) StringFlow() string {
-	return msg.logMessage(wirebson.LogMessageFlow)
+// StringIndent returns an indented string representation for logging.
+func (msg *OpMsg) StringIndent() string {
+	return msg.logMessage(wirebson.LogMessageIndent)
 }
 
 // check interfaces

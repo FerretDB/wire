@@ -35,11 +35,10 @@ type MsgBody interface {
 	// UnmarshalBinaryNocopy is a variant of [encoding.BinaryUnmarshaler] that does not have to copy the data.
 	UnmarshalBinaryNocopy([]byte) error
 
-	// StringBlock returns an indented string representation for logging.
-	StringBlock() string
+	fmt.Stringer
 
-	// StringFlow returns an unindented string representation for logging.
-	StringFlow() string
+	// StringIndent returns an indented string representation for logging.
+	StringIndent() string
 
 	// check performs deep (and slow) validity check.
 	check() error
