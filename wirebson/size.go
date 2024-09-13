@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-// Size returns a Size of the encoding of value v in bytes.
+// Size returns a size of the encoding of value v in bytes.
 //
 // It panics for invalid types.
 func Size(v any) int {
