@@ -224,7 +224,7 @@ func (doc *Document) Encode(raw RawDocument) error {
 		index += written
 	}
 
-	writeByte(raw, byte(0), index)
+	raw[index] = byte(0)
 	index++
 
 	return nil

@@ -28,7 +28,7 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 	var i int
 	switch v := v.(type) {
 	case *Document:
-		writeByte(buf, byte(tagDocument), i)
+		buf[i] = byte(tagDocument)
 		i++
 
 		b := make([]byte, SizeCString(name))
@@ -49,7 +49,8 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		i += len(b)
 
 	case RawDocument:
-		writeByte(buf, byte(tagDocument), i)
+
+		buf[i] = byte(tagDocument)
 		i++
 
 		b := make([]byte, SizeCString(name))
@@ -62,7 +63,7 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		i += len(b)
 
 	case *Array:
-		writeByte(buf, byte(tagArray), i)
+		buf[i] = byte(tagArray)
 		i++
 
 		b := make([]byte, SizeCString(name))
@@ -80,7 +81,7 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 		i += len(b)
 
 	case RawArray:
-		writeByte(buf, byte(tagArray), i)
+		buf[i] = byte(tagArray)
 		i++
 
 		b := make([]byte, SizeCString(name))
@@ -100,10 +101,6 @@ func encodeField(buf []byte, name string, v any) (int, error) {
 	return i, nil
 }
 
-func writeByte(b []byte, v byte, offset int) {
-	b[offset] = v
-}
-
 // returns number of bytes written
 func write(b []byte, v []byte, offset int) int {
 	copy(b[offset:], v)
@@ -117,29 +114,29 @@ func encodeScalarField(b []byte, name string, v any) (int, error) {
 	var i int
 	switch v := v.(type) {
 	case float64:
-		writeByte(b, byte(tagFloat64), i)
+		b[i] = byte(tagFloat64)
 	case string:
-		writeByte(b, byte(tagString), i)
+		b[i] = byte(tagString)
 	case Binary:
-		writeByte(b, byte(tagBinary), i)
+		b[i] = byte(tagBinary)
 	case ObjectID:
-		writeByte(b, byte(tagObjectID), i)
+		b[i] = byte(tagObjectID)
 	case bool:
-		writeByte(b, byte(tagBool), i)
+		b[i] = byte(tagBool)
 	case time.Time:
-		writeByte(b, byte(tagTime), i)
+		b[i] = byte(tagTime)
 	case NullType:
-		writeByte(b, byte(tagNull), i)
+		b[i] = byte(tagNull)
 	case Regex:
-		writeByte(b, byte(tagRegex), i)
+		b[i] = byte(tagRegex)
 	case int32:
-		writeByte(b, byte(tagInt32), i)
+		b[i] = byte(tagInt32)
 	case Timestamp:
-		writeByte(b, byte(tagTimestamp), i)
+		b[i] = byte(tagTimestamp)
 	case int64:
-		writeByte(b, byte(tagInt64), i)
+		b[i] = byte(tagInt64)
 	case Decimal128:
-		writeByte(b, byte(tagDecimal128), i)
+		b[i] = byte(tagDecimal128)
 	default:
 		panic(fmt.Sprintf("invalid BSON type %T", v))
 	}

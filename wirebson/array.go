@@ -139,7 +139,8 @@ func (arr *Array) Encode() (RawArray, error) {
 		index += written
 	}
 
-	writeByte(buf, byte(0), index)
+	buf[index] = byte(0)
+
 	index++
 
 	//return buf.Bytes(), nil
