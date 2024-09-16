@@ -31,7 +31,7 @@ type normalTestCase struct {
 	name string
 	raw  RawDocument
 	doc  *Document
-	m    string
+	b    string
 }
 
 // decodeTestCase represents a single test case for unsuccessful decoding.
@@ -77,11 +77,14 @@ var normalTestCases = []normalTestCase{
 			"compression", MustArray("none"),
 			"loadBalanced", false,
 		),
-		m: `
+		b: `
 		{
 		  "ismaster": true,
 		  "client": {
-		    "driver": {"name": "nodejs", "version": "4.0.0-beta.6"},
+		    "driver": {
+		      "name": "nodejs",
+		      "version": "4.0.0-beta.6",
+		    },
 		    "os": {
 		      "type": "Darwin",
 		      "name": "darwin",
@@ -89,9 +92,13 @@ var normalTestCases = []normalTestCase{
 		      "version": "20.6.0",
 		    },
 		    "platform": "Node.js v14.17.3, LE (unified)|Node.js v14.17.3, LE (unified)",
-		    "application": {"name": "mongosh 1.0.1"},
+		    "application": {
+		      "name": "mongosh 1.0.1",
+		    },
 		  },
-		  "compression": ["none"],
+		  "compression": [
+		    "none",
+		  ],
 		  "loadBalanced": false,
 		}`,
 	},
@@ -119,11 +126,14 @@ var normalTestCases = []normalTestCase{
 			"compression", MustArray("none"),
 			"loadBalanced", false,
 		),
-		m: `
+		b: `
 		{
 		  "ismaster": true,
 		  "client": {
-		    "driver": {"name": "nodejs", "version": "4.0.0-beta.6"},
+		    "driver": {
+		      "name": "nodejs",
+		      "version": "4.0.0-beta.6",
+		    },
 		    "os": {
 		      "type": "Darwin",
 		      "name": "darwin",
@@ -131,9 +141,13 @@ var normalTestCases = []normalTestCase{
 		      "version": "20.6.0",
 		    },
 		    "platform": "Node.js v14.17.3, LE (unified)|Node.js v14.17.3, LE (unified)",
-		    "application": {"name": "mongosh 1.0.1"},
+		    "application": {
+		      "name": "mongosh 1.0.1",
+		    },
 		  },
-		  "compression": ["none"],
+		  "compression": [
+		    "none",
+		  ],
 		  "loadBalanced": false,
 		}`,
 	},
@@ -153,10 +167,12 @@ var normalTestCases = []normalTestCase{
 			),
 			"$db", "admin",
 		),
-		m: `
+		b: `
 		{
 		  "buildInfo": 1,
-		  "lsid": {"id": Binary(uuid:oxnytKF1QMe456OjLsJWvg==)},
+		  "lsid": {
+		    "id": Binary(uuid:oxnytKF1QMe456OjLsJWvg==),
+		  },
 		  "$db": "admin",
 		}`,
 	},
@@ -204,7 +220,7 @@ var normalTestCases = []normalTestCase{
 			"storageEngines", MustArray("devnull", "ephemeralForTest", "wiredTiger"),
 			"ok", float64(1),
 		),
-		m: `
+		b: `
 		{
 		  "version": "5.0.0",
 		  "gitVersion": "1184f004a99660de6f5e745573419bda8a28c0e9",
@@ -212,7 +228,12 @@ var normalTestCases = []normalTestCase{
 		  "allocator": "tcmalloc",
 		  "javascriptEngine": "mozjs",
 		  "sysInfo": "deprecated",
-		  "versionArray": [5, 0, 0, 0],
+		  "versionArray": [
+		    5,
+		    0,
+		    0,
+		    0,
+		  ],
 		  "openssl": {
 		    "running": "OpenSSL 1.1.1f  31 Mar 2020",
 		    "compiled": "OpenSSL 1.1.1f  31 Mar 2020",
@@ -232,7 +253,11 @@ var normalTestCases = []normalTestCase{
 		  "bits": 64,
 		  "debug": false,
 		  "maxBsonObjectSize": 16777216,
-		  "storageEngines": ["devnull", "ephemeralForTest", "wiredTiger"],
+		  "storageEngines": [
+		    "devnull",
+		    "ephemeralForTest",
+		    "wiredTiger",
+		  ],
 		  "ok": 1.0,
 		}`,
 	},
@@ -265,31 +290,108 @@ var normalTestCases = []normalTestCase{
 			"timestamp", MustArray(Timestamp(42), Timestamp(0)),
 			"decimal128", MustArray(Decimal128{L: 42, H: 13}),
 		),
-		m: `
+		b: `
 		{
-		  "array": [[""], ["foo"]],
-		  "binary": [Binary(user:Qg==), Binary(generic:)],
-		  "bool": [true, false],
-		  "datetime": [2021-07-27T09:35:42.123Z, 0001-01-01T00:00:00Z],
-		  "document": [{"foo": ""}, {"": "foo"}],
-		  "double": [42.13, 0.0],
-		  "int32": [42, 0],
-		  "int64": [int64(42), int64(0)],
-		  "objectID": [ObjectID(420000000000000000000000), ObjectID(000000000000000000000000)],
-		  "string": ["foo", ""],
-		  "timestamp": [Timestamp(42), Timestamp(0)],
-		  "decimal128": [Decimal128(42,13)],
+		  "array": [
+		    [
+		      "",
+		    ],
+		    [
+		      "foo",
+		    ],
+		  ],
+		  "binary": [
+		    Binary(user:Qg==),
+		    Binary(generic:),
+		  ],
+		  "bool": [
+		    true,
+		    false,
+		  ],
+		  "datetime": [
+		    2021-07-27T09:35:42.123Z,
+		    0001-01-01T00:00:00Z,
+		  ],
+		  "document": [
+		    {
+		      "foo": "",
+		    },
+		    {
+		      "": "foo",
+		    },
+		  ],
+		  "double": [
+		    42.13,
+		    0.0,
+		  ],
+		  "int32": [
+		    42,
+		    0,
+		  ],
+		  "int64": [
+		    int64(42),
+		    int64(0),
+		  ],
+		  "objectID": [
+		    ObjectID(420000000000000000000000),
+		    ObjectID(000000000000000000000000),
+		  ],
+		  "string": [
+		    "foo",
+		    "",
+		  ],
+		  "timestamp": [
+		    Timestamp(42),
+		    Timestamp(0),
+		  ],
+		  "decimal128": [
+		    Decimal128(42,13),
+		  ],
 		}`,
 	},
 	{
 		name: "nested",
 		raw:  testutil.MustParseDumpFile("testdata", "nested.hex"),
 		doc:  makeNested(false, 150).(*Document),
-		m: `
+		b: `
 		{
 		  "f": [
 		    {
-		      "f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{...}]}]}]}]}]}]}]}]}],
+		      "f": [
+		        {
+		          "f": [
+		            {
+		              "f": [
+		                {
+		                  "f": [
+		                    {
+		                      "f": [
+		                        {
+		                          "f": [
+		                            {
+		                              "f": [
+		                                {
+		                                  "f": [
+		                                    {
+		                                      "f": [
+		                                        {...},
+		                                      ],
+		                                    },
+		                                  ],
+		                                },
+		                              ],
+		                            },
+		                          ],
+		                        },
+		                      ],
+		                    },
+		                  ],
+		                },
+		              ],
+		            },
+		          ],
+		        },
+		      ],
 		    },
 		  ],
 		}`,
@@ -305,7 +407,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", float64(3.141592653589793),
 		),
-		m: `{"f": 3.141592653589793}`,
+		b: `
+		{
+		  "f": 3.141592653589793,
+		}`,
 	},
 	{
 		name: "stringDoc",
@@ -319,7 +424,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", "v",
 		),
-		m: `{"f": "v"}`,
+		b: `
+		{
+		  "f": "v",
+		}`,
 	},
 	{
 		name: "binaryDoc",
@@ -334,7 +442,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", Binary{B: []byte("v"), Subtype: BinaryUser},
 		),
-		m: `{"f": Binary(user:dg==)}`,
+		b: `
+		{
+		  "f": Binary(user:dg==),
+		}`,
 	},
 	{
 		name: "objectIDDoc",
@@ -347,7 +458,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", ObjectID{0x62, 0x56, 0xc5, 0xba, 0x18, 0x2d, 0x44, 0x54, 0xfb, 0x21, 0x09, 0x40},
 		),
-		m: `{"f": ObjectID(6256c5ba182d4454fb210940)}`,
+		b: `
+		{
+		  "f": ObjectID(6256c5ba182d4454fb210940),
+		}`,
 	},
 	{
 		name: "boolDoc",
@@ -360,7 +474,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", true,
 		),
-		m: `{"f": true}`,
+		b: `
+		{
+		  "f": true,
+		}`,
 	},
 	{
 		name: "timeDoc",
@@ -373,7 +490,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", time.Date(2024, 1, 17, 17, 40, 42, 123000000, time.UTC),
 		),
-		m: `{"f": 2024-01-17T17:40:42.123Z}`,
+		b: `
+		{
+		  "f": 2024-01-17T17:40:42.123Z,
+		}`,
 	},
 	{
 		name: "nullDoc",
@@ -385,7 +505,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", Null,
 		),
-		m: `{"f": null}`,
+		b: `
+		{
+		  "f": null,
+		}`,
 	},
 	{
 		name: "regexDoc",
@@ -399,7 +522,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", Regex{Pattern: "p", Options: "o"},
 		),
-		m: `{"f": /p/o}`,
+		b: `
+		{
+		  "f": /p/o,
+		}`,
 	},
 	{
 		name: "int32Doc",
@@ -412,7 +538,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", int32(314159265),
 		),
-		m: `{"f": 314159265}`,
+		b: `
+		{
+		  "f": 314159265,
+		}`,
 	},
 	{
 		name: "timestampDoc",
@@ -425,7 +554,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", Timestamp(42),
 		),
-		m: `{"f": Timestamp(42)}`,
+		b: `
+		{
+		  "f": Timestamp(42),
+		}`,
 	},
 	{
 		name: "int64Doc",
@@ -438,7 +570,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", int64(3141592653589793),
 		),
-		m: `{"f": int64(3141592653589793)}`,
+		b: `
+		{
+		  "f": int64(3141592653589793),
+		}`,
 	},
 	{
 		name: "decimal128Doc",
@@ -451,7 +586,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", Decimal128{L: 42, H: 13},
 		),
-		m: `{"f": Decimal128(42,13)}`,
+		b: `
+		{
+		  "f": Decimal128(42,13),
+		}`,
 	},
 	{
 		name: "smallDoc",
@@ -464,7 +602,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"foo", MustDocument(),
 		),
-		m: `{"foo": {}}`,
+		b: `
+		{
+		  "foo": {},
+		}`,
 	},
 	{
 		name: "smallArray",
@@ -477,7 +618,10 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"foo", MustArray(),
 		),
-		m: `{"foo": []}`,
+		b: `
+		{
+		  "foo": [],
+		}`,
 	},
 	{
 		name: "duplicateKeys",
@@ -491,7 +635,11 @@ var normalTestCases = []normalTestCase{
 			"", false,
 			"", true,
 		),
-		m: `{"": false, "": true}`,
+		b: `
+		{
+		  "": false,
+		  "": true,
+		}`,
 	},
 }
 
@@ -601,8 +749,7 @@ func TestNormal(t *testing.T) {
 				assert.NotContains(t, ls, "called too many times")
 
 				assert.NotEmpty(t, LogMessage(tc.raw))
-				assert.NotEmpty(t, LogMessageBlock(tc.raw))
-				assert.NotEmpty(t, LogMessageFlow(tc.raw))
+				assert.NotEmpty(t, LogMessageIndent(tc.raw))
 
 				l, err := FindRaw(tc.raw)
 				require.NoError(t, err)
@@ -618,8 +765,7 @@ func TestNormal(t *testing.T) {
 				assert.NotContains(t, ls, "called too many times")
 
 				assert.NotEmpty(t, LogMessage(doc))
-				assert.NotEmpty(t, LogMessageBlock(doc))
-				assert.NotEmpty(t, LogMessageFlow(doc))
+				assert.NotEmpty(t, LogMessageIndent(doc))
 
 				raw := make(RawDocument, Size(doc))
 				err = doc.Encode(raw)
@@ -635,9 +781,8 @@ func TestNormal(t *testing.T) {
 				assert.NotContains(t, ls, "panicked")
 				assert.NotContains(t, ls, "called too many times")
 
-				assert.Equal(t, testutil.Unindent(tc.m), LogMessage(doc))
-				assert.NotEmpty(t, LogMessageBlock(doc))
-				assert.NotEmpty(t, LogMessageFlow(doc))
+				assert.NotEmpty(t, LogMessage(doc))
+				assert.Equal(t, testutil.Unindent(tc.b), LogMessageIndent(doc))
 
 				raw := make(RawDocument, Size(doc))
 				err = doc.Encode(raw)
@@ -663,8 +808,7 @@ func TestDecode(t *testing.T) {
 				assert.NotContains(t, ls, "called too many times")
 
 				assert.NotEmpty(t, LogMessage(tc.raw))
-				assert.NotEmpty(t, LogMessageBlock(tc.raw))
-				assert.NotEmpty(t, LogMessageFlow(tc.raw))
+				assert.NotEmpty(t, LogMessageIndent(tc.raw))
 
 				l, err := FindRaw(tc.raw)
 
@@ -753,6 +897,22 @@ func BenchmarkDocument(b *testing.B) {
 				assert.NotContains(b, m, "called too many times")
 			})
 
+			b.Run("LogMessageIndent", func(b *testing.B) {
+				doc, err = tc.raw.Decode()
+				require.NoError(b, err)
+
+				b.ReportAllocs()
+				b.ResetTimer()
+
+				for range b.N {
+					m = LogMessageIndent(doc)
+				}
+
+				b.StopTimer()
+
+				assert.NotEmpty(b, m)
+			})
+
 			b.Run("LogMessage", func(b *testing.B) {
 				doc, err = tc.raw.Decode()
 				require.NoError(b, err)
@@ -818,6 +978,22 @@ func BenchmarkDocument(b *testing.B) {
 				assert.NotContains(b, m, "called too many times")
 			})
 
+			b.Run("LogMessageIndentDeep", func(b *testing.B) {
+				doc, err = tc.raw.DecodeDeep()
+				require.NoError(b, err)
+
+				b.ReportAllocs()
+				b.ResetTimer()
+
+				for range b.N {
+					m = LogMessageIndent(doc)
+				}
+
+				b.StopTimer()
+
+				assert.NotEmpty(b, m)
+			})
+
 			b.Run("LogMessageDeep", func(b *testing.B) {
 				doc, err = tc.raw.DecodeDeep()
 				require.NoError(b, err)
@@ -848,8 +1024,7 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		assert.NotContains(t, ls, "called too many times")
 
 		assert.NotEmpty(t, LogMessage(rawDoc))
-		assert.NotEmpty(t, LogMessageBlock(rawDoc))
-		assert.NotEmpty(t, LogMessageFlow(rawDoc))
+		assert.NotEmpty(t, LogMessageIndent(rawDoc))
 
 		_, _ = FindRaw(rawDoc)
 	})
@@ -868,8 +1043,7 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		assert.NotContains(t, ls, "called too many times")
 
 		assert.NotEmpty(t, LogMessage(doc))
-		assert.NotEmpty(t, LogMessageBlock(doc))
-		assert.NotEmpty(t, LogMessageFlow(doc))
+		assert.NotEmpty(t, LogMessageIndent(doc))
 
 		raw := make(RawDocument, Size(doc))
 		err = doc.Encode(raw)
@@ -889,8 +1063,7 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		assert.NotContains(t, ls, "called too many times")
 
 		assert.NotEmpty(t, LogMessage(doc))
-		assert.NotEmpty(t, LogMessageBlock(doc))
-		assert.NotEmpty(t, LogMessageFlow(doc))
+		assert.NotEmpty(t, LogMessageIndent(doc))
 
 		raw := make(RawDocument, Size(doc))
 		err = doc.Encode(raw)

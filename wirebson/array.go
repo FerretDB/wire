@@ -16,6 +16,7 @@ package wirebson
 
 import (
 	"encoding/binary"
+	"iter"
 	"log/slog"
 	"sort"
 	"strconv"
@@ -26,14 +27,14 @@ import (
 
 // Array represents a BSON array in the (partially) decoded form.
 type Array struct {
-	elements []any
-	frozen   bool
+	values []any
+	frozen bool
 }
 
 // NewArray creates a new Array from the given values.
 func NewArray(values ...any) (*Array, error) {
 	res := &Array{
-		elements: make([]any, 0, len(values)),
+		values: make([]any, 0, len(values)),
 	}
 
 	for i, v := range values {
@@ -58,7 +59,7 @@ func MustArray(values ...any) *Array {
 // MakeArray creates a new empty Array with the given capacity.
 func MakeArray(cap int) *Array {
 	return &Array{
-		elements: make([]any, 0, cap),
+		values: make([]any, 0, cap),
 	}
 }
 
@@ -77,18 +78,40 @@ func (arr *Array) checkFrozen() {
 	}
 }
 
-// Len returns the number of elements in the Array.
+// Len returns the number of values in the Array.
 func (arr *Array) Len() int {
-	return len(arr.elements)
+	return len(arr.values)
 }
 
-// Get returns the element at the given index.
+// Get returns the value at the given index.
 // It panics if index is out of bounds.
 func (arr *Array) Get(index int) any {
-	return arr.elements[index]
+	return arr.values[index]
 }
 
-// Add adds a new element to the end of the Array.
+// All returns an iterator over index/value pairs of the Array.
+func (arr *Array) All() iter.Seq2[int, any] {
+	return func(yield func(int, any) bool) {
+		for i, v := range arr.values {
+			if !yield(i, v) {
+				return
+			}
+		}
+	}
+}
+
+// Values returns an iterator over values of the Array.
+func (arr *Array) Values() iter.Seq[any] {
+	return func(yield func(any) bool) {
+		for _, v := range arr.values {
+			if !yield(v) {
+				return
+			}
+		}
+	}
+}
+
+// Add adds a new value to the end of the Array.
 func (arr *Array) Add(value any) error {
 	if err := validBSONType(value); err != nil {
 		return lazyerrors.Error(err)
@@ -96,7 +119,7 @@ func (arr *Array) Add(value any) error {
 
 	arr.checkFrozen()
 
-	arr.elements = append(arr.elements, value)
+	arr.values = append(arr.values, value)
 
 	return nil
 }
@@ -110,7 +133,7 @@ func (arr *Array) Replace(index int, value any) error {
 
 	arr.checkFrozen()
 
-	arr.elements[index] = value
+	arr.values[index] = value
 
 	return nil
 }
@@ -135,7 +158,7 @@ func (arr *Array) Encode(raw RawArray) error {
 	binary.LittleEndian.PutUint32(raw[0:4], uint32(sizeArray(arr)))
 
 	i := 4
-	for n, v := range arr.elements {
+	for n, v := range arr.values {
 		written, err := encodeField(raw[i:], strconv.Itoa(n), v)
 		if err != nil {
 			return lazyerrors.Error(err)

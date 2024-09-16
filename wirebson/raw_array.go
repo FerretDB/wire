@@ -76,7 +76,7 @@ func (raw RawArray) decode(mode decodeMode) (*Array, error) {
 	}
 
 	res := &Array{
-		elements: make([]any, len(doc.fields)),
+		values: make([]any, len(doc.fields)),
 	}
 
 	for i, f := range doc.fields {
@@ -84,7 +84,7 @@ func (raw RawArray) decode(mode decodeMode) (*Array, error) {
 			return nil, lazyerrors.Errorf("invalid array index: %q", f.name)
 		}
 
-		res.elements[i] = f.value
+		res.values[i] = f.value
 	}
 
 	return res, nil

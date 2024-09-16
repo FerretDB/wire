@@ -12,35 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// We should remove the build tag below once we use 1.23 everywhere.
-// TODO https://github.com/FerretDB/wire/issues/9
-
-//go:build go1.23
-
 package wirebson
 
 import (
-	"iter"
+	"maps"
+	"slices"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-// All returns an iterator over index value pairs of the array.
-func (arr *Array) All() iter.Seq2[int, any] {
-	return func(yield func(int, any) bool) {
-		for i, v := range arr.elements {
-			if !yield(i, v) {
-				return
-			}
-		}
-	}
-}
+func TestDocument(t *testing.T) {
+	t.Parallel()
 
-// Values returns an iterator over values of the array.
-func (arr *Array) Values() iter.Seq[any] {
-	return func(yield func(any) bool) {
-		for _, v := range arr.elements {
-			if !yield(v) {
-				return
-			}
+	doc := MustDocument(
+		"foo", int32(1),
+		"bar", int32(2),
+		"baz", int64(3),
+	)
+
+	t.Run("All", func(t *testing.T) {
+		t.Parallel()
+
+		expected := map[string]any{
+			"foo": int32(1),
+			"bar": int32(2),
+			"baz": int64(3),
 		}
-	}
+
+		assert.Equal(t, expected, maps.Collect(doc.All()))
+	})
+
+	t.Run("Fields", func(t *testing.T) {
+		t.Parallel()
+
+		expected := []string{"foo", "bar", "baz"}
+		assert.Equal(t, expected, slices.Collect(doc.Fields()))
+	})
 }

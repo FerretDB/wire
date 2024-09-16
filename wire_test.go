@@ -72,7 +72,7 @@ type testCase struct {
 	msgHeader *MsgHeader
 	msgBody   MsgBody
 	command   string // only for OpMsg
-	m         string
+	b         string
 	err       string // unwrapped
 }
 
@@ -129,9 +129,8 @@ func testMessages(t *testing.T, testCases []testCase) {
 				require.NotNil(t, msgHeader)
 				require.NotNil(t, msgBody)
 				assert.NotEmpty(t, msgHeader.String())
-				assert.Equal(t, testutil.Unindent(tc.m), msgBody.String())
-				assert.NotEmpty(t, msgBody.StringBlock())
-				assert.NotEmpty(t, msgBody.StringFlow())
+				assert.Equal(t, testutil.Unindent(tc.b), msgBody.StringIndent())
+				assert.NotEmpty(t, msgBody.String())
 
 				require.NoError(t, msgBody.check())
 
@@ -220,9 +219,8 @@ func fuzzMessages(f *testing.F, testCases []testCase) {
 
 			if msgBody.check() != nil {
 				assert.NotEmpty(t, msgHeader.String())
+				assert.NotEmpty(t, msgBody.StringIndent())
 				assert.NotEmpty(t, msgBody.String())
-				assert.NotEmpty(t, msgBody.StringBlock())
-				assert.NotEmpty(t, msgBody.StringFlow())
 
 				if msg, ok := msgBody.(*OpMsg); ok {
 					assert.NotPanics(t, func() {

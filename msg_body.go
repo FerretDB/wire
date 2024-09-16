@@ -37,11 +37,8 @@ type MsgBody interface {
 
 	fmt.Stringer
 
-	// StringBlock returns an indented string representation for logging.
-	StringBlock() string
-
-	// StringFlow returns an unindented string representation for logging.
-	StringFlow() string
+	// StringIndent returns an indented string representation for logging.
+	StringIndent() string
 
 	// check performs deep (and slow) validity check.
 	check() error

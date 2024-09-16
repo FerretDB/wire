@@ -60,7 +60,7 @@ var queryTestCases = []testCase{
 			),
 			returnFieldsSelector: nil,
 		},
-		m: `
+		b: `
 		{
 		  "Flags": "[]",
 		  "FullCollectionName": "admin.$cmd",
@@ -69,7 +69,10 @@ var queryTestCases = []testCase{
 		  "Query": {
 		    "ismaster": true,
 		    "client": {
-		      "driver": {"name": "nodejs", "version": "4.0.0-beta.6"},
+		      "driver": {
+		        "name": "nodejs",
+		        "version": "4.0.0-beta.6",
+		      },
 		      "os": {
 		        "type": "Darwin",
 		        "name": "darwin",
@@ -77,9 +80,13 @@ var queryTestCases = []testCase{
 		        "version": "20.6.0",
 		      },
 		      "platform": "Node.js v14.17.3, LE (unified)|Node.js v14.17.3, LE (unified)",
-		      "application": {"name": "mongosh 1.0.1"},
+		      "application": {
+		        "name": "mongosh 1.0.1",
+		      },
 		    },
-		    "compression": ["none"],
+		    "compression": [
+		      "none",
+		    ],
 		    "loadBalanced": false,
 		  },
 		}`,
@@ -122,7 +129,7 @@ var queryTestCases = []testCase{
 			),
 			returnFieldsSelector: nil,
 		},
-		m: `
+		b: `
 		{
 		  "Flags": "[]",
 		  "FullCollectionName": "admin.$cmd",
@@ -131,7 +138,10 @@ var queryTestCases = []testCase{
 		  "Query": {
 		    "ismaster": true,
 		    "client": {
-		      "driver": {"name": "nodejs", "version": "4.0.0-beta.6"},
+		      "driver": {
+		        "name": "nodejs",
+		        "version": "4.0.0-beta.6",
+		      },
 		      "os": {
 		        "type": "Darwin",
 		        "name": "darwin",
@@ -139,9 +149,13 @@ var queryTestCases = []testCase{
 		        "version": "20.6.0",
 		      },
 		      "platform": "Node.js v14.17.3, LE (unified)|Node.js v14.17.3, LE (unified)",
-		      "application": {"name": "mongosh 1.0.1"},
+		      "application": {
+		        "name": "mongosh 1.0.1",
+		      },
 		    },
-		    "compression": ["none"],
+		    "compression": [
+		      "none",
+		    ],
 		    "loadBalanced": false,
 		  },
 		}`,

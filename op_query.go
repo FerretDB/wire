@@ -189,19 +189,14 @@ func (query *OpQuery) logMessage(logFunc func(v any) string) string {
 	return logFunc(m)
 }
 
-// String returns a string representation for logging.
+// String returns an string representation for logging.
 func (query *OpQuery) String() string {
 	return query.logMessage(wirebson.LogMessage)
 }
 
-// StringBlock returns an indented string representation for logging.
-func (query *OpQuery) StringBlock() string {
-	return query.logMessage(wirebson.LogMessageBlock)
-}
-
-// StringFlow returns an unindented string representation for logging.
-func (query *OpQuery) StringFlow() string {
-	return query.logMessage(wirebson.LogMessageFlow)
+// StringIndent returns an indented string representation for logging.
+func (query *OpQuery) StringIndent() string {
+	return query.logMessage(wirebson.LogMessageIndent)
 }
 
 // check interfaces

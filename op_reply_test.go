@@ -55,7 +55,7 @@ var replyTestCases = []testCase{
 				"ok", float64(1),
 			),
 		},
-		m: `
+		b: `
 		{
 		  "ResponseFlags": "[AwaitCapable]",
 		  "CursorID": int64(0),
@@ -63,7 +63,10 @@ var replyTestCases = []testCase{
 		  "NumberReturned": 1,
 		  "Document": {
 		    "ismaster": true,
-		    "topologyVersion": {"processId": ObjectID(60fbed5371fe1bae70339505), "counter": int64(0)},
+		    "topologyVersion": {
+		      "processId": ObjectID(60fbed5371fe1bae70339505),
+		      "counter": int64(0),
+		    },
 		    "maxBsonObjectSize": 16777216,
 		    "maxMessageSizeBytes": 48000000,
 		    "maxWriteBatchSize": 100000,
@@ -109,7 +112,7 @@ var replyTestCases = []testCase{
 				"ok", float64(1),
 			),
 		},
-		m: `
+		b: `
 		{
 		  "ResponseFlags": "[AwaitCapable]",
 		  "CursorID": int64(0),
@@ -117,7 +120,10 @@ var replyTestCases = []testCase{
 		  "NumberReturned": 1,
 		  "Document": {
 		    "ismaster": true,
-		    "topologyVersion": {"processId": ObjectID(60fbed5371fe1bae70339505), "counter": int64(0)},
+		    "topologyVersion": {
+		      "processId": ObjectID(60fbed5371fe1bae70339505),
+		      "counter": int64(0),
+		    },
 		    "maxBsonObjectSize": 16777216,
 		    "maxMessageSizeBytes": 48000000,
 		    "maxWriteBatchSize": 100000,

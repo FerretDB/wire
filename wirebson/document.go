@@ -16,6 +16,7 @@ package wirebson
 
 import (
 	"encoding/binary"
+	"iter"
 	"log/slog"
 	"slices"
 
@@ -116,9 +117,8 @@ func (doc *Document) FieldNames() []string {
 // It returns nil if the field is not found.
 //
 // If Document contains duplicate field names, it returns the first one.
-// To get other fields, a for/range loop can be used with [Document.Len] and [Document.GetByIndex].
-// Or iterators.
-// TODO https://github.com/FerretDB/wire/issues/9
+// To get other fields, a for/range loop can be used with [Document.All],
+// or [Document.Len] with [Document.GetByIndex].
 func (doc *Document) Get(name string) any {
 	for _, f := range doc.fields {
 		if f.name == name {
@@ -134,6 +134,28 @@ func (doc *Document) Get(name string) any {
 func (doc *Document) GetByIndex(i int) (string, any) {
 	f := doc.fields[i]
 	return f.name, f.value
+}
+
+// All returns an iterator over all field name/value pairs of the Document.
+func (doc *Document) All() iter.Seq2[string, any] {
+	return func(yield func(string, any) bool) {
+		for _, f := range doc.fields {
+			if !yield(f.name, f.value) {
+				return
+			}
+		}
+	}
+}
+
+// Fields returns an iterator over all field names of the Document.
+func (doc *Document) Fields() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for _, f := range doc.fields {
+			if !yield(f.name) {
+				return
+			}
+		}
+	}
 }
 
 // Add adds a new field to the end of the Document.
