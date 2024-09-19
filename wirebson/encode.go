@@ -43,14 +43,17 @@ func encodeField(dst []byte, name string, v any) (int, error) {
 		i += sizeDocument(v)
 
 	case RawDocument:
-
 		dst[i] = byte(tagDocument)
 		i++
 
 		EncodeCString(dst[i:], name)
 		i += SizeCString(name)
 
-		i += write(dst[i:], v)
+		if len(v) > len(dst[i:]) {
+			panic(fmt.Sprintf("length of dst should be at least %d bytes, got %d", len(v), len(dst[i:])))
+		}
+
+		i += copy(dst[i:], v)
 
 	case *Array:
 		dst[i] = byte(tagArray)
@@ -73,24 +76,17 @@ func encodeField(dst []byte, name string, v any) (int, error) {
 		EncodeCString(dst[i:], name)
 		i += SizeCString(name)
 
-		i += write(dst[i:], v)
+		if len(v) > len(dst[i:]) {
+			panic(fmt.Sprintf("length of dst should be at least %d bytes, got %d", len(v), len(dst[i:])))
+		}
+
+		i += copy(dst[i:], v)
 
 	default:
 		return i + encodeScalarField(dst[i:], name, v), nil
 	}
 
 	return i, nil
-}
-
-// write writes bytes from dst to src.
-// It returns number of bytes written.
-func write(dst []byte, src []byte) int {
-	if len(src) > len(dst) {
-		panic(fmt.Sprintf("length of dst should be at least %d bytes, got %d", len(src), len(dst)))
-	}
-
-	copy(dst, src)
-	return len(src)
 }
 
 // encodeScalarField encodes scalar document field.

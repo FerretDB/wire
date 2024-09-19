@@ -226,25 +226,26 @@ func (doc *Document) Command() string {
 
 // Encode encodes non-nil Document.
 //
-// The function operates directly on raw RawDocument.
-// It doesn't reallocate memory, hence raw needs to have the proper length.
+// raw must be at least Size(doc) bytes long; otherwise, Encode will panic.
+// Only raw[0:Size(doc)] bytes are modified.
 func (doc *Document) Encode(raw RawDocument) error {
 	must.NotBeZero(doc)
 
-	binary.LittleEndian.PutUint32(raw[0:4], uint32(sizeDocument(doc)))
+	// ensure raw length early
+	s := sizeDocument(doc)
+	raw[s-1] = 0
+
+	binary.LittleEndian.PutUint32(raw, uint32(s))
 
 	i := 4
 	for _, f := range doc.fields {
-		written, err := encodeField(raw[i:], f.name, f.value)
+		w, err := encodeField(raw[i:], f.name, f.value)
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
 
-		i += written
+		i += w
 	}
-
-	raw[i] = byte(0)
-	i++
 
 	return nil
 }

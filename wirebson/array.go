@@ -148,27 +148,28 @@ func (arr *Array) SortInterface(less func(a, b any) bool) sort.Interface {
 	}
 }
 
-// Encode encodes non-nil Array.
+// Encode encodes Array v into raw.
 //
-// The function operates directly on raw RawArray.
-// It doesn't reallocate memory, hence raw needs to have the proper length.
+// raw must be at least Size(arr) bytes long; otherwise, Encode will panic.
+// Only raw[0:Size(arr)] bytes are modified.
 func (arr *Array) Encode(raw RawArray) error {
 	must.NotBeZero(arr)
 
-	binary.LittleEndian.PutUint32(raw[0:4], uint32(sizeArray(arr)))
+	// ensure raw length early
+	s := sizeArray(arr)
+	raw[s-1] = 0
+
+	binary.LittleEndian.PutUint32(raw, uint32(s))
 
 	i := 4
 	for n, v := range arr.values {
-		written, err := encodeField(raw[i:], strconv.Itoa(n), v)
+		w, err := encodeField(raw[i:], strconv.Itoa(n), v)
 		if err != nil {
 			return lazyerrors.Error(err)
 		}
 
-		i += written
+		i += w
 	}
-
-	raw[i] = byte(0)
-	i++
 
 	return nil
 }

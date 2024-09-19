@@ -88,7 +88,7 @@ tasks:
     desc: "Run benchmarks"
     cmds:
       - go test -list='Benchmark.*' ./...
-      # timeout is needed due to this issue https://github.com/golang/go/issues/69181
+      # -timeout is needed due to https://github.com/golang/go/issues/69181
       - go test -count=10 -bench=BenchmarkDocument -benchtime={{.BENCH_TIME}} -timeout=60m ./wirebson | tee -a new.txt
       - bin/benchstat old.txt new.txt
 

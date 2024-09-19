@@ -22,20 +22,20 @@ func TestEncodeField(t *testing.T) {
 
 	var i int
 	actual := make([]byte, 22)
-	written, err := encodeField(actual[i:], "foo", "bar")
+	w, err := encodeField(actual[i:], "foo", "bar")
 	require.NoError(t, err)
 
-	assert.Equal(t, 13, written)
-	i += written
+	assert.Equal(t, 13, w)
+	i += w
 
 	expected := []byte{0x2, 0x66, 0x6f, 0x6f, 0x0, 0x4, 0x0, 0x0, 0x0, 0x62, 0x61, 0x72, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
 	assert.Equal(t, expected, actual)
 
-	written, err = encodeField(actual[i:], "foo", int32(1))
+	w, err = encodeField(actual[i:], "foo", int32(1))
 	require.NoError(t, err)
 
-	assert.Equal(t, 9, written)
-	i += written
+	assert.Equal(t, 9, w)
+	i += w
 
 	expected = []byte{0x2, 0x66, 0x6f, 0x6f, 0x0, 0x4, 0x0, 0x0, 0x0, 0x62, 0x61, 0x72, 0x0, 0x10, 0x66, 0x6f, 0x6f, 0x0, 0x1, 0x0, 0x0, 0x0}
 	assert.Equal(t, expected, actual)
