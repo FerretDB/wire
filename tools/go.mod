@@ -5,7 +5,7 @@ go 1.23
 toolchain go1.23.1
 
 require (
-	github.com/go-task/task/v3 v3.39.0
+	github.com/go-task/task/v3 v3.39.2
 	github.com/golangci/golangci-lint v1.61.0
 	github.com/quasilyte/go-consistent v0.6.1
 	golang.org/x/perf v0.0.0-20240910214617-f1a715d501dd
