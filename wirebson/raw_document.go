@@ -162,6 +162,16 @@ func (raw RawDocument) LogValue() slog.Value {
 	return slogValue(raw, 1)
 }
 
+// LogMessage implements [AnyDocument].
+func (raw RawDocument) LogMessage() string {
+	return LogMessage(raw)
+}
+
+// LogMessageIndent implements [AnyDocument].
+func (raw RawDocument) LogMessageIndent() string {
+	return LogMessageIndent(raw)
+}
+
 // check interfaces
 var (
 	_ AnyDocument    = RawDocument(nil)

@@ -190,6 +190,16 @@ func (arr *Array) LogValue() slog.Value {
 	return slogValue(arr, 1)
 }
 
+// LogMessage implements [AnyArray].
+func (arr *Array) LogMessage() string {
+	return LogMessage(arr)
+}
+
+// LogMessageIndent implements [AnyArray].
+func (arr *Array) LogMessageIndent() string {
+	return LogMessageIndent(arr)
+}
+
 // check interfaces
 var (
 	_ AnyArray       = (*Array)(nil)

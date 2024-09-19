@@ -266,6 +266,16 @@ func (doc *Document) LogValue() slog.Value {
 	return slogValue(doc, 1)
 }
 
+// LogMessage implements [AnyDocument].
+func (doc *Document) LogMessage() string {
+	return LogMessage(doc)
+}
+
+// LogMessageIndent implements [AnyDocument].
+func (doc *Document) LogMessageIndent() string {
+	return LogMessageIndent(doc)
+}
+
 // check interfaces
 var (
 	_ AnyDocument    = (*Document)(nil)

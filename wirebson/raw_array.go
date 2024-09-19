@@ -94,6 +94,16 @@ func (raw RawArray) LogValue() slog.Value {
 	return slogValue(raw, 1)
 }
 
+// LogMessage implements [AnyArray].
+func (raw RawArray) LogMessage() string {
+	return LogMessage(raw)
+}
+
+// LogMessageIndent implements [AnyArray].
+func (raw RawArray) LogMessageIndent() string {
+	return LogMessageIndent(raw)
+}
+
 // check interfaces
 var (
 	_ AnyArray       = RawArray(nil)
