@@ -748,8 +748,8 @@ func TestNormal(t *testing.T) {
 				assert.NotContains(t, ls, "panicked")
 				assert.NotContains(t, ls, "called too many times")
 
-				assert.NotEmpty(t, LogMessage(tc.raw))
-				assert.NotEmpty(t, LogMessageIndent(tc.raw))
+				assert.NotEmpty(t, tc.raw.LogMessage())
+				assert.NotEmpty(t, tc.raw.LogMessageIndent())
 
 				l, err := FindRaw(tc.raw)
 				require.NoError(t, err)
@@ -764,8 +764,8 @@ func TestNormal(t *testing.T) {
 				assert.NotContains(t, ls, "panicked")
 				assert.NotContains(t, ls, "called too many times")
 
-				assert.NotEmpty(t, LogMessage(doc))
-				assert.NotEmpty(t, LogMessageIndent(doc))
+				assert.NotEmpty(t, doc.LogMessage())
+				assert.NotEmpty(t, doc.LogMessageIndent())
 
 				raw := make(RawDocument, Size(doc))
 				err = doc.Encode(raw)
@@ -781,8 +781,8 @@ func TestNormal(t *testing.T) {
 				assert.NotContains(t, ls, "panicked")
 				assert.NotContains(t, ls, "called too many times")
 
-				assert.NotEmpty(t, LogMessage(doc))
-				assert.Equal(t, testutil.Unindent(tc.b), LogMessageIndent(doc))
+				assert.NotEmpty(t, doc.LogMessage())
+				assert.Equal(t, testutil.Unindent(tc.b), doc.LogMessageIndent())
 
 				raw := make(RawDocument, Size(doc))
 				err = doc.Encode(raw)
@@ -807,8 +807,8 @@ func TestDecode(t *testing.T) {
 				assert.NotContains(t, ls, "panicked")
 				assert.NotContains(t, ls, "called too many times")
 
-				assert.NotEmpty(t, LogMessage(tc.raw))
-				assert.NotEmpty(t, LogMessageIndent(tc.raw))
+				assert.NotEmpty(t, tc.raw.LogMessage())
+				assert.NotEmpty(t, tc.raw.LogMessageIndent())
 
 				l, err := FindRaw(tc.raw)
 
@@ -905,7 +905,7 @@ func BenchmarkDocument(b *testing.B) {
 				b.ResetTimer()
 
 				for range b.N {
-					m = LogMessageIndent(doc)
+					m = doc.LogMessageIndent()
 				}
 
 				b.StopTimer()
@@ -921,7 +921,7 @@ func BenchmarkDocument(b *testing.B) {
 				b.ResetTimer()
 
 				for range b.N {
-					m = LogMessage(doc)
+					m = doc.LogMessage()
 				}
 
 				b.StopTimer()
@@ -986,7 +986,7 @@ func BenchmarkDocument(b *testing.B) {
 				b.ResetTimer()
 
 				for range b.N {
-					m = LogMessageIndent(doc)
+					m = doc.LogMessageIndent()
 				}
 
 				b.StopTimer()
@@ -1002,7 +1002,7 @@ func BenchmarkDocument(b *testing.B) {
 				b.ResetTimer()
 
 				for range b.N {
-					m = LogMessage(doc)
+					m = doc.LogMessage()
 				}
 
 				b.StopTimer()
@@ -1023,8 +1023,8 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		assert.NotContains(t, ls, "panicked")
 		assert.NotContains(t, ls, "called too many times")
 
-		assert.NotEmpty(t, LogMessage(rawDoc))
-		assert.NotEmpty(t, LogMessageIndent(rawDoc))
+		assert.NotEmpty(t, rawDoc.LogMessage())
+		assert.NotEmpty(t, rawDoc.LogMessageIndent())
 
 		_, _ = FindRaw(rawDoc)
 	})
@@ -1042,8 +1042,8 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		assert.NotContains(t, ls, "panicked")
 		assert.NotContains(t, ls, "called too many times")
 
-		assert.NotEmpty(t, LogMessage(doc))
-		assert.NotEmpty(t, LogMessageIndent(doc))
+		assert.NotEmpty(t, doc.LogMessage())
+		assert.NotEmpty(t, doc.LogMessageIndent())
 
 		raw := make(RawDocument, Size(doc))
 		err = doc.Encode(raw)
@@ -1062,8 +1062,8 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		assert.NotContains(t, ls, "panicked")
 		assert.NotContains(t, ls, "called too many times")
 
-		assert.NotEmpty(t, LogMessage(doc))
-		assert.NotEmpty(t, LogMessageIndent(doc))
+		assert.NotEmpty(t, doc.LogMessage())
+		assert.NotEmpty(t, doc.LogMessageIndent())
 
 		raw := make(RawDocument, Size(doc))
 		err = doc.Encode(raw)

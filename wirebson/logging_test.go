@@ -30,13 +30,13 @@ import (
 func TestLoggingNil(t *testing.T) {
 	var doc *Document
 	assert.Equal(t, doc.LogValue().String(), "Document<nil>")
-	assert.Equal(t, LogMessage(doc), "{<nil>}")
-	assert.Equal(t, LogMessageIndent(doc), "{<nil>}")
+	assert.Equal(t, doc.LogMessage(), "{<nil>}")
+	assert.Equal(t, doc.LogMessageIndent(), "{<nil>}")
 
 	var arr *Array
 	assert.Equal(t, arr.LogValue().String(), "Array<nil>")
-	assert.Equal(t, LogMessage(arr), "[<nil>]")
-	assert.Equal(t, LogMessageIndent(arr), "[<nil>]")
+	assert.Equal(t, arr.LogMessage(), "[<nil>]")
+	assert.Equal(t, arr.LogMessageIndent(), "[<nil>]")
 }
 
 func TestLogging(t *testing.T) {
@@ -68,7 +68,7 @@ func TestLogging(t *testing.T) {
 
 	for _, tc := range []struct {
 		name string
-		doc  any
+		doc  AnyDocument
 		t    string
 		j    string
 		mi   string
@@ -232,10 +232,10 @@ func TestLogging(t *testing.T) {
 			assert.Equal(t, tc.j+"\n", jbuf.String(), "json output mismatch")
 			jbuf.Reset()
 
-			m := LogMessage(tc.doc)
+			m := tc.doc.LogMessage()
 			assert.Equal(t, testutil.Unindent(tc.m), m, "actual LogMessage result:\n%s", m)
 
-			mi := LogMessageIndent(tc.doc)
+			mi := tc.doc.LogMessageIndent()
 			assert.Equal(t, testutil.Unindent(tc.mi), mi, "actual LogMessageIndent result:\n%s", mi)
 		})
 	}
