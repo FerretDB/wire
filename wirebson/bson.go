@@ -72,6 +72,8 @@ type ScalarType interface {
 type AnyDocument interface {
 	Encode() (RawDocument, error)
 	Decode() (*Document, error)
+	LogMessage() string
+	LogMessageIndent() string
 }
 
 // AnyArray represents a BSON array type (both [*Array] and [RawArray]).
@@ -81,6 +83,8 @@ type AnyDocument interface {
 type AnyArray interface {
 	Encode() (RawArray, error)
 	Decode() (*Array, error)
+	LogMessage() string
+	LogMessageIndent() string
 }
 
 // validBSONType checks if v is a valid BSON type (including raw types).
