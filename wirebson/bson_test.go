@@ -15,6 +15,7 @@
 package wirebson
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -31,7 +32,7 @@ type normalTestCase struct {
 	name string
 	raw  RawDocument
 	doc  *Document
-	b    string
+	mi   string
 }
 
 // decodeTestCase represents a single test case for unsuccessful decoding.
@@ -77,7 +78,7 @@ var normalTestCases = []normalTestCase{
 			"compression", MustArray("none"),
 			"loadBalanced", false,
 		),
-		b: `
+		mi: `
 		{
 		  "ismaster": true,
 		  "client": {
@@ -126,7 +127,7 @@ var normalTestCases = []normalTestCase{
 			"compression", MustArray("none"),
 			"loadBalanced", false,
 		),
-		b: `
+		mi: `
 		{
 		  "ismaster": true,
 		  "client": {
@@ -167,7 +168,7 @@ var normalTestCases = []normalTestCase{
 			),
 			"$db", "admin",
 		),
-		b: `
+		mi: `
 		{
 		  "buildInfo": 1,
 		  "lsid": {
@@ -220,7 +221,7 @@ var normalTestCases = []normalTestCase{
 			"storageEngines", MustArray("devnull", "ephemeralForTest", "wiredTiger"),
 			"ok", float64(1),
 		),
-		b: `
+		mi: `
 		{
 		  "version": "5.0.0",
 		  "gitVersion": "1184f004a99660de6f5e745573419bda8a28c0e9",
@@ -290,7 +291,7 @@ var normalTestCases = []normalTestCase{
 			"timestamp", MustArray(Timestamp(42), Timestamp(0)),
 			"decimal128", MustArray(Decimal128{L: 42, H: 13}),
 		),
-		b: `
+		mi: `
 		{
 		  "array": [
 		    [
@@ -353,7 +354,7 @@ var normalTestCases = []normalTestCase{
 		name: "nested",
 		raw:  testutil.MustParseDumpFile("testdata", "nested.hex"),
 		doc:  makeNested(false, 150).(*Document),
-		b: `
+		mi: `
 		{
 		  "f": [
 		    {
@@ -407,7 +408,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", float64(3.141592653589793),
 		),
-		b: `
+		mi: `
 		{
 		  "f": 3.141592653589793,
 		}`,
@@ -424,7 +425,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", "v",
 		),
-		b: `
+		mi: `
 		{
 		  "f": "v",
 		}`,
@@ -442,7 +443,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", Binary{B: []byte("v"), Subtype: BinaryUser},
 		),
-		b: `
+		mi: `
 		{
 		  "f": Binary(user:dg==),
 		}`,
@@ -458,7 +459,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", ObjectID{0x62, 0x56, 0xc5, 0xba, 0x18, 0x2d, 0x44, 0x54, 0xfb, 0x21, 0x09, 0x40},
 		),
-		b: `
+		mi: `
 		{
 		  "f": ObjectID(6256c5ba182d4454fb210940),
 		}`,
@@ -474,7 +475,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", true,
 		),
-		b: `
+		mi: `
 		{
 		  "f": true,
 		}`,
@@ -490,7 +491,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", time.Date(2024, 1, 17, 17, 40, 42, 123000000, time.UTC),
 		),
-		b: `
+		mi: `
 		{
 		  "f": 2024-01-17T17:40:42.123Z,
 		}`,
@@ -505,7 +506,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", Null,
 		),
-		b: `
+		mi: `
 		{
 		  "f": null,
 		}`,
@@ -522,7 +523,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", Regex{Pattern: "p", Options: "o"},
 		),
-		b: `
+		mi: `
 		{
 		  "f": /p/o,
 		}`,
@@ -538,7 +539,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", int32(314159265),
 		),
-		b: `
+		mi: `
 		{
 		  "f": 314159265,
 		}`,
@@ -554,7 +555,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", Timestamp(42),
 		),
-		b: `
+		mi: `
 		{
 		  "f": Timestamp(42),
 		}`,
@@ -570,7 +571,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", int64(3141592653589793),
 		),
-		b: `
+		mi: `
 		{
 		  "f": int64(3141592653589793),
 		}`,
@@ -586,7 +587,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"f", Decimal128{L: 42, H: 13},
 		),
-		b: `
+		mi: `
 		{
 		  "f": Decimal128(42,13),
 		}`,
@@ -602,7 +603,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"foo", MustDocument(),
 		),
-		b: `
+		mi: `
 		{
 		  "foo": {},
 		}`,
@@ -618,7 +619,7 @@ var normalTestCases = []normalTestCase{
 		doc: MustDocument(
 			"foo", MustArray(),
 		),
-		b: `
+		mi: `
 		{
 		  "foo": [],
 		}`,
@@ -635,7 +636,7 @@ var normalTestCases = []normalTestCase{
 			"", false,
 			"", true,
 		),
-		b: `
+		mi: `
 		{
 		  "": false,
 		  "": true,
@@ -781,7 +782,7 @@ func TestNormal(t *testing.T) {
 				assert.NotContains(t, ls, "called too many times")
 
 				assert.NotEmpty(t, doc.LogMessage())
-				assert.Equal(t, testutil.Unindent(tc.b), doc.LogMessageIndent())
+				assert.Equal(t, strings.ReplaceAll(testutil.Unindent(tc.mi), `"`, "`"), doc.LogMessageIndent())
 
 				raw, err := doc.Encode()
 				require.NoError(t, err)

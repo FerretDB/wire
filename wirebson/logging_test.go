@@ -19,6 +19,7 @@ import (
 	"context"
 	"log/slog"
 	"math"
+	"strings"
 	"testing"
 	"time"
 
@@ -89,7 +90,7 @@ func TestLogging(t *testing.T) {
 			),
 			t: `v.f64=42 v.inf=+Inf v.neg_inf=-Inf v.zero=0 v.neg_zero=-0 v.nan=NaN v.nan_weird=NaN v.i32=42 v.i64=42`,
 			j: `{"v":{"f64":42,"inf":"+Inf","neg_inf":"-Inf","zero":0,"neg_zero":-0,"nan":"NaN","nan_weird":"NaN","i32":42,"i64":42}}`,
-			mi: `
+			mi: strings.ReplaceAll(`
 			{
 			  "f64": 42.0,
 			  "inf": +Inf,
@@ -100,10 +101,10 @@ func TestLogging(t *testing.T) {
 			  "nan_weird": NaN(111111111111000000000000000111100000000000011110000000000000001),
 			  "i32": 42,
 			  "i64": int64(42),
-			}`,
-			m: `{"f64": 42.0, "inf": +Inf, "neg_inf": -Inf, "zero": 0.0, "neg_zero": -0.0, "nan": NaN, ` +
-				`"nan_weird": NaN(111111111111000000000000000111100000000000011110000000000000001), ` +
-				`"i32": 42, "i64": int64(42)}`,
+			}`, `"`, "`"),
+			m: "{`f64`: 42.0, `inf`: +Inf, `neg_inf`: -Inf, `zero`: 0.0, `neg_zero`: -0.0, `nan`: NaN, " +
+				"`nan_weird`: NaN(111111111111000000000000000111100000000000011110000000000000001), " +
+				"`i32`: 42, `i64`: int64(42)}",
 		},
 		{
 			name: "Scalars",
@@ -115,14 +116,14 @@ func TestLogging(t *testing.T) {
 			),
 			t: `v.null=<nil> v.id=ObjectID(420000000000000000000000) v.bool=true v.time=2023-03-06T09:14:42.123Z`,
 			j: `{"v":{"null":null,"id":"ObjectID(420000000000000000000000)","bool":true,"time":"2023-03-06T09:14:42.123Z"}}`,
-			mi: `
+			mi: strings.ReplaceAll(`
 			{
 			  "null": null,
 			  "id": ObjectID(420000000000000000000000),
 			  "bool": true,
 			  "time": 2023-03-06T09:14:42.123Z,
-			}`,
-			m: `{"null": null, "id": ObjectID(420000000000000000000000), "bool": true, "time": 2023-03-06T09:14:42.123Z}`,
+			}`, `"`, "`"),
+			m: "{`null`: null, `id`: ObjectID(420000000000000000000000), `bool`: true, `time`: 2023-03-06T09:14:42.123Z}",
 		},
 		{
 			name: "Composites",
@@ -143,7 +144,7 @@ func TestLogging(t *testing.T) {
 				`v.array.0=foo v.array.1=bar v.array.2.0=baz v.array.2.1=qux`,
 			j: `{"v":{"doc":{"foo":"bar","baz":{"qux":"quux"}},"doc_raw":"RawDocument<1>",` +
 				`"array":{"0":"foo","1":"bar","2":{"0":"baz","1":"qux"}}}}`,
-			mi: `
+			mi: strings.ReplaceAll(`
 				{
 				  "doc": {
 				    "foo": "bar",
@@ -161,8 +162,8 @@ func TestLogging(t *testing.T) {
 				      "qux",
 				    ],
 				  ],
-				}`,
-			m: `{"doc": {"foo": "bar", "baz": {"qux": "quux"}}, "doc_raw": RawDocument<1>, "doc_empty": {}, "array": ["foo", "bar", ["baz", "qux"]]}`,
+				}`, `"`, "`"),
+			m: "{`doc`: {`foo`: `bar`, `baz`: {`qux`: `quux`}}, `doc_raw`: RawDocument<1>, `doc_empty`: {}, `array`: [`foo`, `bar`, [`baz`, `qux`]]}",
 		},
 		{
 			name: "Nested",
@@ -170,7 +171,7 @@ func TestLogging(t *testing.T) {
 			t:    `v.f.0.f.0.f.0.f.0.f.0.f.0.f.0.f.0.f.0.f.0=<nil>`,
 			j: `{"v":{"f":{"0":{"f":{"0":{"f":{"0":{"f":{"0":{"f":{"0":{"f":{"0":` +
 				`{"f":{"0":{"f":{"0":{"f":{"0":{"f":{"0":null}}}}}}}}}}}}}}}}}}}}}`,
-			mi: `
+			mi: strings.ReplaceAll(`
 				{
 				  "f": [
 				    {
@@ -211,8 +212,8 @@ func TestLogging(t *testing.T) {
 				      ],
 				    },
 				  ],
-				}`,
-			m: `{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [{"f": [null]}]}]}]}]}]}]}]}]}]}`,
+				}`, `"`, "`"),
+			m: "{`f`: [{`f`: [{`f`: [{`f`: [{`f`: [{`f`: [{`f`: [{`f`: [{`f`: [{`f`: [null]}]}]}]}]}]}]}]}]}]}",
 		},
 		{
 			name: "Raw",
