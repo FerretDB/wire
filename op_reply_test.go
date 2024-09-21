@@ -55,7 +55,7 @@ var replyTestCases = []testCase{
 				"ok", float64(1),
 			),
 		},
-		b: `
+		si: `
 		{
 		  "ResponseFlags": "[AwaitCapable]",
 		  "CursorID": int64(0),
@@ -112,7 +112,7 @@ var replyTestCases = []testCase{
 				"ok", float64(1),
 			),
 		},
-		b: `
+		si: `
 		{
 		  "ResponseFlags": "[AwaitCapable]",
 		  "CursorID": int64(0),
