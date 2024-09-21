@@ -37,7 +37,8 @@ type OpQuery struct {
 
 // NewOpQuery creates a new OpQuery message.
 func NewOpQuery(doc wirebson.AnyDocument) (*OpQuery, error) {
-	raw, err := doc.Encode()
+	raw := make([]byte, wirebson.Size(doc))
+	err := doc.Encode(raw)
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}

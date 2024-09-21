@@ -15,7 +15,6 @@
 package wirebson
 
 import (
-	"bytes"
 	"encoding/binary"
 	"iter"
 	"log/slog"
@@ -149,32 +148,30 @@ func (arr *Array) SortInterface(less func(a, b any) bool) sort.Interface {
 	}
 }
 
-// Encode encodes non-nil Array.
+// Encode encodes Array v into raw.
 //
-// TODO https://github.com/FerretDB/wire/issues/21
-// This method should accept a slice of bytes, not return it.
-// That would allow to avoid unnecessary allocations.
-func (arr *Array) Encode() (RawArray, error) {
+// raw must be at least Size(arr) bytes long; otherwise, Encode will panic.
+// Only raw[0:Size(arr)] bytes are modified.
+func (arr *Array) Encode(raw RawArray) error {
 	must.NotBeZero(arr)
 
-	size := sizeArray(arr)
-	buf := bytes.NewBuffer(make([]byte, 0, size))
+	// ensure raw length early
+	s := sizeArray(arr)
+	raw[s-1] = 0
 
-	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
-		return nil, lazyerrors.Error(err)
-	}
+	binary.LittleEndian.PutUint32(raw, uint32(s))
 
-	for i, v := range arr.values {
-		if err := encodeField(buf, strconv.Itoa(i), v); err != nil {
-			return nil, lazyerrors.Error(err)
+	i := 4
+	for n, v := range arr.values {
+		w, err := encodeField(raw[i:], strconv.Itoa(n), v)
+		if err != nil {
+			return lazyerrors.Error(err)
 		}
+
+		i += w
 	}
 
-	if err := binary.Write(buf, binary.LittleEndian, byte(0)); err != nil {
-		return nil, lazyerrors.Error(err)
-	}
-
-	return buf.Bytes(), nil
+	return nil
 }
 
 // Decode returns itself to implement [AnyArray].
