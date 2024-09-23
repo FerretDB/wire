@@ -6,7 +6,9 @@ env:
   GOCOVERDIR: tmp/cover
 
 vars:
+  BENCH: Benchmark.*
   BENCH_TIME: 1s
+  BENCH_COUNT: 5
   FUZZ_TIME: 15s
 
 tasks:
@@ -87,9 +89,9 @@ tasks:
   bench:
     desc: "Run benchmarks"
     cmds:
-      - go test -list='Benchmark.*' ./...
+      - go test -list='{{.BENCH}}' ./wirebson
       # -timeout is needed due to https://github.com/golang/go/issues/69181
-      - go test -count=10 -bench=BenchmarkDocument -benchtime={{.BENCH_TIME}} -timeout=60m ./wirebson | tee -a new.txt
+      - go test -bench='{{.BENCH}}' -count={{.BENCH_COUNT}} -benchtime={{.BENCH_TIME}} -timeout=60m ./wirebson | tee -a new.txt
       - bin/benchstat old.txt new.txt
 
   fuzz:
