@@ -839,173 +839,206 @@ func TestDecode(t *testing.T) {
 	}
 }
 
-func BenchmarkDocument(b *testing.B) {
+var drain any
+
+func BenchmarkDocumentDecode(b *testing.B) {
 	for _, tc := range normalTestCases {
 		b.Run(tc.name, func(b *testing.B) {
-			var doc *Document
-			var raw []byte
-			var m string
+			b.ReportAllocs()
+
 			var err error
+			for range b.N {
+				drain, err = tc.raw.Decode()
+			}
 
-			b.Run("Decode", func(b *testing.B) {
-				b.ReportAllocs()
+			b.StopTimer()
 
-				for range b.N {
-					doc, err = tc.raw.Decode()
-				}
+			require.NoError(b, err)
+			require.NotNil(b, drain)
+		})
+	}
+}
 
-				b.StopTimer()
+func BenchmarkDocumentDecodeDeep(b *testing.B) {
+	for _, tc := range normalTestCases {
+		b.Run(tc.name, func(b *testing.B) {
+			b.ReportAllocs()
 
-				require.NoError(b, err)
-				require.NotNil(b, doc)
-			})
+			var err error
+			for range b.N {
+				drain, err = tc.raw.DecodeDeep()
+			}
 
-			b.Run("Encode", func(b *testing.B) {
-				doc, err = tc.raw.Decode()
-				require.NoError(b, err)
+			b.StopTimer()
 
-				b.ReportAllocs()
-				b.ResetTimer()
+			require.NoError(b, err)
+			require.NotNil(b, drain)
+		})
+	}
+}
 
-				for range b.N {
-					raw, err = doc.Encode()
-				}
+func BenchmarkDocumentEncode(b *testing.B) {
+	for _, tc := range normalTestCases {
+		b.Run(tc.name, func(b *testing.B) {
+			doc, err := tc.raw.Decode()
+			require.NoError(b, err)
 
-				b.StopTimer()
+			b.ReportAllocs()
+			b.ResetTimer()
 
-				require.NoError(b, err)
-				assert.NotNil(b, raw)
-			})
+			for range b.N {
+				drain, err = doc.Encode()
+			}
 
-			b.Run("LogValue", func(b *testing.B) {
-				doc, err = tc.raw.Decode()
-				require.NoError(b, err)
+			b.StopTimer()
 
-				b.ReportAllocs()
-				b.ResetTimer()
+			require.NoError(b, err)
+			assert.NotNil(b, drain)
+		})
+	}
+}
 
-				for range b.N {
-					m = doc.LogValue().Resolve().String()
-				}
+func BenchmarkDocumentEncodeDeep(b *testing.B) {
+	for _, tc := range normalTestCases {
+		b.Run(tc.name, func(b *testing.B) {
+			doc, err := tc.raw.DecodeDeep()
+			require.NoError(b, err)
 
-				b.StopTimer()
+			b.ReportAllocs()
+			b.ResetTimer()
 
-				assert.NotEmpty(b, m)
-				assert.NotContains(b, m, "panicked")
-				assert.NotContains(b, m, "called too many times")
-			})
+			for range b.N {
+				drain, err = doc.Encode()
+			}
 
-			b.Run("LogMessageIndent", func(b *testing.B) {
-				doc, err = tc.raw.Decode()
-				require.NoError(b, err)
+			b.StopTimer()
 
-				b.ReportAllocs()
-				b.ResetTimer()
+			require.NoError(b, err)
+			assert.NotNil(b, drain)
+		})
+	}
+}
 
-				for range b.N {
-					m = doc.LogMessageIndent()
-				}
+func BenchmarkDocumentLogValue(b *testing.B) {
+	for _, tc := range normalTestCases {
+		b.Run(tc.name, func(b *testing.B) {
+			doc, err := tc.raw.Decode()
+			require.NoError(b, err)
 
-				b.StopTimer()
+			b.ReportAllocs()
+			b.ResetTimer()
 
-				assert.NotEmpty(b, m)
-			})
+			for range b.N {
+				drain = doc.LogValue().Resolve().String()
+			}
 
-			b.Run("LogMessage", func(b *testing.B) {
-				doc, err = tc.raw.Decode()
-				require.NoError(b, err)
+			b.StopTimer()
 
-				b.ReportAllocs()
-				b.ResetTimer()
+			assert.NotEmpty(b, drain)
+			assert.NotContains(b, drain, "panicked")
+			assert.NotContains(b, drain, "called too many times")
+		})
+	}
+}
 
-				for range b.N {
-					m = doc.LogMessage()
-				}
+func BenchmarkDocumentLogValueDeep(b *testing.B) {
+	for _, tc := range normalTestCases {
+		b.Run(tc.name, func(b *testing.B) {
+			doc, err := tc.raw.DecodeDeep()
+			require.NoError(b, err)
 
-				b.StopTimer()
+			b.ReportAllocs()
+			b.ResetTimer()
 
-				assert.NotEmpty(b, m)
-			})
+			for range b.N {
+				drain = doc.LogValue().Resolve().String()
+			}
 
-			b.Run("DecodeDeep", func(b *testing.B) {
-				b.ReportAllocs()
+			b.StopTimer()
 
-				for range b.N {
-					doc, err = tc.raw.DecodeDeep()
-				}
+			assert.NotEmpty(b, drain)
+			assert.NotContains(b, drain, "panicked")
+			assert.NotContains(b, drain, "called too many times")
+		})
+	}
+}
 
-				b.StopTimer()
+func BenchmarkDocumentLogMessage(b *testing.B) {
+	for _, tc := range normalTestCases {
+		b.Run(tc.name, func(b *testing.B) {
+			doc, err := tc.raw.Decode()
+			require.NoError(b, err)
 
-				require.NoError(b, err)
-				require.NotNil(b, doc)
-			})
+			b.ReportAllocs()
+			b.ResetTimer()
 
-			b.Run("EncodeDeep", func(b *testing.B) {
-				doc, err = tc.raw.DecodeDeep()
-				require.NoError(b, err)
+			for range b.N {
+				drain = doc.LogMessage()
+			}
 
-				b.ReportAllocs()
-				b.ResetTimer()
+			b.StopTimer()
 
-				for range b.N {
-					raw, err = doc.Encode()
-				}
+			assert.NotEmpty(b, drain)
+		})
+	}
+}
 
-				b.StopTimer()
+func BenchmarkDocumentLogMessageDeep(b *testing.B) {
+	for _, tc := range normalTestCases {
+		b.Run(tc.name, func(b *testing.B) {
+			doc, err := tc.raw.DecodeDeep()
+			require.NoError(b, err)
 
-				require.NoError(b, err)
-				assert.NotNil(b, raw)
-			})
+			b.ReportAllocs()
+			b.ResetTimer()
 
-			b.Run("LogValueDeep", func(b *testing.B) {
-				doc, err = tc.raw.DecodeDeep()
-				require.NoError(b, err)
+			for range b.N {
+				drain = doc.LogMessage()
+			}
 
-				b.ReportAllocs()
-				b.ResetTimer()
+			b.StopTimer()
 
-				for range b.N {
-					m = doc.LogValue().Resolve().String()
-				}
+			assert.NotEmpty(b, drain)
+		})
+	}
+}
 
-				b.StopTimer()
+func BenchmarkDocumentLogMessageIndent(b *testing.B) {
+	for _, tc := range normalTestCases {
+		b.Run(tc.name, func(b *testing.B) {
+			doc, err := tc.raw.Decode()
+			require.NoError(b, err)
 
-				assert.NotEmpty(b, m)
-				assert.NotContains(b, m, "panicked")
-				assert.NotContains(b, m, "called too many times")
-			})
+			b.ReportAllocs()
+			b.ResetTimer()
 
-			b.Run("LogMessageIndentDeep", func(b *testing.B) {
-				doc, err = tc.raw.DecodeDeep()
-				require.NoError(b, err)
+			for range b.N {
+				drain = doc.LogMessageIndent()
+			}
 
-				b.ReportAllocs()
-				b.ResetTimer()
+			b.StopTimer()
 
-				for range b.N {
-					m = doc.LogMessageIndent()
-				}
+			assert.NotEmpty(b, drain)
+		})
+	}
+}
 
-				b.StopTimer()
+func BenchmarkDocumentLogMessageIndentDeep(b *testing.B) {
+	for _, tc := range normalTestCases {
+		b.Run(tc.name, func(b *testing.B) {
+			doc, err := tc.raw.DecodeDeep()
+			require.NoError(b, err)
 
-				assert.NotEmpty(b, m)
-			})
+			b.ReportAllocs()
+			b.ResetTimer()
 
-			b.Run("LogMessageDeep", func(b *testing.B) {
-				doc, err = tc.raw.DecodeDeep()
-				require.NoError(b, err)
+			for range b.N {
+				drain = doc.LogMessageIndent()
+			}
 
-				b.ReportAllocs()
-				b.ResetTimer()
+			b.StopTimer()
 
-				for range b.N {
-					m = doc.LogMessage()
-				}
-
-				b.StopTimer()
-
-				assert.NotEmpty(b, m)
-			})
+			assert.NotEmpty(b, drain)
 		})
 	}
 }
