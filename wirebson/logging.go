@@ -187,8 +187,7 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 			b.WriteByte('{')
 
 			for i, f := range v.fields {
-				b.WriteString(strconv.Quote(f.name))
-				b.WriteString(": ")
+				fmt.Fprintf(b, "%#q: ", f.name)
 
 				logMessage(f.value, -1, depth+1, b)
 
@@ -206,8 +205,7 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 		for _, f := range v.fields {
 			b.WriteString(strings.Repeat("  ", indent+1))
 
-			b.WriteString(strconv.Quote(f.name))
-			b.WriteString(": ")
+			fmt.Fprintf(b, "%#q: ", f.name)
 
 			logMessage(f.value, indent+1, depth+1, b)
 
@@ -218,9 +216,7 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 		b.WriteByte('}')
 
 	case RawDocument:
-		b.WriteString("RawDocument<")
-		b.WriteString(strconv.FormatInt(int64(len(v)), 10))
-		b.WriteByte('>')
+		fmt.Fprintf(b, "RawDocument<%d>", len(v))
 
 	case *Array:
 		if v == nil {
@@ -268,15 +264,13 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 		b.WriteByte(']')
 
 	case RawArray:
-		b.WriteString("RawArray<")
-		b.WriteString(strconv.FormatInt(int64(len(v)), 10))
-		b.WriteByte('>')
+		fmt.Fprintf(b, "RawArray<%d>", len(v))
 
 	case float64:
 		switch {
 		case math.IsNaN(v):
 			if bits := math.Float64bits(v); bits != nanBits {
-				b.WriteString(fmt.Sprintf("NaN(%b)", bits))
+				fmt.Fprintf(b, "NaN(%b)", bits)
 				return
 			}
 
@@ -298,7 +292,7 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 		}
 
 	case string:
-		b.WriteString(strconv.Quote(v))
+		fmt.Fprintf(b, "%#q", v)
 
 	case Binary:
 		b.WriteString("Binary(")
