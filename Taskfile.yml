@@ -91,7 +91,7 @@ tasks:
     cmds:
       - go test -list='{{.BENCH}}' ./wirebson
       # -timeout is needed due to https://github.com/golang/go/issues/69181
-      - go test -bench='{{.BENCH}}' -count={{.BENCH_COUNT}} -benchtime={{.BENCH_TIME}} -timeout=60m ./wirebson | tee -a new.txt
+      - go test -bench='{{.BENCH}}' -count={{.BENCH_COUNT}} -benchtime={{.BENCH_TIME}} -timeout=60m ./wirebson | tee new.txt
       - bin/benchstat old.txt new.txt
 
   fuzz:

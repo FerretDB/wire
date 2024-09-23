@@ -29,6 +29,9 @@ labels:
   - name: code/feature
     color: "#0E8A16"
     description: Some user-visible feature is not implemented yet
+  - name: code/perf
+    color: "#0B6E60"
+    description: Performance improvements
 
   # the rest sorted alphabetically
 
