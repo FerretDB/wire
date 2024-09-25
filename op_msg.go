@@ -85,6 +85,8 @@ func (msg *OpMsg) SetSections(sections ...OpMsgSection) error {
 }
 
 // RawSection0 returns the value of first section with kind 0.
+//
+// Most callers should use [OpMsg.RawDocument] instead.
 func (msg *OpMsg) RawSection0() wirebson.RawDocument {
 	for _, s := range msg.Sections() {
 		if s.Kind == 0 {
@@ -96,6 +98,8 @@ func (msg *OpMsg) RawSection0() wirebson.RawDocument {
 }
 
 // RawSections returns the value of section with kind 0 and the value of all sections with kind 1.
+//
+// Most callers should use [OpMsg.RawDocument] instead.
 func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
 	var spec wirebson.RawDocument
 	var seq []byte
