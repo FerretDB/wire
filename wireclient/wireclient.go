@@ -339,17 +339,19 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			return fmt.Errorf("wireclient.Conn.Login: %s failed (ok was %v)", cmd.Command(), ok)
 		}
 
+		if !conv.Done() {
+			payload, err = conv.Step(string(res.Get("payload").(wirebson.Binary).B))
+			if err != nil {
+				return fmt.Errorf("wireclient.Conn.Login: %w", err)
+			}
+		}
+
 		if res.Get("done").(bool) {
 			if !conv.Valid() {
 				return fmt.Errorf("wireclient.Conn.Login: conversation is not valid")
 			}
 
 			return nil
-		}
-
-		payload, err = conv.Step(string(res.Get("payload").(wirebson.Binary).B))
-		if err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
 		cmd = wirebson.MustDocument(
