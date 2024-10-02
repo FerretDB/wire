@@ -75,8 +75,16 @@ func TestConn(t *testing.T) {
 			require.NoError(t, conn.Close())
 		})
 
-		assert.Error(t, conn.Login(ctx, "invalid", "invalid", "admin"))
-		assert.Error(t, conn.Login(ctx, "username", "password", "database"))
-		assert.NoError(t, conn.Login(ctx, "username", "password", "admin"))
+		t.Run("InvalidUsername", func(t *testing.T) {
+			assert.Error(t, conn.Login(ctx, "invalid", "invalid", "admin"))
+		})
+
+		t.Run("InvalidDatabase", func(t *testing.T) {
+			assert.Error(t, conn.Login(ctx, "username", "password", "invalid"))
+		})
+
+		t.Run("Valid", func(t *testing.T) {
+			assert.NoError(t, conn.Login(ctx, "username", "password", "admin"))
+		})
 	})
 }
