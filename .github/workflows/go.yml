@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dockerfile: [mongo, ferretdb]
+        dockerfile: [mongo, ferretdb1, ferretdb2]
 
     steps:
       # TODO https://github.com/FerretDB/github-actions/issues/211
