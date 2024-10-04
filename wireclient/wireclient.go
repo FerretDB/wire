@@ -339,6 +339,9 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			return fmt.Errorf("wireclient.Conn.Login: %s failed (ok was %v)", cmd.Command(), ok)
 		}
 
+		// when `saslContinue` is called twice the SCRAM client conversation is
+		// completed before the second `saslContinue` request,
+		// ensure to move only the incomplete conversation forward
 		if !conv.Done() {
 			payload, err = conv.Step(string(res.Get("payload").(wirebson.Binary).B))
 			if err != nil {
