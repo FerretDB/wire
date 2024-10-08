@@ -5,7 +5,7 @@ services:
   mongodb:
     build:
       context: .
-      dockerfile: ${DOCKERFILE:-mongo}.Dockerfile
+      dockerfile: ${MONGO_DOCKERFILE:-mongo}.Dockerfile
     ports:
       - 27017:27017
     environment:
@@ -21,7 +21,8 @@ services:
   postgres:
     build:
       context: .
-      dockerfile: postgres.Dockerfile
+      dockerfile: ${POSTGRES_DOCKERFILE:-postgres}.Dockerfile
+    platform: linux/amd64
     ports:
       - 5432:5432
     environment:
