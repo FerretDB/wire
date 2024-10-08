@@ -136,6 +136,22 @@ func (msg *OpMsg) RawDocument() (wirebson.RawDocument, error) {
 	return s.documents[0], nil
 }
 
+// DecodeDeepDocument returns the value of msg as deeply-decoded [*wirebson.Document].
+//
+// The error is returned if msg contains anything other than a single section of kind 0
+// with a single document.
+//
+// Most callers do not need deeply-decoded document and should use more effective combination of
+// [OpMsg.RawDocument] and [wirebson.RawDocument.Decode] instead.
+func (msg *OpMsg) DecodeDeepDocument() (*wirebson.Document, error) {
+	raw, err := msg.RawDocument()
+	if err != nil {
+		return nil, err
+	}
+
+	return raw.DecodeDeep()
+}
+
 func (msg *OpMsg) msgbody() {}
 
 // check implements [MsgBody].
