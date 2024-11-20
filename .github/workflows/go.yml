@@ -88,7 +88,7 @@ jobs:
       # We also can't use ${{ vars.CODECOV_TOKEN }}: https://github.com/orgs/community/discussions/44322
       - name: Upload coverage information to codecov
         if: always()
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: 69371c38-548a-488e-8843-bfbbf32810bd
           files: ./cover.txt
