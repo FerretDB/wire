@@ -148,7 +148,7 @@ func (arr *Array) SortInterface(less func(a, b any) bool) sort.Interface {
 	}
 }
 
-// EncodeTo encodes non-nil Array.
+// Encode encodes non-nil Array.
 func (arr *Array) Encode() (RawArray, error) {
 	must.NotBeZero(arr)
 

@@ -25,17 +25,17 @@ import (
 //
 // It returns the number of bytes written.
 // It panics if v is not a valid type.
-func encodeField(dst []byte, name string, v any) (int, error) {
+func encodeField(b []byte, name string, v any) (int, error) {
 	var i int
 	switch v := v.(type) {
 	case *Document:
-		dst[i] = byte(tagDocument)
+		b[i] = byte(tagDocument)
 		i++
 
-		EncodeCString(dst[i:], name)
+		EncodeCString(b[i:], name)
 		i += SizeCString(name)
 
-		err := v.EncodeTo(dst[i:])
+		err := v.EncodeTo(b[i:])
 		if err != nil {
 			return 0, lazyerrors.Error(err)
 		}
@@ -43,26 +43,26 @@ func encodeField(dst []byte, name string, v any) (int, error) {
 		i += sizeDocument(v)
 
 	case RawDocument:
-		dst[i] = byte(tagDocument)
+		b[i] = byte(tagDocument)
 		i++
 
-		EncodeCString(dst[i:], name)
+		EncodeCString(b[i:], name)
 		i += SizeCString(name)
 
-		if len(v) > len(dst[i:]) {
-			panic(fmt.Sprintf("length of dst should be at least %d bytes, got %d", len(v), len(dst[i:])))
+		if len(v) > len(b[i:]) {
+			panic(fmt.Sprintf("length of b should be at least %d bytes, got %d", len(v), len(b[i:])))
 		}
 
-		i += copy(dst[i:], v)
+		i += copy(b[i:], v)
 
 	case *Array:
-		dst[i] = byte(tagArray)
+		b[i] = byte(tagArray)
 		i++
 
-		EncodeCString(dst[i:], name)
+		EncodeCString(b[i:], name)
 		i += SizeCString(name)
 
-		err := v.EncodeTo(dst[i:])
+		err := v.EncodeTo(b[i:])
 		if err != nil {
 			return 0, lazyerrors.Error(err)
 		}
@@ -70,20 +70,20 @@ func encodeField(dst []byte, name string, v any) (int, error) {
 		i += sizeArray(v)
 
 	case RawArray:
-		dst[i] = byte(tagArray)
+		b[i] = byte(tagArray)
 		i++
 
-		EncodeCString(dst[i:], name)
+		EncodeCString(b[i:], name)
 		i += SizeCString(name)
 
-		if len(v) > len(dst[i:]) {
-			panic(fmt.Sprintf("length of dst should be at least %d bytes, got %d", len(v), len(dst[i:])))
+		if len(v) > len(b[i:]) {
+			panic(fmt.Sprintf("length of b should be at least %d bytes, got %d", len(v), len(b[i:])))
 		}
 
-		i += copy(dst[i:], v)
+		i += copy(b[i:], v)
 
 	default:
-		return i + encodeScalarField(dst[i:], name, v), nil
+		return i + encodeScalarField(b[i:], name, v), nil
 	}
 
 	return i, nil
@@ -93,42 +93,42 @@ func encodeField(dst []byte, name string, v any) (int, error) {
 //
 // It returns the number of bytes written.
 // It panics if v is not a scalar value.
-func encodeScalarField(dst []byte, name string, v any) int {
+func encodeScalarField(b []byte, name string, v any) int {
 	var i int
 	switch v := v.(type) {
 	case float64:
-		dst[i] = byte(tagFloat64)
+		b[i] = byte(tagFloat64)
 	case string:
-		dst[i] = byte(tagString)
+		b[i] = byte(tagString)
 	case Binary:
-		dst[i] = byte(tagBinary)
+		b[i] = byte(tagBinary)
 	case ObjectID:
-		dst[i] = byte(tagObjectID)
+		b[i] = byte(tagObjectID)
 	case bool:
-		dst[i] = byte(tagBool)
+		b[i] = byte(tagBool)
 	case time.Time:
-		dst[i] = byte(tagTime)
+		b[i] = byte(tagTime)
 	case NullType:
-		dst[i] = byte(tagNull)
+		b[i] = byte(tagNull)
 	case Regex:
-		dst[i] = byte(tagRegex)
+		b[i] = byte(tagRegex)
 	case int32:
-		dst[i] = byte(tagInt32)
+		b[i] = byte(tagInt32)
 	case Timestamp:
-		dst[i] = byte(tagTimestamp)
+		b[i] = byte(tagTimestamp)
 	case int64:
-		dst[i] = byte(tagInt64)
+		b[i] = byte(tagInt64)
 	case Decimal128:
-		dst[i] = byte(tagDecimal128)
+		b[i] = byte(tagDecimal128)
 	default:
 		panic(fmt.Sprintf("invalid BSON type %T", v))
 	}
 	i++
 
-	EncodeCString(dst[i:], name)
+	EncodeCString(b[i:], name)
 	i += SizeCString(name)
 
-	encodeScalarValue(dst[i:], v)
+	encodeScalarValue(b[i:], v)
 	i += sizeScalar(v)
 
 	return i
@@ -140,32 +140,32 @@ func encodeScalarField(dst []byte, name string, v any) int {
 // Only b[0:Size(v)] bytes are modified.
 //
 // It panics if v is not a [ScalarType] (including CString).
-func encodeScalarValue(dst []byte, v any) {
+func encodeScalarValue(b []byte, v any) {
 	switch v := v.(type) {
 	case float64:
-		encodeFloat64(dst, v)
+		encodeFloat64(b, v)
 	case string:
-		encodeString(dst, v)
+		encodeString(b, v)
 	case Binary:
-		encodeBinary(dst, v)
+		encodeBinary(b, v)
 	case ObjectID:
-		encodeObjectID(dst, v)
+		encodeObjectID(b, v)
 	case bool:
-		encodeBool(dst, v)
+		encodeBool(b, v)
 	case time.Time:
-		encodeTime(dst, v)
+		encodeTime(b, v)
 	case NullType:
 		// nothing
 	case Regex:
-		encodeRegex(dst, v)
+		encodeRegex(b, v)
 	case int32:
-		encodeInt32(dst, v)
+		encodeInt32(b, v)
 	case Timestamp:
-		encodeTimestamp(dst, v)
+		encodeTimestamp(b, v)
 	case int64:
-		encodeInt64(dst, v)
+		encodeInt64(b, v)
 	case Decimal128:
-		encodeDecimal128(dst, v)
+		encodeDecimal128(b, v)
 	default:
 		panic(fmt.Sprintf("unsupported type %T", v))
 	}
