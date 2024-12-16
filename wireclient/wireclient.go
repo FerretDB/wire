@@ -34,6 +34,9 @@ import (
 // nextRequestID stores the last generated request ID.
 var nextRequestID atomic.Int32
 
+// skipEmptyExchange is the value of `saslStart`'s options used by [*Conn.Login].
+const skipEmptyExchange = false
+
 // Conn represents a single client connection.
 //
 // It is not safe for concurrent use.
@@ -269,12 +272,7 @@ func (c *Conn) Ping(ctx context.Context) error {
 		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
 	}
 
-	resRaw, err := resBody.(*wire.OpMsg).RawDocument()
-	if err != nil {
-		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
-	}
-
-	res, err := resRaw.Decode()
+	res, err := resBody.(*wire.OpMsg).DecodeDeepDocument()
 	if err != nil {
 		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
 	}
@@ -286,7 +284,8 @@ func (c *Conn) Ping(ctx context.Context) error {
 	return nil
 }
 
-// Login authenticates the connection with the given credentials.
+// Login authenticates the connection with the given credentials
+// using some unspecified sequences of commands.
 //
 // It should not be used to test various authentication scenarios.
 func (c *Conn) Login(ctx context.Context, username, password, authDB string) error {
@@ -309,10 +308,23 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 		"$db", authDB,
 	)
 
-	for step := range 3 {
+	// one `saslStart`, two `saslContinue` requests
+	steps := 3
+
+	if skipEmptyExchange {
+		if err = cmd.Add("options", wirebson.MustDocument("skipEmptyExchange", true)); err != nil {
+			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		}
+
+		// only one `saslContinue`
+		steps = 2
+	}
+
+	for step := 1; step <= steps; step++ {
 		c.l.DebugContext(
-			ctx, "Login",
-			slog.Int("step", step), slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
+			ctx, "Login: client",
+			slog.Int("step", step), slog.String("payload", payload),
+			slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
 		)
 
 		var body *wire.OpMsg
@@ -325,13 +337,8 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
-		var resRaw wirebson.RawDocument
-		if resRaw, err = resBody.(*wire.OpMsg).RawDocument(); err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
-		}
-
 		var res *wirebson.Document
-		if res, err = resRaw.Decode(); err != nil {
+		if res, err = resBody.(*wire.OpMsg).DecodeDeepDocument(); err != nil {
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
@@ -339,15 +346,40 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			return fmt.Errorf("wireclient.Conn.Login: %s failed (ok was %v)", cmd.Command(), ok)
 		}
 
+		payload = string(res.Get("payload").(wirebson.Binary).B)
+
+		c.l.DebugContext(
+			ctx, "Login: server",
+			slog.Int("step", step), slog.String("payload", payload),
+		)
+
 		if res.Get("done").(bool) {
-			if !conv.Valid() {
-				return fmt.Errorf("wireclient.Conn.Login: conversation is not valid")
+			if skipEmptyExchange {
+				if step != 2 {
+					return fmt.Errorf("wireclient.Conn.Login: expected server conversation to be done at step 2")
+				}
+
+				if _, err = conv.Step(payload); err != nil {
+					return fmt.Errorf("wireclient.Conn.Login: %w", err)
+				}
+			} else {
+				if step != 3 {
+					return fmt.Errorf("wireclient.Conn.Login: expected server conversation to be done at step 3")
+				}
 			}
 
-			return nil
+			if !conv.Done() {
+				return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
+			}
+
+			if !conv.Valid() {
+				return fmt.Errorf("wireclient.Conn.Login: conversation is done, but not valid")
+			}
+
+			return c.checkAuth(ctx)
 		}
 
-		payload, err = conv.Step(string(res.Get("payload").(wirebson.Binary).B))
+		payload, err = conv.Step(payload)
 		if err != nil {
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
@@ -361,6 +393,25 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 	}
 
 	return fmt.Errorf("wireclient.Conn.Login: too many steps")
+}
+
+// checkAuth checks if the connection is authenticated.
+func (c *Conn) checkAuth(ctx context.Context) error {
+	_, resBody, err := c.Request(ctx, wire.MustOpMsg("listDatabases", int32(1), "$db", "admin"))
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.checkAuth: %w", err)
+	}
+
+	res, err := resBody.(*wire.OpMsg).DecodeDeepDocument()
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
+	}
+
+	if ok := res.Get("ok"); ok != 1.0 {
+		return fmt.Errorf("wireclient.Conn.checkAuth: failed (ok was %v)", ok)
+	}
+
+	return nil
 }
 
 // sleep waits until the given duration is over or the context is canceled.

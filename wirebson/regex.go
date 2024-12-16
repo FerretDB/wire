@@ -24,7 +24,7 @@ type Regex struct {
 	Options string
 }
 
-// sizeRegex returns a size of the encoding of v [Regex] in bytes.
+// sizeRegex returns the size of the encoding of v [Regex] in bytes.
 func sizeRegex(v Regex) int {
 	return len(v.Pattern) + len(v.Options) + 2
 }

@@ -9,12 +9,16 @@ linters-settings:
     settings:
       shadow:
         strict: true
+  staticcheck:
+    checks:
+      - all
 
 linters:
   disable-all: true
   enable:
     # TODO https://github.com/FerretDB/wire/issues/4
     - govet
+    - staticcheck
 
 issues:
   max-issues-per-linter: 0

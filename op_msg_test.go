@@ -53,7 +53,7 @@ var msgTestCases = []testCase{
 			}},
 		},
 		command: "buildInfo",
-		b: `
+		si: `
 		{
 		  "FlagBits": "[]",
 		  "Checksum": int64(0),
@@ -128,7 +128,7 @@ var msgTestCases = []testCase{
 			}},
 		},
 		command: "version",
-		b: `
+		si: `
 		{
 		  "FlagBits": "[]",
 		  "Checksum": int64(0),
@@ -221,7 +221,7 @@ var msgTestCases = []testCase{
 			},
 		},
 		command: "insert",
-		b: `
+		si: `
 		{
 		  "FlagBits": "[]",
 		  "Checksum": int64(0),
@@ -315,7 +315,7 @@ var msgTestCases = []testCase{
 			}},
 		},
 		command: "insert",
-		b: `
+		si: `
 		{
 		  "FlagBits": "[]",
 		  "Checksum": int64(0),
@@ -389,7 +389,7 @@ var msgTestCases = []testCase{
 			},
 		},
 		command: "insert",
-		b: `
+		si: `
 		{
 		  "FlagBits": "[]",
 		  "Checksum": int64(0),
@@ -475,7 +475,7 @@ var msgTestCases = []testCase{
 			checksum: 1737537506,
 		},
 		command: "insert",
-		b: `
+		si: `
 		{
 		  "FlagBits": "[checksumPresent]",
 		  "Checksum": int64(1737537506),
@@ -584,7 +584,7 @@ var msgTestCases = []testCase{
 			checksum: 2932997361,
 		},
 		command: "update",
-		b: `
+		si: `
 		{
 		  "FlagBits": "[checksumPresent]",
 		  "Checksum": int64(2932997361),

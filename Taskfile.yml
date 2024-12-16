@@ -6,7 +6,9 @@ env:
   GOCOVERDIR: tmp/cover
 
 vars:
+  BENCH: Benchmark.*
   BENCH_TIME: 1s
+  BENCH_COUNT: 5
   FUZZ_TIME: 15s
 
 tasks:

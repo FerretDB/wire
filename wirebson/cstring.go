@@ -19,7 +19,7 @@ import (
 	"fmt"
 )
 
-// SizeCString returns a size of the encoding of v cstring in bytes.
+// SizeCString returns the size of the encoding of v cstring in bytes.
 func SizeCString(v string) int {
 	return len(v) + 1
 }

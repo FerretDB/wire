@@ -60,7 +60,7 @@ var queryTestCases = []testCase{
 			),
 			returnFieldsSelector: nil,
 		},
-		b: `
+		si: `
 		{
 		  "Flags": "[]",
 		  "FullCollectionName": "admin.$cmd",
@@ -129,7 +129,7 @@ var queryTestCases = []testCase{
 			),
 			returnFieldsSelector: nil,
 		},
-		b: `
+		si: `
 		{
 		  "Flags": "[]",
 		  "FullCollectionName": "admin.$cmd",
