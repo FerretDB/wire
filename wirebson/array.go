@@ -148,7 +148,19 @@ func (arr *Array) SortInterface(less func(a, b any) bool) sort.Interface {
 	}
 }
 
-// EncodeTo encodes Array v into raw.
+// EncodeTo encodes non-nil Array.
+func (arr *Array) Encode() (RawArray, error) {
+	must.NotBeZero(arr)
+
+	raw := make([]byte, Size(arr))
+	if err := arr.EncodeTo(raw); err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	return raw, nil
+}
+
+// EncodeTo encodes non-nil Array.
 //
 // raw must be at least Size(arr) bytes long; otherwise, EncodeTo will panic.
 // Only raw[0:Size(arr)] bytes are modified.

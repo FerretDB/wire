@@ -224,6 +224,18 @@ func (doc *Document) Command() string {
 	return doc.fields[0].name
 }
 
+// Encode encodes non-nil Document.
+func (doc *Document) Encode() (RawDocument, error) {
+	must.NotBeZero(doc)
+
+	raw := make([]byte, Size(doc))
+	if err := doc.EncodeTo(raw); err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	return raw, nil
+}
+
 // EncodeTo encodes non-nil Document.
 //
 // raw must be at least Size(doc) bytes long; otherwise, EncodeTo will panic.
