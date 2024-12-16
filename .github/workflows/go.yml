@@ -25,7 +25,7 @@ env:
 jobs:
   test:
     name: Test ${{ matrix.mongo_dockerfile }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     # Do not run this job in parallel for any PR change or branch push.
@@ -101,7 +101,7 @@ jobs:
 
   fuzz:
     name: Fuzz
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     # Do not run this job in parallel for any PR change or branch push.
