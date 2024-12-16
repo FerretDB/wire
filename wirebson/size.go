@@ -20,10 +20,10 @@ import (
 	"time"
 )
 
-// size returns a size of the encoding of value v in bytes.
+// Size returns the size of the encoding of value v in bytes.
 //
 // It panics for invalid types.
-func size(v any) int {
+func Size(v any) int {
 	switch v := v.(type) {
 	case *Document:
 		return sizeDocument(v)
@@ -38,29 +38,29 @@ func size(v any) int {
 	}
 }
 
-// sizeDocument returns a size of the encoding of Document doc in bytes.
+// sizeDocument returns the size of the encoding of Document doc in bytes.
 func sizeDocument(doc *Document) int {
 	res := 5
 
 	for _, f := range doc.fields {
-		res += 1 + SizeCString(f.name) + size(f.value)
+		res += 1 + SizeCString(f.name) + Size(f.value)
 	}
 
 	return res
 }
 
-// sizeArray returns a size of the encoding of Array arr in bytes.
+// sizeArray returns the size of the encoding of Array arr in bytes.
 func sizeArray(arr *Array) int {
 	res := 5
 
 	for i, v := range arr.values {
-		res += 1 + SizeCString(strconv.Itoa(i)) + size(v)
+		res += 1 + SizeCString(strconv.Itoa(i)) + Size(v)
 	}
 
 	return res
 }
 
-// sizeScalar returns a size of the encoding of scalar value v in bytes.
+// sizeScalar returns the size of the encoding of scalar value v in bytes.
 //
 // It panics if v is not a [ScalarType] (including CString).
 func sizeScalar(v any) int {

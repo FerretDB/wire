@@ -19,7 +19,7 @@ import (
 	"fmt"
 )
 
-// sizeString returns a size of the encoding of v string in bytes.
+// sizeString returns the size of the encoding of v string in bytes.
 func sizeString(v string) int {
 	return len(v) + 5
 }
