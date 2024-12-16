@@ -20,6 +20,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -40,9 +41,7 @@ func TestMain(m *testing.M) {
 func makeRawDocument(pairs ...any) wirebson.RawDocument {
 	d := wirebson.MustDocument(pairs...)
 
-	raw := make([]byte, wirebson.Size(d))
-
-	err := d.EncodeTo(raw)
+	raw, err := d.Encode()
 	if err != nil {
 		panic(err)
 	}
@@ -72,7 +71,7 @@ type testCase struct {
 	msgHeader *MsgHeader
 	msgBody   MsgBody
 	command   string // only for OpMsg
-	b         string
+	si        string
 	err       string // unwrapped
 }
 
@@ -129,7 +128,7 @@ func testMessages(t *testing.T, testCases []testCase) {
 				require.NotNil(t, msgHeader)
 				require.NotNil(t, msgBody)
 				assert.NotEmpty(t, msgHeader.String())
-				assert.Equal(t, testutil.Unindent(tc.b), msgBody.StringIndent())
+				assert.Equal(t, strings.ReplaceAll(testutil.Unindent(tc.si), `"`, "`"), msgBody.StringIndent())
 				assert.NotEmpty(t, msgBody.String())
 
 				require.NoError(t, msgBody.check())
