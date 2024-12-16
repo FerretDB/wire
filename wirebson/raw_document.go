@@ -26,13 +26,12 @@ import (
 // It generally references a part of a larger slice, not a copy.
 type RawDocument []byte
 
-// EncodeTo returns itself to implement the [AnyDocument] interface.
+// Encode returns itself to implement the [AnyDocument] interface.
 //
 // Receiver must not be nil.
-func (raw RawDocument) EncodeTo(out RawDocument) error {
+func (raw RawDocument) Encode() (RawDocument, error) {
 	must.BeTrue(raw != nil)
-	copy(out, raw) // FIXME
-	return nil
+	return raw, nil
 }
 
 // Decode decodes a single non-nil BSON document that takes the whole non-nil byte slice.

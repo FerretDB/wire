@@ -27,13 +27,12 @@ import (
 // It generally references a part of a larger slice, not a copy.
 type RawArray []byte
 
-// EncodeTo returns itself to implement the [AnyArray] interface.
+// Encode returns itself to implement the [AnyArray] interface.
 //
 // Receiver must not be nil.
-func (raw RawArray) EncodeTo(out RawArray) error {
+func (raw RawArray) Encode() (RawArray, error) {
 	must.BeTrue(raw != nil)
-	copy(out, raw) // FIXME
-	return nil
+	return raw, nil
 }
 
 // Decode decodes a single non-nil BSON array that takes the whole non-nil byte slice.
