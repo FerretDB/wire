@@ -29,7 +29,9 @@ const sizeObjectID = 12
 // b must be at least 12 ([sizeObjectID]) bytes long; otherwise, encodeObjectID will panic.
 // Only b[0:12] bytes are modified.
 func encodeObjectID(b []byte, v ObjectID) {
+	// ensure b length early
 	_ = b[11]
+
 	copy(b, v[:])
 }
 
