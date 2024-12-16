@@ -38,8 +38,7 @@ type OpMsg struct {
 
 // NewOpMsg creates a message with a single section of kind 0 with a single document.
 func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
-	raw := make([]byte, wirebson.Size(doc))
-	err := doc.EncodeTo(raw)
+	raw, err := doc.Encode()
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}
@@ -86,6 +85,8 @@ func (msg *OpMsg) SetSections(sections ...OpMsgSection) error {
 }
 
 // RawSection0 returns the value of first section with kind 0.
+//
+// Most callers should use [OpMsg.RawDocument] instead.
 func (msg *OpMsg) RawSection0() wirebson.RawDocument {
 	for _, s := range msg.Sections() {
 		if s.Kind == 0 {
@@ -97,6 +98,8 @@ func (msg *OpMsg) RawSection0() wirebson.RawDocument {
 }
 
 // RawSections returns the value of section with kind 0 and the value of all sections with kind 1.
+//
+// Most callers should use [OpMsg.RawDocument] instead.
 func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
 	var spec wirebson.RawDocument
 	var seq []byte
@@ -131,6 +134,22 @@ func (msg *OpMsg) RawDocument() (wirebson.RawDocument, error) {
 	}
 
 	return s.documents[0], nil
+}
+
+// DecodeDeepDocument returns the value of msg as deeply-decoded [*wirebson.Document].
+//
+// The error is returned if msg contains anything other than a single section of kind 0
+// with a single document.
+//
+// Most callers do not need deeply-decoded document and should use more effective combination of
+// [OpMsg.RawDocument] and [wirebson.RawDocument.Decode] instead.
+func (msg *OpMsg) DecodeDeepDocument() (*wirebson.Document, error) {
+	raw, err := msg.RawDocument()
+	if err != nil {
+		return nil, err
+	}
+
+	return raw.DecodeDeep()
 }
 
 func (msg *OpMsg) msgbody() {}
