@@ -54,7 +54,7 @@ type Binary struct {
 	Subtype BinarySubtype
 }
 
-// sizeBinary returns a size of the encoding of v [Binary] in bytes.
+// sizeBinary returns the size of the encoding of v [Binary] in bytes.
 func sizeBinary(v Binary) int {
 	return len(v.B) + 5
 }
