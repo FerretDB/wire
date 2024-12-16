@@ -35,7 +35,7 @@ func encodeField(dst []byte, name string, v any) (int, error) {
 		EncodeCString(dst[i:], name)
 		i += SizeCString(name)
 
-		err := v.Encode(dst[i:])
+		err := v.EncodeTo(dst[i:])
 		if err != nil {
 			return 0, lazyerrors.Error(err)
 		}
@@ -62,7 +62,7 @@ func encodeField(dst []byte, name string, v any) (int, error) {
 		EncodeCString(dst[i:], name)
 		i += SizeCString(name)
 
-		err := v.Encode(dst[i:])
+		err := v.EncodeTo(dst[i:])
 		if err != nil {
 			return 0, lazyerrors.Error(err)
 		}

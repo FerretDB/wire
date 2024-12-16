@@ -42,7 +42,7 @@ func makeRawDocument(pairs ...any) wirebson.RawDocument {
 
 	raw := make([]byte, wirebson.Size(d))
 
-	err := d.Encode(raw)
+	err := d.EncodeTo(raw)
 	if err != nil {
 		panic(err)
 	}

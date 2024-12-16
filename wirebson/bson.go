@@ -70,7 +70,7 @@ type ScalarType interface {
 // Note that the Encode and Decode methods could return the receiver itself,
 // so care must be taken when results are modified.
 type AnyDocument interface {
-	Encode(RawDocument) error
+	EncodeTo(RawDocument) error
 	Decode() (*Document, error)
 	LogMessage() string
 	LogMessageIndent() string
@@ -81,7 +81,7 @@ type AnyDocument interface {
 // Note that the Encode and Decode methods could return the receiver itself,
 // so care must be taken when results are modified.
 type AnyArray interface {
-	Encode(RawArray) error
+	EncodeTo(RawArray) error
 	Decode() (*Array, error)
 	LogMessage() string
 	LogMessageIndent() string

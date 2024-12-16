@@ -148,11 +148,11 @@ func (arr *Array) SortInterface(less func(a, b any) bool) sort.Interface {
 	}
 }
 
-// Encode encodes Array v into raw.
+// EncodeTo encodes Array v into raw.
 //
-// raw must be at least Size(arr) bytes long; otherwise, Encode will panic.
+// raw must be at least Size(arr) bytes long; otherwise, EncodeTo will panic.
 // Only raw[0:Size(arr)] bytes are modified.
-func (arr *Array) Encode(raw RawArray) error {
+func (arr *Array) EncodeTo(raw RawArray) error {
 	must.NotBeZero(arr)
 
 	// ensure raw length early

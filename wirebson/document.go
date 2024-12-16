@@ -224,11 +224,11 @@ func (doc *Document) Command() string {
 	return doc.fields[0].name
 }
 
-// Encode encodes non-nil Document.
+// EncodeTo encodes non-nil Document.
 //
-// raw must be at least Size(doc) bytes long; otherwise, Encode will panic.
+// raw must be at least Size(doc) bytes long; otherwise, EncodeTo will panic.
 // Only raw[0:Size(doc)] bytes are modified.
-func (doc *Document) Encode(raw RawDocument) error {
+func (doc *Document) EncodeTo(raw RawDocument) error {
 	must.NotBeZero(doc)
 
 	// ensure raw length early

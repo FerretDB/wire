@@ -39,7 +39,7 @@ type OpMsg struct {
 // NewOpMsg creates a message with a single section of kind 0 with a single document.
 func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
 	raw := make([]byte, wirebson.Size(doc))
-	err := doc.Encode(raw)
+	err := doc.EncodeTo(raw)
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}

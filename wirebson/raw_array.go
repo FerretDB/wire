@@ -27,10 +27,10 @@ import (
 // It generally references a part of a larger slice, not a copy.
 type RawArray []byte
 
-// Encode returns itself to implement the [AnyArray] interface.
+// EncodeTo returns itself to implement the [AnyArray] interface.
 //
 // Receiver must not be nil.
-func (raw RawArray) Encode(out RawArray) error {
+func (raw RawArray) EncodeTo(out RawArray) error {
 	must.BeTrue(raw != nil)
 	copy(out, raw) // FIXME
 	return nil

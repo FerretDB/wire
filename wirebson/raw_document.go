@@ -26,10 +26,10 @@ import (
 // It generally references a part of a larger slice, not a copy.
 type RawDocument []byte
 
-// Encode returns itself to implement the [AnyDocument] interface.
+// EncodeTo returns itself to implement the [AnyDocument] interface.
 //
 // Receiver must not be nil.
-func (raw RawDocument) Encode(out RawDocument) error {
+func (raw RawDocument) EncodeTo(out RawDocument) error {
 	must.BeTrue(raw != nil)
 	copy(out, raw) // FIXME
 	return nil
