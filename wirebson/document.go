@@ -255,19 +255,38 @@ func (doc *Document) Encode() (RawDocument, error) {
 }
 
 // MarshalJSON implements the json.Marshaler interface for Document.
-// It converts the Document into a JSON object representation.
+// It converts the Document into a JSON object representation while preserving the order of fields.
 func (doc *Document) MarshalJSON() ([]byte, error) {
 	if doc == nil {
 		return nil, lazyerrors.Errorf("nil Document")
 	}
 
-	jsonMap := make(map[string]interface{}, len(doc.fields))
+	jsonObject := make([]byte, 0)
+	jsonObject = append(jsonObject, '{')
 
-	for _, field := range doc.fields {
-		jsonMap[field.name] = field.value
+	for i, field := range doc.fields {
+		key, err := json.Marshal(field.name)
+		if err != nil {
+			return nil, lazyerrors.Errorf("failed to marshal key: %w", err)
+		}
+
+		value, err := json.Marshal(field.value)
+		if err != nil {
+			return nil, lazyerrors.Errorf("failed to marshal value: %w", err)
+		}
+
+		jsonObject = append(jsonObject, key...)
+		jsonObject = append(jsonObject, ':')
+		jsonObject = append(jsonObject, value...)
+
+		if i < len(doc.fields)-1 {
+			jsonObject = append(jsonObject, ',')
+		}
 	}
 
-	return json.Marshal(jsonMap)
+	jsonObject = append(jsonObject, '}')
+
+	return jsonObject, nil
 }
 
 // Decode returns itself to implement [AnyDocument].

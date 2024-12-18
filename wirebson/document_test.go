@@ -51,13 +51,19 @@ func TestDocument(t *testing.T) {
 		assert.Equal(t, expected, slices.Collect(doc.Fields()))
 	})
 
-	t.Run("MarshalJSON", func(t *testing.T) {
+	t.Run("MarshalJSON_PreserveOrder", func(t *testing.T) {
 		t.Parallel()
 
-		arr := MustArray("value1", int32(42), true)
-		data, err := json.Marshal(arr)
+		doc := MustDocument(
+			"key1", "value1",
+			"key2", int32(42),
+			"key3", true,
+		)
+
+		data, err := json.Marshal(doc)
 		assert.NoError(t, err)
-		expected := `["value1",42,true]`
-		assert.JSONEq(t, expected, string(data))
+
+		expected := `{"key1":"value1","key2":42,"key3":true}`
+		assert.Equal(t, expected, string(data), "JSON output should preserve the field order")
 	})
 }
