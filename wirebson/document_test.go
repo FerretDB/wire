@@ -15,6 +15,7 @@
 package wirebson
 
 import (
+	"encoding/json"
 	"maps"
 	"slices"
 	"testing"
@@ -48,5 +49,15 @@ func TestDocument(t *testing.T) {
 
 		expected := []string{"foo", "bar", "baz"}
 		assert.Equal(t, expected, slices.Collect(doc.Fields()))
+	})
+
+	t.Run("MarshalJSON", func(t *testing.T) {
+		t.Parallel()
+
+		arr := MustArray("value1", int32(42), true)
+		data, err := json.Marshal(arr)
+		assert.NoError(t, err)
+		expected := `["value1",42,true]`
+		assert.JSONEq(t, expected, string(data))
 	})
 }
