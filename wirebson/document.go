@@ -265,12 +265,12 @@ func (doc *Document) MarshalJSON() ([]byte, error) {
 	for i, field := range doc.fields {
 		key, err := json.Marshal(field.name)
 		if err != nil {
-			return nil, lazyerrors.Errorf("failed to marshal key: %w", err)
+			return nil, lazyerrors.Error(err)
 		}
 
 		value, err := json.Marshal(field.value)
 		if err != nil {
-			return nil, lazyerrors.Errorf("failed to marshal value: %w", err)
+			return nil, lazyerrors.Error(err)
 		}
 
 		jsonObject = append(jsonObject, key...)
