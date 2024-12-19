@@ -17,6 +17,7 @@ package wirebson
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"iter"
 	"log/slog"
 	"sort"
@@ -177,6 +178,13 @@ func (arr *Array) Encode() (RawArray, error) {
 	return buf.Bytes(), nil
 }
 
+// MarshalJSON implements the json.Marshaler interface for Array.
+// It converts the Array into a JSON array representation.
+func (arr *Array) MarshalJSON() ([]byte, error) {
+	must.NotBeZero(arr)
+	return json.Marshal(arr.values)
+}
+
 // Decode returns itself to implement [AnyArray].
 //
 // Receiver must not be nil.
@@ -204,4 +212,5 @@ func (arr *Array) LogMessageIndent() string {
 var (
 	_ AnyArray       = (*Array)(nil)
 	_ slog.LogValuer = (*Array)(nil)
+	_ json.Marshaler = (*Array)(nil)
 )

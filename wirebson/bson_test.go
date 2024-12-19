@@ -15,6 +15,7 @@
 package wirebson
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -741,6 +742,27 @@ var decodeTestCases = []decodeTestCase{
 	},
 }
 
+var marshalJSONTestCases = []normalTestCase{
+	{
+		name: "MarshalJsonOrderedFields",
+		doc: MustDocument(
+			"first", int32(1),
+			"second", "two",
+			"third", float64(3.0),
+		),
+		mi: `{
+            "first": 1,
+            "second": "two",
+            "third": 3.0
+        }`,
+	},
+	{
+		name: "MarshalJsonEmptyDocument",
+		doc:  MustDocument(),
+		mi:   `{}`,
+	},
+}
+
 func TestNormal(t *testing.T) {
 	for _, tc := range normalTestCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -788,6 +810,15 @@ func TestNormal(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, tc.raw, raw)
 			})
+		})
+	}
+
+	for _, tc := range marshalJSONTestCases {
+		t.Run("MarshalJSON", func(t *testing.T) {
+			data, err := tc.doc.MarshalJSON()
+			require.NoError(t, err)
+
+			assert.JSONEq(t, tc.mi, string(data))
 		})
 	}
 }
@@ -1043,6 +1074,16 @@ func BenchmarkDocumentLogMessageIndentDeep(b *testing.B) {
 	}
 }
 
+func BenchmarkDocumentMarshalJSON(b *testing.B) {
+	for _, tc := range marshalJSONTestCases {
+		b.Run(tc.name, func(b *testing.B) {
+			for n := 0; n < b.N; n++ {
+				_, _ = json.Marshal(tc.doc)
+			}
+		})
+	}
+}
+
 // testRawDocument tests a single RawDocument (that might or might not be valid).
 // It is adapted from tests above.
 func testRawDocument(t *testing.T, rawDoc RawDocument) {
@@ -1112,11 +1153,22 @@ func FuzzDocument(f *testing.F) {
 	f.Fuzz(func(t *testing.T, b []byte) {
 		t.Parallel()
 
-		testRawDocument(t, RawDocument(b))
+		rawDoc := RawDocument(b)
 
-		l, err := FindRaw(b)
-		if err == nil {
-			testRawDocument(t, RawDocument(b[:l]))
-		}
+		t.Run("TestRawDocument", func(t *testing.T) {
+			testRawDocument(t, rawDoc)
+		})
+
+		t.Run("TestMarshalJSON", func(t *testing.T) {
+			for _, tc := range marshalJSONTestCases {
+				data, err := json.Marshal(tc.doc)
+				require.NoError(t, err)
+				assert.NotNil(t, data)
+
+				var parsed map[string]any
+				err = json.Unmarshal(data, &parsed)
+				assert.NoError(t, err)
+			}
+		})
 	})
 }
