@@ -181,10 +181,7 @@ func (arr *Array) Encode() (RawArray, error) {
 // MarshalJSON implements the json.Marshaler interface for Array.
 // It converts the Array into a JSON array representation.
 func (arr *Array) MarshalJSON() ([]byte, error) {
-	if arr == nil {
-		return nil, lazyerrors.Errorf("nil Array")
-	}
-
+	must.NotBeZero(arr)
 	return json.Marshal(arr.values)
 }
 

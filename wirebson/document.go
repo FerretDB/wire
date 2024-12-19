@@ -257,9 +257,7 @@ func (doc *Document) Encode() (RawDocument, error) {
 // MarshalJSON implements the json.Marshaler interface for Document.
 // It converts the Document into a JSON object representation while preserving the order of fields.
 func (doc *Document) MarshalJSON() ([]byte, error) {
-	if doc == nil {
-		return nil, lazyerrors.Errorf("nil Document")
-	}
+	must.NotBeZero(doc)
 
 	jsonObject := make([]byte, 0)
 	jsonObject = append(jsonObject, '{')

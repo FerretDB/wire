@@ -49,8 +49,8 @@ func TestArray(t *testing.T) {
 	t.Run("MarshalJSON", func(t *testing.T) {
 		t.Parallel()
 
-		arr := MustArray("value1", int32(42), true)
-		data, err := json.Marshal(arr)
+		array := MustArray("value1", int32(42), true)
+		data, err := json.Marshal(array)
 		assert.NoError(t, err)
 		expected := `["value1",42,true]`
 		assert.JSONEq(t, expected, string(data))
