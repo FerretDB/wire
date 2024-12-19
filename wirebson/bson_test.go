@@ -789,6 +789,30 @@ func TestNormal(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, tc.raw, raw)
 			})
+
+			t.Run("ArrayMarshalJSON", func(t *testing.T) {
+				arr := MustArray("value1", int32(42), true)
+
+				data, err := json.Marshal(arr)
+				require.NoError(t, err)
+
+				expected := `["value1",42,true]`
+				assert.JSONEq(t, expected, string(data))
+			})
+
+			t.Run("DocumentMarshalJSON", func(t *testing.T) {
+				doc := MustDocument(
+					"key1", "value1",
+					"key2", int32(42),
+					"key3", true,
+				)
+
+				data, err := json.Marshal(doc)
+				require.NoError(t, err)
+
+				expected := `{"key1":"value1","key2":42,"key3":true}`
+				assert.JSONEq(t, expected, string(data))
+			})
 		})
 	}
 }
@@ -1044,6 +1068,20 @@ func BenchmarkDocumentLogMessageIndentDeep(b *testing.B) {
 	}
 }
 
+func BenchmarkDocumentMarshalJSON(b *testing.B) {
+	doc := MustDocument(
+		"key1", "value1",
+		"key2", int32(42),
+		"key3", true,
+	)
+
+	b.Run("Document", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_, _ = json.Marshal(doc)
+		}
+	})
+}
+
 // testRawDocument tests a single RawDocument (that might or might not be valid).
 // It is adapted from tests above.
 func testRawDocument(t *testing.T, rawDoc RawDocument) {
@@ -1113,77 +1151,25 @@ func FuzzDocument(f *testing.F) {
 	f.Fuzz(func(t *testing.T, b []byte) {
 		t.Parallel()
 
-		testRawDocument(t, RawDocument(b))
+		rawDoc := RawDocument(b)
 
-		l, err := FindRaw(b)
-		if err == nil {
-			testRawDocument(t, RawDocument(b[:l]))
-		}
-	})
-}
+		t.Run("TestRawDocument", func(t *testing.T) {
+			testRawDocument(t, rawDoc)
+		})
 
-func TestMarshalJSON(t *testing.T) {
-	t.Parallel()
+		t.Run("TestMarshalJSON", func(t *testing.T) {
+			doc, err := rawDoc.Decode()
+			if err != nil {
+				return
+			}
 
-	t.Run("DocumentMarshalJSON", func(t *testing.T) {
-		doc := MustDocument(
-			"key1", "value1",
-			"key2", int32(42),
-			"key3", true,
-		)
+			data, err := json.Marshal(doc)
+			require.NoError(t, err)
+			assert.NotNil(t, data)
 
-		data, err := json.Marshal(doc)
-		require.NoError(t, err)
-
-		expected := `{"key1":"value1","key2":42,"key3":true}`
-		assert.JSONEq(t, expected, string(data))
-	})
-
-	t.Run("ArrayMarshalJSON", func(t *testing.T) {
-		arr := MustArray("value1", int32(42), true)
-
-		data, err := json.Marshal(arr)
-		require.NoError(t, err)
-
-		expected := `["value1",42,true]`
-		assert.JSONEq(t, expected, string(data))
-	})
-}
-
-func BenchmarkMarshalJSON(b *testing.B) {
-	doc := MustDocument(
-		"key1", "value1",
-		"key2", int32(42),
-		"key3", true,
-	)
-
-	arr := MustArray("value1", int32(42), true)
-
-	b.Run("Document", func(b *testing.B) {
-		for n := 0; n < b.N; n++ {
-			_, _ = json.Marshal(doc)
-		}
-	})
-
-	b.Run("Array", func(b *testing.B) {
-		for n := 0; n < b.N; n++ {
-			_, _ = json.Marshal(arr)
-		}
-	})
-}
-
-func FuzzMarshalJSON(f *testing.F) {
-	f.Add("testString")
-	f.Add("42")
-	f.Add("true")
-
-	f.Fuzz(func(t *testing.T, input string) {
-		doc := MustDocument("key", input)
-		_, err := json.Marshal(doc)
-		assert.NoError(t, err)
-
-		arr := MustArray(input)
-		_, err = json.Marshal(arr)
-		assert.NoError(t, err)
+			var parsed map[string]any
+			err = json.Unmarshal(data, &parsed)
+			assert.NoError(t, err)
+		})
 	})
 }

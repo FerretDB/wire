@@ -259,8 +259,7 @@ func (doc *Document) Encode() (RawDocument, error) {
 func (doc *Document) MarshalJSON() ([]byte, error) {
 	must.NotBeZero(doc)
 
-	jsonObject := make([]byte, 0)
-	jsonObject = append(jsonObject, '{')
+	jsonObject := []byte{'{'}
 
 	for i, field := range doc.fields {
 		key, err := json.Marshal(field.name)
