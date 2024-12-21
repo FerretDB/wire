@@ -17,6 +17,7 @@ package wirebson
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"iter"
 	"log/slog"
 	"slices"
@@ -253,6 +254,38 @@ func (doc *Document) Encode() (RawDocument, error) {
 	return buf.Bytes(), nil
 }
 
+// MarshalJSON implements the json.Marshaler interface for Document.
+// It converts the Document into a JSON object representation while preserving the order of fields.
+func (doc *Document) MarshalJSON() ([]byte, error) {
+	must.NotBeZero(doc)
+
+	jsonObject := []byte{'{'}
+
+	for i, field := range doc.fields {
+		key, err := json.Marshal(field.name)
+		if err != nil {
+			return nil, lazyerrors.Error(err)
+		}
+
+		value, err := json.Marshal(field.value)
+		if err != nil {
+			return nil, lazyerrors.Error(err)
+		}
+
+		jsonObject = append(jsonObject, key...)
+		jsonObject = append(jsonObject, ':')
+		jsonObject = append(jsonObject, value...)
+
+		if i < len(doc.fields)-1 {
+			jsonObject = append(jsonObject, ',')
+		}
+	}
+
+	jsonObject = append(jsonObject, '}')
+
+	return jsonObject, nil
+}
+
 // Decode returns itself to implement [AnyDocument].
 //
 // Receiver must not be nil.
@@ -280,4 +313,5 @@ func (doc *Document) LogMessageIndent() string {
 var (
 	_ AnyDocument    = (*Document)(nil)
 	_ slog.LogValuer = (*Document)(nil)
+	_ json.Marshaler = (*Document)(nil)
 )
