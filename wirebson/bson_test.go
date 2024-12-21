@@ -30,10 +30,11 @@ import (
 //
 //nolint:vet // for readability
 type normalTestCase struct {
-	name string
-	raw  RawDocument
-	doc  *Document
-	mi   string
+	name          string
+	raw           RawDocument
+	doc           *Document
+	mi            string
+	isMarshalJSON bool // isMarshalJSON: Set to true if the test case is meant for JSON marshalling.
 }
 
 // decodeTestCase represents a single test case for unsuccessful decoding.
@@ -643,6 +644,26 @@ var normalTestCases = []normalTestCase{
 		  "": true,
 		}`,
 	},
+	{
+		name: "MarshalJsonOrderedFields",
+		doc: MustDocument(
+			"first", int32(1),
+			"second", "two",
+			"third", float64(3.0),
+		),
+		mi: `{
+			"first": 1,
+			"second": "two",
+			"third": 3.0
+		}`,
+		isMarshalJSON: true,
+	},
+	{
+		name:          "MarshalJsonEmptyDocument",
+		doc:           MustDocument(),
+		mi:            `{}`,
+		isMarshalJSON: true,
+	},
 }
 
 // decodeTestCases represents test cases for unsuccessful decoding.
@@ -742,83 +763,65 @@ var decodeTestCases = []decodeTestCase{
 	},
 }
 
-var marshalJSONTestCases = []normalTestCase{
-	{
-		name: "MarshalJsonOrderedFields",
-		doc: MustDocument(
-			"first", int32(1),
-			"second", "two",
-			"third", float64(3.0),
-		),
-		mi: `{
-            "first": 1,
-            "second": "two",
-            "third": 3.0
-        }`,
-	},
-	{
-		name: "MarshalJsonEmptyDocument",
-		doc:  MustDocument(),
-		mi:   `{}`,
-	},
-}
-
 func TestNormal(t *testing.T) {
 	for _, tc := range normalTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Run("FindRaw", func(t *testing.T) {
-				ls := tc.raw.LogValue().Resolve().String()
-				assert.NotContains(t, ls, "panicked")
-				assert.NotContains(t, ls, "called too many times")
+			if tc.raw != nil {
+				t.Run("FindRaw", func(t *testing.T) {
+					ls := tc.raw.LogValue().Resolve().String()
+					assert.NotContains(t, ls, "panicked")
+					assert.NotContains(t, ls, "called too many times")
 
-				assert.NotEmpty(t, tc.raw.LogMessage())
-				assert.NotEmpty(t, tc.raw.LogMessageIndent())
+					assert.NotEmpty(t, tc.raw.LogMessage())
+					assert.NotEmpty(t, tc.raw.LogMessageIndent())
 
-				l, err := FindRaw(tc.raw)
-				require.NoError(t, err)
-				require.Len(t, tc.raw, l)
-			})
+					l, err := FindRaw(tc.raw)
+					require.NoError(t, err)
+					require.Len(t, tc.raw, l)
+				})
 
-			t.Run("DecodeEncode", func(t *testing.T) {
-				doc, err := tc.raw.Decode()
-				require.NoError(t, err)
+				t.Run("DecodeEncode", func(t *testing.T) {
+					doc, err := tc.raw.Decode()
+					require.NoError(t, err)
 
-				ls := doc.LogValue().Resolve().String()
-				assert.NotContains(t, ls, "panicked")
-				assert.NotContains(t, ls, "called too many times")
+					ls := doc.LogValue().Resolve().String()
+					assert.NotContains(t, ls, "panicked")
+					assert.NotContains(t, ls, "called too many times")
 
-				assert.NotEmpty(t, doc.LogMessage())
-				assert.NotEmpty(t, doc.LogMessageIndent())
+					assert.NotEmpty(t, doc.LogMessage())
+					assert.NotEmpty(t, doc.LogMessageIndent())
 
-				raw, err := doc.Encode()
-				require.NoError(t, err)
-				assert.Equal(t, tc.raw, raw)
-			})
+					raw, err := doc.Encode()
+					require.NoError(t, err)
+					assert.Equal(t, tc.raw, raw)
+				})
 
-			t.Run("DecodeDeepEncode", func(t *testing.T) {
-				doc, err := tc.raw.DecodeDeep()
-				require.NoError(t, err)
+				t.Run("DecodeDeepEncode", func(t *testing.T) {
+					doc, err := tc.raw.DecodeDeep()
+					require.NoError(t, err)
 
-				ls := doc.LogValue().Resolve().String()
-				assert.NotContains(t, ls, "panicked")
-				assert.NotContains(t, ls, "called too many times")
+					ls := doc.LogValue().Resolve().String()
+					assert.NotContains(t, ls, "panicked")
+					assert.NotContains(t, ls, "called too many times")
 
-				assert.NotEmpty(t, doc.LogMessage())
-				assert.Equal(t, strings.ReplaceAll(testutil.Unindent(tc.mi), `"`, "`"), doc.LogMessageIndent())
+					assert.NotEmpty(t, doc.LogMessage())
+					assert.Equal(t, strings.ReplaceAll(testutil.Unindent(tc.mi), `"`, "`"), doc.LogMessageIndent())
 
-				raw, err := doc.Encode()
-				require.NoError(t, err)
-				assert.Equal(t, tc.raw, raw)
-			})
-		})
-	}
+					raw, err := doc.Encode()
+					require.NoError(t, err)
+					assert.Equal(t, tc.raw, raw)
+				})
+			}
 
-	for _, tc := range marshalJSONTestCases {
-		t.Run("MarshalJSON", func(t *testing.T) {
-			data, err := tc.doc.MarshalJSON()
-			require.NoError(t, err)
+			if tc.isMarshalJSON {
+				t.Run("MarshalJSON", func(t *testing.T) {
+					data, err := tc.doc.MarshalJSON()
+					require.NoError(t, err)
 
-			assert.JSONEq(t, tc.mi, string(data))
+					expected := tc.mi
+					assert.JSONEq(t, expected, string(data))
+				})
+			}
 		})
 	}
 }
@@ -874,213 +877,235 @@ var drain any
 
 func BenchmarkDocumentDecode(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			b.ReportAllocs()
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				b.ReportAllocs()
 
-			var err error
-			for range b.N {
-				drain, err = tc.raw.Decode()
-			}
+				var err error
+				for range b.N {
+					drain, err = tc.raw.Decode()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			require.NoError(b, err)
-			require.NotNil(b, drain)
-		})
+				require.NoError(b, err)
+				require.NotNil(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentDecodeDeep(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			b.ReportAllocs()
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				b.ReportAllocs()
 
-			var err error
-			for range b.N {
-				drain, err = tc.raw.DecodeDeep()
-			}
+				var err error
+				for range b.N {
+					drain, err = tc.raw.DecodeDeep()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			require.NoError(b, err)
-			require.NotNil(b, drain)
-		})
+				require.NoError(b, err)
+				require.NotNil(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentEncode(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.Decode()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.Decode()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain, err = doc.Encode()
-			}
+				for range b.N {
+					drain, err = doc.Encode()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			require.NoError(b, err)
-			assert.NotNil(b, drain)
-		})
+				require.NoError(b, err)
+				assert.NotNil(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentEncodeDeep(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.DecodeDeep()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain, err = doc.Encode()
-			}
+				for range b.N {
+					drain, err = doc.Encode()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			require.NoError(b, err)
-			assert.NotNil(b, drain)
-		})
+				require.NoError(b, err)
+				assert.NotNil(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogValue(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.Decode()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.Decode()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogValue().Resolve().String()
-			}
+				for range b.N {
+					drain = doc.LogValue().Resolve().String()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-			assert.NotContains(b, drain, "panicked")
-			assert.NotContains(b, drain, "called too many times")
-		})
+				assert.NotEmpty(b, drain)
+				assert.NotContains(b, drain, "panicked")
+				assert.NotContains(b, drain, "called too many times")
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogValueDeep(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.DecodeDeep()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogValue().Resolve().String()
-			}
+				for range b.N {
+					drain = doc.LogValue().Resolve().String()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-			assert.NotContains(b, drain, "panicked")
-			assert.NotContains(b, drain, "called too many times")
-		})
+				assert.NotEmpty(b, drain)
+				assert.NotContains(b, drain, "panicked")
+				assert.NotContains(b, drain, "called too many times")
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogMessage(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.Decode()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.Decode()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogMessage()
-			}
+				for range b.N {
+					drain = doc.LogMessage()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-		})
+				assert.NotEmpty(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogMessageDeep(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.DecodeDeep()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogMessage()
-			}
+				for range b.N {
+					drain = doc.LogMessage()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-		})
+				assert.NotEmpty(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogMessageIndent(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.Decode()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.Decode()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogMessageIndent()
-			}
+				for range b.N {
+					drain = doc.LogMessageIndent()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-		})
+				assert.NotEmpty(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogMessageIndentDeep(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.DecodeDeep()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogMessageIndent()
-			}
+				for range b.N {
+					drain = doc.LogMessageIndent()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-		})
+				assert.NotEmpty(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentMarshalJSON(b *testing.B) {
-	for _, tc := range marshalJSONTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			for n := 0; n < b.N; n++ {
-				_, _ = json.Marshal(tc.doc)
-			}
-		})
+	for _, tc := range normalTestCases {
+		if tc.isMarshalJSON {
+			b.Run(tc.name, func(b *testing.B) {
+				for n := 0; n < b.N; n++ {
+					_, _ = json.Marshal(tc.doc)
+				}
+			})
+		}
 	}
 }
 
@@ -1143,7 +1168,9 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 
 func FuzzDocument(f *testing.F) {
 	for _, tc := range normalTestCases {
-		f.Add([]byte(tc.raw))
+		if tc.raw != nil {
+			f.Add([]byte(tc.raw))
+		}
 	}
 
 	for _, tc := range decodeTestCases {
@@ -1160,14 +1187,16 @@ func FuzzDocument(f *testing.F) {
 		})
 
 		t.Run("TestMarshalJSON", func(t *testing.T) {
-			for _, tc := range marshalJSONTestCases {
-				data, err := json.Marshal(tc.doc)
-				require.NoError(t, err)
-				assert.NotNil(t, data)
+			for _, tc := range normalTestCases {
+				if tc.isMarshalJSON {
+					data, err := json.Marshal(tc.doc)
+					require.NoError(t, err)
+					assert.NotNil(t, data)
 
-				var parsed map[string]any
-				err = json.Unmarshal(data, &parsed)
-				assert.NoError(t, err)
+					var parsed map[string]any
+					err = json.Unmarshal(data, &parsed)
+					assert.NoError(t, err)
+				}
 			}
 		})
 	})
