@@ -27,7 +27,7 @@ const flagsSize = 4
 
 func (flags flags) strings(bitStringer func(flagBit) string) []string {
 	res := make([]string, 0, 2)
-	for shift := 0; shift < 32; shift++ {
+	for shift := range 32 {
 		bit := flags >> shift
 		if bit&1 == 1 {
 			res = append(res, bitStringer(1<<shift))
