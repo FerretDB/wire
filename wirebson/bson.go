@@ -165,8 +165,8 @@ func fromDriver(v any) (any, error) {
 	case bool:
 		return v, nil
 	case bson.DateTime:
-		return v.Time(), nil
-	case nil, bson.Null:
+		return v.Time().UTC(), nil
+	case bson.Null, nil:
 		return Null, nil
 	case bson.Regex:
 		return Regex{
@@ -180,12 +180,84 @@ func fromDriver(v any) (any, error) {
 	case int64:
 		return v, nil
 	case bson.Decimal128:
-		l, h := v.GetBytes()
+		h, l := v.GetBytes()
 
 		return Decimal128{
 			L: l,
 			H: h,
 		}, nil
+
+	default:
+		return nil, lazyerrors.Errorf("invalid BSON type %T", v)
+	}
+}
+
+// toDriver converts wirebson value to MongoDB driver value (bson.D, bson.A, etc).
+func toDriver(v any) (any, error) {
+	switch v := v.(type) {
+	// composite types
+
+	case *Document:
+		doc := make(bson.D, 0, v.Len())
+		for k, v := range v.All() {
+			val, err := toDriver(v)
+			if err != nil {
+				return nil, lazyerrors.Error(err)
+			}
+
+			doc = append(doc, bson.E{Key: k, Value: val})
+		}
+
+		return doc, nil
+
+	case *Array:
+		arr := make(bson.A, v.Len())
+		for i, v := range v.All() {
+			val, err := toDriver(v)
+			if err != nil {
+				return nil, lazyerrors.Error(err)
+			}
+
+			arr[i] = val
+		}
+
+		return arr, nil
+
+	// scalar types (in the same order as in bson package)
+
+	case float64:
+		return v, nil
+	case string:
+		return v, nil
+	case Binary:
+		return bson.Binary{
+			Subtype: byte(v.Subtype),
+			Data:    v.B,
+		}, nil
+	case ObjectID:
+		return bson.ObjectID(v), nil
+	case bool:
+		return v, nil
+	case time.Time:
+		return bson.NewDateTimeFromTime(v), nil
+	case NullType:
+		return nil, nil
+	case Regex:
+		return bson.Regex{
+			Pattern: v.Pattern,
+			Options: v.Options,
+		}, nil
+	case int32:
+		return v, nil
+	case Timestamp:
+		return bson.Timestamp{
+			T: uint32(v >> 32),
+			I: uint32(v),
+		}, nil
+	case int64:
+		return v, nil
+	case Decimal128:
+		return bson.NewDecimal128(v.H, v.L), nil
 
 	default:
 		return nil, lazyerrors.Errorf("invalid BSON type %T", v)
