@@ -43,6 +43,8 @@ package wirebson
 import (
 	"time"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
+
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 )
 
@@ -110,4 +112,82 @@ func validBSONType(v any) error {
 	}
 
 	return nil
+}
+
+// fromDriver converts MongoDB driver value ([bson.D], [bson.A], etc) to wirebson value.
+func fromDriver(v any) (any, error) {
+	switch v := v.(type) {
+	// composite types
+
+	case bson.D:
+		doc := MakeDocument(len(v))
+		for _, e := range v {
+			val, err := fromDriver(e.Value)
+			if err != nil {
+				return nil, lazyerrors.Error(err)
+			}
+
+			if err = doc.Add(e.Key, val); err != nil {
+				return nil, lazyerrors.Error(err)
+			}
+		}
+
+		return doc, nil
+
+	case bson.A:
+		arr := MakeArray(len(v))
+		for _, e := range v {
+			val, err := fromDriver(e)
+			if err != nil {
+				return nil, lazyerrors.Error(err)
+			}
+
+			if err = arr.Add(val); err != nil {
+				return nil, lazyerrors.Error(err)
+			}
+		}
+
+		return arr, nil
+
+	// scalar types (in the same order as in bson package)
+
+	case float64:
+		return v, nil
+	case string:
+		return v, nil
+	case bson.Binary:
+		return Binary{
+			Subtype: BinarySubtype(v.Subtype),
+			B:       v.Data,
+		}, nil
+	case bson.ObjectID:
+		return ObjectID(v), nil
+	case bool:
+		return v, nil
+	case bson.DateTime:
+		return v.Time(), nil
+	case nil, bson.Null:
+		return Null, nil
+	case bson.Regex:
+		return Regex{
+			Pattern: v.Pattern,
+			Options: v.Options,
+		}, nil
+	case int32:
+		return v, nil
+	case bson.Timestamp:
+		return Timestamp(uint64(v.T)<<32 | uint64(v.I)), nil
+	case int64:
+		return v, nil
+	case bson.Decimal128:
+		l, h := v.GetBytes()
+
+		return Decimal128{
+			L: l,
+			H: h,
+		}, nil
+
+	default:
+		return nil, lazyerrors.Errorf("invalid BSON type %T", v)
+	}
 }
