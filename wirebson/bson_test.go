@@ -944,20 +944,20 @@ func TestNormal(t *testing.T) {
 				assert.Equal(t, tc.raw, raw, "actual:\n"+hex.Dump(raw))
 			})
 
-			t.Run("UnmarshalJSONMarshalJSON", func(t *testing.T) {
+			t.Run("MarshalUnmarshal", func(t *testing.T) {
 				// TODO https://github.com/FerretDB/wire/issues/49
 				if tc.j == "" {
 					t.Skip("https://github.com/FerretDB/wire/issues/49")
 				}
 
-				var doc *Document
-				err := json.Unmarshal([]byte(tc.j), &doc)
-				require.NoError(t, err)
-				assert.Equal(t, tc.doc, doc)
-
 				b, err := json.MarshalIndent(tc.doc, "", "  ")
 				require.NoError(t, err)
 				assert.Equal(t, testutil.Unindent(tc.j), string(b))
+
+				var doc *Document
+				err = json.Unmarshal([]byte(tc.j), &doc)
+				require.NoError(t, err)
+				assert.Equal(t, tc.doc, doc)
 			})
 		})
 	}
@@ -1290,18 +1290,18 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		assert.Equal(t, rawDoc, raw)
 	})
 
-	t.Run("ToDriverFromDriver", func(t *testing.T) {
+	t.Run("MarshalUnmarshal", func(t *testing.T) {
 		doc, err := rawDoc.DecodeDeep()
 		if err != nil {
 			return
 		}
 
-		d, err := toDriver(doc)
+		b, err := json.Marshal(doc)
 		require.NoError(t, err)
 
-		doc2, err := fromDriver(d)
+		var doc2 *Document
+		err = json.Unmarshal(b, &doc2)
 		require.NoError(t, err)
-		assert.Equal(t, doc, doc2)
 	})
 }
 
