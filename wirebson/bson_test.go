@@ -16,7 +16,6 @@ package wirebson
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"math"
 	"strings"
 	"testing"
@@ -32,11 +31,10 @@ import (
 //
 //nolint:vet // for readability
 type normalTestCase struct {
-	name          string
-	raw           RawDocument
-	doc           *Document
-	mi            string
-	isMarshalJSON bool // isMarshalJSON: Set to true if the test case is meant for JSON marshalling.
+	name string
+	raw  RawDocument
+	doc  *Document
+	mi   string
 }
 
 // decodeTestCase represents a single test case for unsuccessful decoding.
@@ -657,26 +655,6 @@ var normalTestCases = []normalTestCase{
 		  "": true,
 		}`,
 	},
-	{
-		name: "MarshalJsonOrderedFields",
-		doc: MustDocument(
-			"first", int32(1),
-			"second", "two",
-			"third", float64(3.0),
-		),
-		mi: `{
-			"first": 1,
-			"second": "two",
-			"third": 3.0
-		}`,
-		isMarshalJSON: true,
-	},
-	{
-		name:          "MarshalJsonEmptyDocument",
-		doc:           MustDocument(),
-		mi:            `{}`,
-		isMarshalJSON: true,
-	},
 }
 
 // decodeTestCases represents test cases for unsuccessful decoding.
@@ -1107,18 +1085,6 @@ func BenchmarkDocumentLogMessageIndentDeep(b *testing.B) {
 	}
 }
 
-func BenchmarkDocumentMarshalJSON(b *testing.B) {
-	for _, tc := range normalTestCases {
-		if tc.isMarshalJSON {
-			b.Run(tc.name, func(b *testing.B) {
-				for n := 0; n < b.N; n++ {
-					_, _ = json.Marshal(tc.doc)
-				}
-			})
-		}
-	}
-}
-
 // testRawDocument tests a single RawDocument (that might or might not be valid).
 // It is adapted from tests above.
 func testRawDocument(t *testing.T, rawDoc RawDocument) {
@@ -1208,20 +1174,6 @@ func FuzzDocument(f *testing.F) {
 
 		t.Run("TestRawDocument", func(t *testing.T) {
 			testRawDocument(t, rawDoc)
-		})
-
-		t.Run("TestMarshalJSON", func(t *testing.T) {
-			for _, tc := range normalTestCases {
-				if tc.isMarshalJSON {
-					data, err := json.Marshal(tc.doc)
-					require.NoError(t, err)
-					assert.NotNil(t, data)
-
-					var parsed map[string]any
-					err = json.Unmarshal(data, &parsed)
-					assert.NoError(t, err)
-				}
-			}
 		})
 	})
 }

@@ -24,6 +24,7 @@ import (
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 	"github.com/FerretDB/wire/internal/util/must"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // field represents a single Document field in the (partially) decoded form.
@@ -254,36 +255,21 @@ func (doc *Document) Encode() (RawDocument, error) {
 	return buf.Bytes(), nil
 }
 
-// MarshalJSON implements the json.Marshaler interface for Document.
-// It converts the Document into a JSON object representation while preserving the order of fields.
+// MarshalJSON implements [json.Marshaler].
 func (doc *Document) MarshalJSON() ([]byte, error) {
 	must.NotBeZero(doc)
 
-	jsonObject := []byte{'{'}
-
-	for i, field := range doc.fields {
-		key, err := json.Marshal(field.name)
-		if err != nil {
-			return nil, lazyerrors.Error(err)
-		}
-
-		value, err := json.Marshal(field.value)
-		if err != nil {
-			return nil, lazyerrors.Error(err)
-		}
-
-		jsonObject = append(jsonObject, key...)
-		jsonObject = append(jsonObject, ':')
-		jsonObject = append(jsonObject, value...)
-
-		if i < len(doc.fields)-1 {
-			jsonObject = append(jsonObject, ',')
-		}
+	d, err := toDriver(doc)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
 	}
 
-	jsonObject = append(jsonObject, '}')
+	b, err := bson.MarshalExtJSON(d, true, false)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
 
-	return jsonObject, nil
+	return b, nil
 }
 
 // Decode returns itself to implement [AnyDocument].
@@ -292,6 +278,12 @@ func (doc *Document) MarshalJSON() ([]byte, error) {
 func (doc *Document) Decode() (*Document, error) {
 	must.NotBeZero(doc)
 	return doc, nil
+}
+
+// UnmarshalJSON implements [json.Unmarshaler].
+func (doc *Document) UnmarshalJSON([]byte) error {
+	must.NotBeZero(doc)
+	panic("not implemented")
 }
 
 // LogValue implements [slog.LogValuer].
@@ -311,7 +303,8 @@ func (doc *Document) LogMessageIndent() string {
 
 // check interfaces
 var (
-	_ AnyDocument    = (*Document)(nil)
-	_ slog.LogValuer = (*Document)(nil)
-	_ json.Marshaler = (*Document)(nil)
+	_ AnyDocument      = (*Document)(nil)
+	_ slog.LogValuer   = (*Document)(nil)
+	_ json.Marshaler   = (*Document)(nil)
+	_ json.Unmarshaler = (*Document)(nil)
 )

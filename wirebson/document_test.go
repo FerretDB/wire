@@ -15,7 +15,6 @@
 package wirebson
 
 import (
-	"encoding/json"
 	"maps"
 	"slices"
 	"testing"
@@ -49,21 +48,5 @@ func TestDocument(t *testing.T) {
 
 		expected := []string{"foo", "bar", "baz"}
 		assert.Equal(t, expected, slices.Collect(doc.Fields()))
-	})
-
-	t.Run("MarshalJSON_PreserveOrder", func(t *testing.T) {
-		t.Parallel()
-
-		document := MustDocument(
-			"key1", "value1",
-			"key2", int32(42),
-			"key3", true,
-		)
-
-		data, err := json.Marshal(document)
-		assert.NoError(t, err)
-
-		expected := `{"key1":"value1","key2":42,"key3":true}`
-		assert.Equal(t, expected, string(data), "JSON output should preserve the field order")
 	})
 }

@@ -25,6 +25,7 @@ import (
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 	"github.com/FerretDB/wire/internal/util/must"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // Array represents a BSON array in the (partially) decoded form.
@@ -178,11 +179,21 @@ func (arr *Array) Encode() (RawArray, error) {
 	return buf.Bytes(), nil
 }
 
-// MarshalJSON implements the json.Marshaler interface for Array.
-// It converts the Array into a JSON array representation.
+// MarshalJSON implements [json.Marshaler].
 func (arr *Array) MarshalJSON() ([]byte, error) {
 	must.NotBeZero(arr)
-	return json.Marshal(arr.values)
+
+	a, err := toDriver(arr)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	b, err := bson.MarshalExtJSON(a, true, false)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	return b, nil
 }
 
 // Decode returns itself to implement [AnyArray].
@@ -191,6 +202,12 @@ func (arr *Array) MarshalJSON() ([]byte, error) {
 func (arr *Array) Decode() (*Array, error) {
 	must.NotBeZero(arr)
 	return arr, nil
+}
+
+// UnmarshalJSON implements [json.Unmarshaler].
+func (arr *Array) UnmarshalJSON([]byte) error {
+	must.NotBeZero(arr)
+	panic("not implemented")
 }
 
 // LogValue implements [slog.LogValuer].
@@ -210,7 +227,8 @@ func (arr *Array) LogMessageIndent() string {
 
 // check interfaces
 var (
-	_ AnyArray       = (*Array)(nil)
-	_ slog.LogValuer = (*Array)(nil)
-	_ json.Marshaler = (*Array)(nil)
+	_ AnyArray         = (*Array)(nil)
+	_ slog.LogValuer   = (*Array)(nil)
+	_ json.Marshaler   = (*Array)(nil)
+	_ json.Unmarshaler = (*Array)(nil)
 )
