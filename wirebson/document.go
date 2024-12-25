@@ -281,9 +281,27 @@ func (doc *Document) Decode() (*Document, error) {
 }
 
 // UnmarshalJSON implements [json.Unmarshaler].
-func (doc *Document) UnmarshalJSON([]byte) error {
+func (doc *Document) UnmarshalJSON(b []byte) error {
 	must.NotBeZero(doc)
-	panic("not implemented")
+
+	var d bson.D
+	if err := bson.UnmarshalExtJSON(b, true, &d); err != nil {
+		return lazyerrors.Error(err)
+	}
+
+	v, err := fromDriver(d)
+	if err != nil {
+		return lazyerrors.Error(err)
+	}
+
+	switch v := v.(type) {
+	case *Document:
+		must.NotBeZero(v)
+		*doc = *v
+		return nil
+	default:
+		return lazyerrors.Errorf("expected *Document, got %T", v)
+	}
 }
 
 // LogValue implements [slog.LogValuer].

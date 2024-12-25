@@ -15,7 +15,9 @@
 package wirebson
 
 import (
+	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"math"
 	"strings"
 	"testing"
@@ -35,6 +37,7 @@ type normalTestCase struct {
 	raw  RawDocument
 	doc  *Document
 	mi   string
+	j    string
 }
 
 // decodeTestCase represents a single test case for unsuccessful decoding.
@@ -279,7 +282,7 @@ var normalTestCases = []normalTestCase{
 			"string", MustArray("foo", ""),
 			"binary", MustArray(
 				Binary{Subtype: BinaryUser, B: []byte{0x42}},
-				Binary{},
+				Binary{Subtype: BinaryGeneric, B: []byte{}},
 			),
 			"objectID", MustArray(ObjectID{0x42}, ObjectID{}),
 			"bool", MustArray(true, false),
@@ -361,6 +364,72 @@ var normalTestCases = []normalTestCase{
 		    Decimal128(0,0),
 		  ],
 		}`,
+		j: `
+		{
+		  "document":[
+		    {
+		      "":"foo",
+		      "bar":"baz",
+		      "":"qux"
+		    },
+		    {}
+		  ],
+		  "array":[
+		    [
+		      "foo"
+		    ],
+		    []
+		  ],
+		  "float64":[
+		    {"$numberDouble":"42.13"},
+		    {"$numberDouble":"0.0"},
+		    {"$numberDouble":"-0.0"},
+		    {"$numberDouble":"Infinity"},
+		    {"$numberDouble":"-Infinity"}
+		  ],
+		  "string":[
+		    "foo",
+		    ""
+		  ],
+		  "binary":[
+		    {"$binary":{"base64":"Qg==","subType":"80"}},
+		    {"$binary":{"base64":"","subType":"00"}}
+		  ],
+		  "objectID":[
+		    {"$oid":"420000000000000000000000"},
+		    {"$oid":"000000000000000000000000"}
+		  ],
+		  "bool":[
+		    true,
+		    false
+		  ],
+		  "datetime":[
+		    {"$date":{"$numberLong":"1627378542123"}},
+		    {"$date":{"$numberLong":"-62135596800000"}}
+		  ],
+		  "null":[null],
+		  "regex":[
+		    {"$regularExpression":{"pattern":"p","options":"o"}},
+		    {"$regularExpression":{"pattern":"","options":""}}
+		  ],
+		  "int32":[
+		    {"$numberInt":"42"},
+		    {"$numberInt":"0"}
+		  ],
+		  "timestamp":[
+		    {"$timestamp":{"t":0,"i":42}},
+		    {"$timestamp":{"t":0,"i":0}}
+		  ],
+		  "int64":[
+		    {"$numberLong":"42"},
+		    {"$numberLong":"0"}
+		   ],
+		  "decimal128":[
+		    {"$numberDecimal":"2.39807672958224171050E-6156"},
+		    {"$numberDecimal":"0E-6176"}
+		  ]
+		}
+		`,
 	},
 	{
 		name: "nested",
@@ -636,6 +705,7 @@ var normalTestCases = []normalTestCase{
 		{
 		  "foo": [],
 		}`,
+		j: `{"foo":[]}`,
 	},
 	{
 		name: "duplicateKeys",
@@ -654,6 +724,7 @@ var normalTestCases = []normalTestCase{
 		  "": false,
 		  "": true,
 		}`,
+		j: `{"":false,"":true}`,
 	},
 }
 
@@ -802,13 +873,24 @@ func TestNormal(t *testing.T) {
 				assert.Equal(t, tc.raw, raw, "actual:\n"+hex.Dump(raw))
 			})
 
-			t.Run("ToDriverFromDrive", func(t *testing.T) {
-				d, err := toDriver(tc.doc)
-				require.NoError(t, err)
+			t.Run("UnmarshalJSONMarshalJSON", func(t *testing.T) {
+				// TODO https://github.com/FerretDB/wire/issues/49
+				if tc.j == "" {
+					t.Skip("https://github.com/FerretDB/wire/issues/49")
+				}
 
-				doc, err := fromDriver(d)
+				var doc *Document
+				err := json.Unmarshal([]byte(tc.j), &doc)
 				require.NoError(t, err)
 				assert.Equal(t, tc.doc, doc)
+
+				var j bytes.Buffer
+				err = json.Compact(&j, []byte(tc.j))
+				require.NoError(t, err)
+
+				b, err := json.Marshal(tc.doc)
+				require.NoError(t, err)
+				assert.Equal(t, j.String(), string(b))
 			})
 		})
 	}

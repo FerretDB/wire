@@ -205,9 +205,27 @@ func (arr *Array) Decode() (*Array, error) {
 }
 
 // UnmarshalJSON implements [json.Unmarshaler].
-func (arr *Array) UnmarshalJSON([]byte) error {
+func (arr *Array) UnmarshalJSON(b []byte) error {
 	must.NotBeZero(arr)
-	panic("not implemented")
+
+	var a bson.A
+	if err := bson.UnmarshalExtJSON(b, true, &a); err != nil {
+		return lazyerrors.Error(err)
+	}
+
+	v, err := fromDriver(a)
+	if err != nil {
+		return lazyerrors.Error(err)
+	}
+
+	switch v := v.(type) {
+	case *Array:
+		must.NotBeZero(v)
+		*arr = *v
+		return nil
+	default:
+		return lazyerrors.Errorf("expected *Array, got %T", v)
+	}
 }
 
 // LogValue implements [slog.LogValuer].

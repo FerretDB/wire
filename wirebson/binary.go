@@ -89,10 +89,8 @@ func decodeBinary(b []byte) (Binary, error) {
 
 	res.Subtype = BinarySubtype(b[4])
 
-	if i > 0 {
-		res.B = make([]byte, i)
-		copy(res.B, b[5:5+i])
-	}
+	res.B = make([]byte, i)
+	copy(res.B, b[5:5+i])
 
 	return res, nil
 }
