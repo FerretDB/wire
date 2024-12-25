@@ -24,6 +24,8 @@ import (
 )
 
 // CheckNaNs set to true returns an error if float64 NaN value is present in wire messages.
+//
+// TODO https://github.com/FerretDB/wire/issues/73
 var CheckNaNs bool
 
 // OpMsg is the main wire protocol message type.
