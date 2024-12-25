@@ -266,44 +266,68 @@ var normalTestCases = []normalTestCase{
 		name: "all",
 		raw:  testutil.MustParseDumpFile("testdata", "all.hex"),
 		doc: MustDocument(
-			"array", MustArray(
-				MustArray(""),
-				MustArray("foo"),
+			"document", MustArray(
+				MustDocument("", "foo", "bar", "baz", "", "qux"),
+				MustDocument(),
 			),
+			"array", MustArray(
+				MustArray("foo"),
+				MustArray(),
+			),
+			// TODO https://github.com/FerretDB/wire/issues/73
+			"float64", MustArray(42.13, 0.0, math.Copysign(0, -1), math.Inf(1), math.Inf(-1)),
+			"string", MustArray("foo", ""),
 			"binary", MustArray(
 				Binary{Subtype: BinaryUser, B: []byte{0x42}},
 				Binary{},
 			),
+			"objectID", MustArray(ObjectID{0x42}, ObjectID{}),
 			"bool", MustArray(true, false),
 			"datetime", MustArray(
 				time.Date(2021, 7, 27, 9, 35, 42, 123000000, time.UTC),
 				time.Time{},
 			),
-			"document", MustArray(
-				MustDocument("foo", ""),
-				MustDocument("", "foo"),
-			),
-			"double", MustArray(42.13, 0.0),
+			"null", MustArray(Null),
+			"regex", MustArray(Regex{Pattern: "p", Options: "o"}, Regex{}),
 			"int32", MustArray(int32(42), int32(0)),
-			"int64", MustArray(int64(42), int64(0)),
-			"objectID", MustArray(ObjectID{0x42}, ObjectID{}),
-			"string", MustArray("foo", ""),
 			"timestamp", MustArray(Timestamp(42), Timestamp(0)),
-			"decimal128", MustArray(Decimal128{L: 42, H: 13}),
+			"int64", MustArray(int64(42), int64(0)),
+			"decimal128", MustArray(Decimal128{L: 42, H: 13}, Decimal128{}),
 		),
 		mi: `
 		{
+		  "document": [
+		    {
+		      "": "foo",
+		      "bar": "baz",
+		      "": "qux",
+		    },
+		    {},
+		  ],
 		  "array": [
-		    [
-		      "",
-		    ],
 		    [
 		      "foo",
 		    ],
+		    [],
+		  ],
+		  "float64": [
+		    42.13,
+		    0.0,
+		    -0.0,
+		    +Inf,
+		    -Inf,
+		  ],
+		  "string": [
+		    "foo",
+		    "",
 		  ],
 		  "binary": [
 		    Binary(user:Qg==),
 		    Binary(generic:),
+		  ],
+		  "objectID": [
+		    ObjectID(420000000000000000000000),
+		    ObjectID(000000000000000000000000),
 		  ],
 		  "bool": [
 		    true,
@@ -313,40 +337,28 @@ var normalTestCases = []normalTestCase{
 		    2021-07-27T09:35:42.123Z,
 		    0001-01-01T00:00:00Z,
 		  ],
-		  "document": [
-		    {
-		      "foo": "",
-		    },
-		    {
-		      "": "foo",
-		    },
+		  "null": [
+		    null,
 		  ],
-		  "double": [
-		    42.13,
-		    0.0,
+		  "regex": [
+		    /p/o,
+		    //,
 		  ],
 		  "int32": [
 		    42,
 		    0,
 		  ],
-		  "int64": [
-		    int64(42),
-		    int64(0),
-		  ],
-		  "objectID": [
-		    ObjectID(420000000000000000000000),
-		    ObjectID(000000000000000000000000),
-		  ],
-		  "string": [
-		    "foo",
-		    "",
-		  ],
 		  "timestamp": [
 		    Timestamp(42),
 		    Timestamp(0),
 		  ],
+		  "int64": [
+		    int64(42),
+		    int64(0),
+		  ],
 		  "decimal128": [
 		    Decimal128(42,13),
+		    Decimal128(0,0),
 		  ],
 		}`,
 	},
