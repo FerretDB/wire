@@ -15,7 +15,9 @@
 package wirebson
 
 import (
+	"encoding/hex"
 	"encoding/json"
+	"math"
 	"strings"
 	"testing"
 	"time"
@@ -43,8 +45,6 @@ type normalTestCase struct {
 type decodeTestCase struct {
 	name string
 	raw  RawDocument
-
-	oldOk bool
 
 	findRawErr    error
 	findRawL      int
@@ -268,44 +268,68 @@ var normalTestCases = []normalTestCase{
 		name: "all",
 		raw:  testutil.MustParseDumpFile("testdata", "all.hex"),
 		doc: MustDocument(
-			"array", MustArray(
-				MustArray(""),
-				MustArray("foo"),
+			"document", MustArray(
+				MustDocument("", "foo", "bar", "baz", "", "qux"),
+				MustDocument(),
 			),
+			"array", MustArray(
+				MustArray("foo"),
+				MustArray(),
+			),
+			// TODO https://github.com/FerretDB/wire/issues/73
+			"float64", MustArray(42.13, 0.0, math.Copysign(0, -1), math.Inf(1), math.Inf(-1)),
+			"string", MustArray("foo", ""),
 			"binary", MustArray(
 				Binary{Subtype: BinaryUser, B: []byte{0x42}},
-				Binary{Subtype: BinaryGeneric, B: []byte{}},
+				Binary{},
 			),
+			"objectID", MustArray(ObjectID{0x42}, ObjectID{}),
 			"bool", MustArray(true, false),
 			"datetime", MustArray(
-				time.Date(2021, 7, 27, 9, 35, 42, 123000000, time.UTC).Local(),
-				time.Time{}.Local(),
+				time.Date(2021, 7, 27, 9, 35, 42, 123000000, time.UTC),
+				time.Time{},
 			),
-			"document", MustArray(
-				MustDocument("foo", ""),
-				MustDocument("", "foo"),
-			),
-			"double", MustArray(42.13, 0.0),
+			"null", MustArray(Null),
+			"regex", MustArray(Regex{Pattern: "p", Options: "o"}, Regex{}),
 			"int32", MustArray(int32(42), int32(0)),
-			"int64", MustArray(int64(42), int64(0)),
-			"objectID", MustArray(ObjectID{0x42}, ObjectID{}),
-			"string", MustArray("foo", ""),
 			"timestamp", MustArray(Timestamp(42), Timestamp(0)),
-			"decimal128", MustArray(Decimal128{L: 42, H: 13}),
+			"int64", MustArray(int64(42), int64(0)),
+			"decimal128", MustArray(Decimal128{L: 42, H: 13}, Decimal128{}),
 		),
 		mi: `
 		{
+		  "document": [
+		    {
+		      "": "foo",
+		      "bar": "baz",
+		      "": "qux",
+		    },
+		    {},
+		  ],
 		  "array": [
-		    [
-		      "",
-		    ],
 		    [
 		      "foo",
 		    ],
+		    [],
+		  ],
+		  "float64": [
+		    42.13,
+		    0.0,
+		    -0.0,
+		    +Inf,
+		    -Inf,
+		  ],
+		  "string": [
+		    "foo",
+		    "",
 		  ],
 		  "binary": [
 		    Binary(user:Qg==),
 		    Binary(generic:),
+		  ],
+		  "objectID": [
+		    ObjectID(420000000000000000000000),
+		    ObjectID(000000000000000000000000),
 		  ],
 		  "bool": [
 		    true,
@@ -315,40 +339,28 @@ var normalTestCases = []normalTestCase{
 		    2021-07-27T09:35:42.123Z,
 		    0001-01-01T00:00:00Z,
 		  ],
-		  "document": [
-		    {
-		      "foo": "",
-		    },
-		    {
-		      "": "foo",
-		    },
+		  "null": [
+		    null,
 		  ],
-		  "double": [
-		    42.13,
-		    0.0,
+		  "regex": [
+		    /p/o,
+		    //,
 		  ],
 		  "int32": [
 		    42,
 		    0,
 		  ],
-		  "int64": [
-		    int64(42),
-		    int64(0),
-		  ],
-		  "objectID": [
-		    ObjectID(420000000000000000000000),
-		    ObjectID(000000000000000000000000),
-		  ],
-		  "string": [
-		    "foo",
-		    "",
-		  ],
 		  "timestamp": [
 		    Timestamp(42),
 		    Timestamp(0),
 		  ],
+		  "int64": [
+		    int64(42),
+		    int64(0),
+		  ],
 		  "decimal128": [
 		    Decimal128(42,13),
+		    Decimal128(0,0),
 		  ],
 		}`,
 	},
@@ -583,7 +595,8 @@ var normalTestCases = []normalTestCase{
 		raw: RawDocument{
 			0x18, 0x00, 0x00, 0x00,
 			0x13, 0x66, 0x00,
-			0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x0d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			0x00,
 		},
 		doc: MustDocument(
@@ -699,7 +712,6 @@ var decodeTestCases = []decodeTestCase{
 			0x00, // end of document
 			0x00, // extra byte
 		},
-		oldOk:     true,
 		findRawL:  5,
 		decodeErr: ErrDecodeInvalidInput,
 	},
@@ -766,62 +778,60 @@ var decodeTestCases = []decodeTestCase{
 func TestNormal(t *testing.T) {
 	for _, tc := range normalTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.raw != nil {
-				t.Run("FindRaw", func(t *testing.T) {
-					ls := tc.raw.LogValue().Resolve().String()
-					assert.NotContains(t, ls, "panicked")
-					assert.NotContains(t, ls, "called too many times")
+			t.Run("FindRaw", func(t *testing.T) {
+				ls := tc.raw.LogValue().Resolve().String()
+				assert.NotContains(t, ls, "panicked")
+				assert.NotContains(t, ls, "called too many times")
 
-					assert.NotEmpty(t, tc.raw.LogMessage())
-					assert.NotEmpty(t, tc.raw.LogMessageIndent())
+				assert.NotEmpty(t, tc.raw.LogMessage())
+				assert.NotEmpty(t, tc.raw.LogMessageIndent())
 
-					l, err := FindRaw(tc.raw)
-					require.NoError(t, err)
-					require.Len(t, tc.raw, l)
-				})
+				l, err := FindRaw(tc.raw)
+				require.NoError(t, err)
+				require.Len(t, tc.raw, l)
+			})
 
-				t.Run("DecodeEncode", func(t *testing.T) {
-					doc, err := tc.raw.Decode()
-					require.NoError(t, err)
+			t.Run("DecodeEncode", func(t *testing.T) {
+				doc, err := tc.raw.Decode()
+				require.NoError(t, err)
 
-					ls := doc.LogValue().Resolve().String()
-					assert.NotContains(t, ls, "panicked")
-					assert.NotContains(t, ls, "called too many times")
+				ls := doc.LogValue().Resolve().String()
+				assert.NotContains(t, ls, "panicked")
+				assert.NotContains(t, ls, "called too many times")
 
-					assert.NotEmpty(t, doc.LogMessage())
-					assert.NotEmpty(t, doc.LogMessageIndent())
+				assert.NotEmpty(t, doc.LogMessage())
+				assert.NotEmpty(t, doc.LogMessageIndent())
 
-					raw, err := doc.Encode()
-					require.NoError(t, err)
-					assert.Equal(t, tc.raw, raw)
-				})
+				raw, err := doc.Encode()
+				require.NoError(t, err)
+				assert.Equal(t, tc.raw, raw)
+			})
 
-				t.Run("DecodeDeepEncode", func(t *testing.T) {
-					doc, err := tc.raw.DecodeDeep()
-					require.NoError(t, err)
+			t.Run("DecodeDeepEncode", func(t *testing.T) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(t, err)
+				assert.Equal(t, tc.doc, doc)
 
-					ls := doc.LogValue().Resolve().String()
-					assert.NotContains(t, ls, "panicked")
-					assert.NotContains(t, ls, "called too many times")
+				ls := doc.LogValue().Resolve().String()
+				assert.NotContains(t, ls, "panicked")
+				assert.NotContains(t, ls, "called too many times")
 
-					assert.NotEmpty(t, doc.LogMessage())
-					assert.Equal(t, strings.ReplaceAll(testutil.Unindent(tc.mi), `"`, "`"), doc.LogMessageIndent())
+				assert.NotEmpty(t, doc.LogMessage())
+				assert.Equal(t, strings.ReplaceAll(testutil.Unindent(tc.mi), `"`, "`"), doc.LogMessageIndent())
 
-					raw, err := doc.Encode()
-					require.NoError(t, err)
-					assert.Equal(t, tc.raw, raw)
-				})
-			}
+				raw, err := tc.doc.Encode()
+				require.NoError(t, err)
+				assert.Equal(t, tc.raw, raw, "actual:\n"+hex.Dump(raw))
+			})
 
-			if tc.isMarshalJSON {
-				t.Run("MarshalJSON", func(t *testing.T) {
-					data, err := tc.doc.MarshalJSON()
-					require.NoError(t, err)
+			t.Run("ToDriverFromDrive", func(t *testing.T) {
+				d, err := toDriver(tc.doc)
+				require.NoError(t, err)
 
-					expected := tc.mi
-					assert.JSONEq(t, expected, string(data))
-				})
-			}
+				doc, err := fromDriver(d)
+				require.NoError(t, err)
+				assert.Equal(t, tc.doc, doc)
+			})
 		})
 	}
 }
@@ -1163,6 +1173,20 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		raw, err := doc.Encode()
 		require.NoError(t, err)
 		assert.Equal(t, rawDoc, raw)
+	})
+
+	t.Run("ToDriverFromDriver", func(t *testing.T) {
+		doc, err := rawDoc.DecodeDeep()
+		if err != nil {
+			return
+		}
+
+		d, err := toDriver(doc)
+		require.NoError(t, err)
+
+		doc2, err := fromDriver(d)
+		require.NoError(t, err)
+		assert.Equal(t, doc, doc2)
 	})
 }
 

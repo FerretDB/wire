@@ -47,7 +47,7 @@ const (
 
 // FindRaw finds the first raw BSON document or array in b and returns its length l.
 // It should start from the first byte of b.
-// RawDocument(b[:l] / RawArray(b[:l]) might not be valid. It is the caller's responsibility to check it.
+// RawDocument(b[:l]) / RawArray(b[:l]) might not be valid. It is the caller's responsibility to check it.
 //
 // Use RawDocument(b) / RawArray(b) conversion instead if b contains exactly one document/array and no extra bytes.
 func FindRaw(b []byte) (int, error) {
