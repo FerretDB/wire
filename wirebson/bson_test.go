@@ -15,7 +15,6 @@
 package wirebson
 
 import (
-	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"math"
@@ -366,70 +365,135 @@ var normalTestCases = []normalTestCase{
 		}`,
 		j: `
 		{
-		  "document":[
+		  "document": [
 		    {
-		      "":"foo",
-		      "bar":"baz",
-		      "":"qux"
+		      "": "foo",
+		      "bar": "baz",
+		      "": "qux"
 		    },
 		    {}
 		  ],
-		  "array":[
+		  "array": [
 		    [
 		      "foo"
 		    ],
 		    []
 		  ],
-		  "float64":[
-		    {"$numberDouble":"42.13"},
-		    {"$numberDouble":"0.0"},
-		    {"$numberDouble":"-0.0"},
-		    {"$numberDouble":"Infinity"},
-		    {"$numberDouble":"-Infinity"}
+		  "float64": [
+		    {
+		      "$numberDouble": "42.13"
+		    },
+		    {
+		      "$numberDouble": "0.0"
+		    },
+		    {
+		      "$numberDouble": "-0.0"
+		    },
+		    {
+		      "$numberDouble": "Infinity"
+		    },
+		    {
+		      "$numberDouble": "-Infinity"
+		    }
 		  ],
-		  "string":[
+		  "string": [
 		    "foo",
 		    ""
 		  ],
-		  "binary":[
-		    {"$binary":{"base64":"Qg==","subType":"80"}},
-		    {"$binary":{"base64":"","subType":"00"}}
+		  "binary": [
+		    {
+		      "$binary": {
+		        "base64": "Qg==",
+		        "subType": "80"
+		      }
+		    },
+		    {
+		      "$binary": {
+		        "base64": "",
+		        "subType": "00"
+		      }
+		    }
 		  ],
-		  "objectID":[
-		    {"$oid":"420000000000000000000000"},
-		    {"$oid":"000000000000000000000000"}
+		  "objectID": [
+		    {
+		      "$oid": "420000000000000000000000"
+		    },
+		    {
+		      "$oid": "000000000000000000000000"
+		    }
 		  ],
-		  "bool":[
+		  "bool": [
 		    true,
 		    false
 		  ],
-		  "datetime":[
-		    {"$date":{"$numberLong":"1627378542123"}},
-		    {"$date":{"$numberLong":"-62135596800000"}}
+		  "datetime": [
+		    {
+		      "$date": {
+		        "$numberLong": "1627378542123"
+		      }
+		    },
+		    {
+		      "$date": {
+		        "$numberLong": "-62135596800000"
+		      }
+		    }
 		  ],
-		  "null":[null],
-		  "regex":[
-		    {"$regularExpression":{"pattern":"p","options":"o"}},
-		    {"$regularExpression":{"pattern":"","options":""}}
+		  "null": [
+		    null
 		  ],
-		  "int32":[
-		    {"$numberInt":"42"},
-		    {"$numberInt":"0"}
+		  "regex": [
+		    {
+		      "$regularExpression": {
+		        "pattern": "p",
+		        "options": "o"
+		      }
+		    },
+		    {
+		      "$regularExpression": {
+		        "pattern": "",
+		        "options": ""
+		      }
+		    }
 		  ],
-		  "timestamp":[
-		    {"$timestamp":{"t":0,"i":42}},
-		    {"$timestamp":{"t":0,"i":0}}
+		  "int32": [
+		    {
+		      "$numberInt": "42"
+		    },
+		    {
+		      "$numberInt": "0"
+		    }
 		  ],
-		  "int64":[
-		    {"$numberLong":"42"},
-		    {"$numberLong":"0"}
-		   ],
-		  "decimal128":[
-		    {"$numberDecimal":"2.39807672958224171050E-6156"},
-		    {"$numberDecimal":"0E-6176"}
+		  "timestamp": [
+		    {
+		      "$timestamp": {
+		        "t": 0,
+		        "i": 42
+		      }
+		    },
+		    {
+		      "$timestamp": {
+		        "t": 0,
+		        "i": 0
+		      }
+		    }
+		  ],
+		  "int64": [
+		    {
+		      "$numberLong": "42"
+		    },
+		    {
+		      "$numberLong": "0"
+		    }
+		  ],
+		  "decimal128": [
+		    {
+		      "$numberDecimal": "2.39807672958224171050E-6156"
+		    },
+		    {
+		      "$numberDecimal": "0E-6176"
+		    }
 		  ]
-		}
-		`,
+		}`,
 	},
 	{
 		name: "nested",
@@ -705,7 +769,10 @@ var normalTestCases = []normalTestCase{
 		{
 		  "foo": [],
 		}`,
-		j: `{"foo":[]}`,
+		j: `
+		{
+		  "foo": []
+		}`,
 	},
 	{
 		name: "duplicateKeys",
@@ -724,7 +791,11 @@ var normalTestCases = []normalTestCase{
 		  "": false,
 		  "": true,
 		}`,
-		j: `{"":false,"":true}`,
+		j: `
+		{
+		  "": false,
+		  "": true
+		}`,
 	},
 }
 
@@ -884,13 +955,9 @@ func TestNormal(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, tc.doc, doc)
 
-				var j bytes.Buffer
-				err = json.Compact(&j, []byte(tc.j))
+				b, err := json.MarshalIndent(tc.doc, "", "  ")
 				require.NoError(t, err)
-
-				b, err := json.Marshal(tc.doc)
-				require.NoError(t, err)
-				assert.Equal(t, j.String(), string(b))
+				assert.Equal(t, testutil.Unindent(tc.j), string(b))
 			})
 		})
 	}
