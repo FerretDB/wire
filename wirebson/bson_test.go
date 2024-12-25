@@ -945,6 +945,7 @@ func TestNormal(t *testing.T) {
 			})
 
 			t.Run("MarshalUnmarshal", func(t *testing.T) {
+				// We should set all tc.j and remove this Skip.
 				// TODO https://github.com/FerretDB/wire/issues/49
 				if tc.j == "" {
 					t.Skip("https://github.com/FerretDB/wire/issues/49")
