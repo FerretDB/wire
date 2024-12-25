@@ -22,9 +22,10 @@ import (
 	"log/slog"
 	"slices"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
+
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 	"github.com/FerretDB/wire/internal/util/must"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // field represents a single Document field in the (partially) decoded form.

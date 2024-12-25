@@ -23,9 +23,10 @@ import (
 	"sort"
 	"strconv"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
+
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 	"github.com/FerretDB/wire/internal/util/must"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // Array represents a BSON array in the (partially) decoded form.

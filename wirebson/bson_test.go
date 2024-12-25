@@ -1297,7 +1297,8 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		}
 
 		b, err := json.Marshal(doc)
-		require.NoError(t, err)
+		d, _ := toDriver(doc)
+		require.NoError(t, err, "%s\n%#v", doc.LogMessage(), d)
 
 		var doc2 *Document
 		err = json.Unmarshal(b, &doc2)
