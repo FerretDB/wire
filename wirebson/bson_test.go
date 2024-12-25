@@ -15,6 +15,7 @@
 package wirebson
 
 import (
+	"encoding/hex"
 	"strings"
 	"testing"
 	"time"
@@ -41,8 +42,6 @@ type normalTestCase struct {
 type decodeTestCase struct {
 	name string
 	raw  RawDocument
-
-	oldOk bool
 
 	findRawErr    error
 	findRawL      int
@@ -581,7 +580,8 @@ var normalTestCases = []normalTestCase{
 		raw: RawDocument{
 			0x18, 0x00, 0x00, 0x00,
 			0x13, 0x66, 0x00,
-			0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x0d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			0x00,
 		},
 		doc: MustDocument(
@@ -677,7 +677,6 @@ var decodeTestCases = []decodeTestCase{
 			0x00, // end of document
 			0x00, // extra byte
 		},
-		oldOk:     true,
 		findRawL:  5,
 		decodeErr: ErrDecodeInvalidInput,
 	},
@@ -776,6 +775,7 @@ func TestNormal(t *testing.T) {
 			t.Run("DecodeDeepEncode", func(t *testing.T) {
 				doc, err := tc.raw.DecodeDeep()
 				require.NoError(t, err)
+				assert.Equal(t, tc.doc, doc)
 
 				ls := doc.LogValue().Resolve().String()
 				assert.NotContains(t, ls, "panicked")
@@ -784,9 +784,9 @@ func TestNormal(t *testing.T) {
 				assert.NotEmpty(t, doc.LogMessage())
 				assert.Equal(t, strings.ReplaceAll(testutil.Unindent(tc.mi), `"`, "`"), doc.LogMessageIndent())
 
-				raw, err := doc.Encode()
+				raw, err := tc.doc.Encode()
 				require.NoError(t, err)
-				assert.Equal(t, tc.raw, raw)
+				assert.Equal(t, tc.raw, raw, "actual:\n"+hex.Dump(raw))
 			})
 		})
 	}
