@@ -16,6 +16,7 @@ package wirebson
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"math"
 	"strings"
 	"testing"
@@ -35,6 +36,7 @@ type normalTestCase struct {
 	raw  RawDocument
 	doc  *Document
 	mi   string
+	j    string
 }
 
 // decodeTestCase represents a single test case for unsuccessful decoding.
@@ -279,7 +281,7 @@ var normalTestCases = []normalTestCase{
 			"string", MustArray("foo", ""),
 			"binary", MustArray(
 				Binary{Subtype: BinaryUser, B: []byte{0x42}},
-				Binary{},
+				Binary{Subtype: BinaryGeneric, B: []byte{}},
 			),
 			"objectID", MustArray(ObjectID{0x42}, ObjectID{}),
 			"bool", MustArray(true, false),
@@ -360,6 +362,137 @@ var normalTestCases = []normalTestCase{
 		    Decimal128(42,13),
 		    Decimal128(0,0),
 		  ],
+		}`,
+		j: `
+		{
+		  "document": [
+		    {
+		      "": "foo",
+		      "bar": "baz",
+		      "": "qux"
+		    },
+		    {}
+		  ],
+		  "array": [
+		    [
+		      "foo"
+		    ],
+		    []
+		  ],
+		  "float64": [
+		    {
+		      "$numberDouble": "42.13"
+		    },
+		    {
+		      "$numberDouble": "0.0"
+		    },
+		    {
+		      "$numberDouble": "-0.0"
+		    },
+		    {
+		      "$numberDouble": "Infinity"
+		    },
+		    {
+		      "$numberDouble": "-Infinity"
+		    }
+		  ],
+		  "string": [
+		    "foo",
+		    ""
+		  ],
+		  "binary": [
+		    {
+		      "$binary": {
+		        "base64": "Qg==",
+		        "subType": "80"
+		      }
+		    },
+		    {
+		      "$binary": {
+		        "base64": "",
+		        "subType": "00"
+		      }
+		    }
+		  ],
+		  "objectID": [
+		    {
+		      "$oid": "420000000000000000000000"
+		    },
+		    {
+		      "$oid": "000000000000000000000000"
+		    }
+		  ],
+		  "bool": [
+		    true,
+		    false
+		  ],
+		  "datetime": [
+		    {
+		      "$date": {
+		        "$numberLong": "1627378542123"
+		      }
+		    },
+		    {
+		      "$date": {
+		        "$numberLong": "-62135596800000"
+		      }
+		    }
+		  ],
+		  "null": [
+		    null
+		  ],
+		  "regex": [
+		    {
+		      "$regularExpression": {
+		        "pattern": "p",
+		        "options": "o"
+		      }
+		    },
+		    {
+		      "$regularExpression": {
+		        "pattern": "",
+		        "options": ""
+		      }
+		    }
+		  ],
+		  "int32": [
+		    {
+		      "$numberInt": "42"
+		    },
+		    {
+		      "$numberInt": "0"
+		    }
+		  ],
+		  "timestamp": [
+		    {
+		      "$timestamp": {
+		        "t": 0,
+		        "i": 42
+		      }
+		    },
+		    {
+		      "$timestamp": {
+		        "t": 0,
+		        "i": 0
+		      }
+		    }
+		  ],
+		  "int64": [
+		    {
+		      "$numberLong": "42"
+		    },
+		    {
+		      "$numberLong": "0"
+		    }
+		  ],
+		  "decimal128": [
+		    {
+		      "$numberDecimal": "2.39807672958224171050E-6156"
+		    },
+		    {
+		      "$numberDecimal": "0E-6176"
+		    }
+		  ]
 		}`,
 	},
 	{
@@ -636,6 +769,10 @@ var normalTestCases = []normalTestCase{
 		{
 		  "foo": [],
 		}`,
+		j: `
+		{
+		  "foo": []
+		}`,
 	},
 	{
 		name: "duplicateKeys",
@@ -653,6 +790,11 @@ var normalTestCases = []normalTestCase{
 		{
 		  "": false,
 		  "": true,
+		}`,
+		j: `
+		{
+		  "": false,
+		  "": true
 		}`,
 	},
 }
@@ -802,11 +944,19 @@ func TestNormal(t *testing.T) {
 				assert.Equal(t, tc.raw, raw, "actual:\n"+hex.Dump(raw))
 			})
 
-			t.Run("ToDriverFromDrive", func(t *testing.T) {
-				d, err := toDriver(tc.doc)
-				require.NoError(t, err)
+			t.Run("MarshalUnmarshal", func(t *testing.T) {
+				// We should set all tc.j and remove this Skip.
+				// TODO https://github.com/FerretDB/wire/issues/49
+				if tc.j == "" {
+					t.Skip("https://github.com/FerretDB/wire/issues/49")
+				}
 
-				doc, err := fromDriver(d)
+				b, err := json.MarshalIndent(tc.doc, "", "  ")
+				require.NoError(t, err)
+				assert.Equal(t, testutil.Unindent(tc.j), string(b))
+
+				var doc *Document
+				err = json.Unmarshal([]byte(tc.j), &doc)
 				require.NoError(t, err)
 				assert.Equal(t, tc.doc, doc)
 			})
@@ -865,203 +1015,223 @@ var drain any
 
 func BenchmarkDocumentDecode(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			b.ReportAllocs()
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				b.ReportAllocs()
 
-			var err error
-			for range b.N {
-				drain, err = tc.raw.Decode()
-			}
+				var err error
+				for range b.N {
+					drain, err = tc.raw.Decode()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			require.NoError(b, err)
-			require.NotNil(b, drain)
-		})
+				require.NoError(b, err)
+				require.NotNil(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentDecodeDeep(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			b.ReportAllocs()
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				b.ReportAllocs()
 
-			var err error
-			for range b.N {
-				drain, err = tc.raw.DecodeDeep()
-			}
+				var err error
+				for range b.N {
+					drain, err = tc.raw.DecodeDeep()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			require.NoError(b, err)
-			require.NotNil(b, drain)
-		})
+				require.NoError(b, err)
+				require.NotNil(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentEncode(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.Decode()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.Decode()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain, err = doc.Encode()
-			}
+				for range b.N {
+					drain, err = doc.Encode()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			require.NoError(b, err)
-			assert.NotNil(b, drain)
-		})
+				require.NoError(b, err)
+				assert.NotNil(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentEncodeDeep(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.DecodeDeep()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain, err = doc.Encode()
-			}
+				for range b.N {
+					drain, err = doc.Encode()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			require.NoError(b, err)
-			assert.NotNil(b, drain)
-		})
+				require.NoError(b, err)
+				assert.NotNil(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogValue(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.Decode()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.Decode()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogValue().Resolve().String()
-			}
+				for range b.N {
+					drain = doc.LogValue().Resolve().String()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-			assert.NotContains(b, drain, "panicked")
-			assert.NotContains(b, drain, "called too many times")
-		})
+				assert.NotEmpty(b, drain)
+				assert.NotContains(b, drain, "panicked")
+				assert.NotContains(b, drain, "called too many times")
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogValueDeep(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.DecodeDeep()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogValue().Resolve().String()
-			}
+				for range b.N {
+					drain = doc.LogValue().Resolve().String()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-			assert.NotContains(b, drain, "panicked")
-			assert.NotContains(b, drain, "called too many times")
-		})
+				assert.NotEmpty(b, drain)
+				assert.NotContains(b, drain, "panicked")
+				assert.NotContains(b, drain, "called too many times")
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogMessage(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.Decode()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.Decode()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogMessage()
-			}
+				for range b.N {
+					drain = doc.LogMessage()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-		})
+				assert.NotEmpty(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogMessageDeep(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.DecodeDeep()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogMessage()
-			}
+				for range b.N {
+					drain = doc.LogMessage()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-		})
+				assert.NotEmpty(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogMessageIndent(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.Decode()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.Decode()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogMessageIndent()
-			}
+				for range b.N {
+					drain = doc.LogMessageIndent()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-		})
+				assert.NotEmpty(b, drain)
+			})
+		}
 	}
 }
 
 func BenchmarkDocumentLogMessageIndentDeep(b *testing.B) {
 	for _, tc := range normalTestCases {
-		b.Run(tc.name, func(b *testing.B) {
-			doc, err := tc.raw.DecodeDeep()
-			require.NoError(b, err)
+		if tc.raw != nil {
+			b.Run(tc.name, func(b *testing.B) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(b, err)
 
-			b.ReportAllocs()
-			b.ResetTimer()
+				b.ReportAllocs()
+				b.ResetTimer()
 
-			for range b.N {
-				drain = doc.LogMessageIndent()
-			}
+				for range b.N {
+					drain = doc.LogMessageIndent()
+				}
 
-			b.StopTimer()
+				b.StopTimer()
 
-			assert.NotEmpty(b, drain)
-		})
+				assert.NotEmpty(b, drain)
+			})
+		}
 	}
 }
 
@@ -1121,24 +1291,27 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		assert.Equal(t, rawDoc, raw)
 	})
 
-	t.Run("ToDriverFromDriver", func(t *testing.T) {
+	t.Run("MarshalUnmarshal", func(t *testing.T) {
 		doc, err := rawDoc.DecodeDeep()
 		if err != nil {
 			return
 		}
 
-		d, err := toDriver(doc)
-		require.NoError(t, err)
+		b, err := json.Marshal(doc)
+		d, _ := toDriver(doc)
+		require.NoError(t, err, "%s\n%#v", doc.LogMessage(), d)
 
-		doc2, err := fromDriver(d)
+		var doc2 *Document
+		err = json.Unmarshal(b, &doc2)
 		require.NoError(t, err)
-		assert.Equal(t, doc, doc2)
 	})
 }
 
 func FuzzDocument(f *testing.F) {
 	for _, tc := range normalTestCases {
-		f.Add([]byte(tc.raw))
+		if tc.raw != nil {
+			f.Add([]byte(tc.raw))
+		}
 	}
 
 	for _, tc := range decodeTestCases {
@@ -1148,11 +1321,10 @@ func FuzzDocument(f *testing.F) {
 	f.Fuzz(func(t *testing.T, b []byte) {
 		t.Parallel()
 
-		testRawDocument(t, RawDocument(b))
+		rawDoc := RawDocument(b)
 
-		l, err := FindRaw(b)
-		if err == nil {
-			testRawDocument(t, RawDocument(b[:l]))
-		}
+		t.Run("TestRawDocument", func(t *testing.T) {
+			testRawDocument(t, rawDoc)
+		})
 	})
 }

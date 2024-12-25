@@ -17,10 +17,13 @@ package wirebson
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"iter"
 	"log/slog"
 	"sort"
 	"strconv"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 	"github.com/FerretDB/wire/internal/util/must"
@@ -177,12 +180,53 @@ func (arr *Array) Encode() (RawArray, error) {
 	return buf.Bytes(), nil
 }
 
+// MarshalJSON implements [json.Marshaler].
+func (arr *Array) MarshalJSON() ([]byte, error) {
+	must.NotBeZero(arr)
+
+	a, err := toDriver(arr)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	b, err := bson.MarshalExtJSON(a, true, false)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	return b, nil
+}
+
 // Decode returns itself to implement [AnyArray].
 //
 // Receiver must not be nil.
 func (arr *Array) Decode() (*Array, error) {
 	must.NotBeZero(arr)
 	return arr, nil
+}
+
+// UnmarshalJSON implements [json.Unmarshaler].
+func (arr *Array) UnmarshalJSON(b []byte) error {
+	must.NotBeZero(arr)
+
+	var a bson.A
+	if err := bson.UnmarshalExtJSON(b, true, &a); err != nil {
+		return lazyerrors.Error(err)
+	}
+
+	v, err := fromDriver(a)
+	if err != nil {
+		return lazyerrors.Error(err)
+	}
+
+	switch v := v.(type) {
+	case *Array:
+		must.NotBeZero(v)
+		*arr = *v
+		return nil
+	default:
+		return lazyerrors.Errorf("expected *Array, got %T", v)
+	}
 }
 
 // LogValue implements [slog.LogValuer].
@@ -202,6 +246,8 @@ func (arr *Array) LogMessageIndent() string {
 
 // check interfaces
 var (
-	_ AnyArray       = (*Array)(nil)
-	_ slog.LogValuer = (*Array)(nil)
+	_ AnyArray         = (*Array)(nil)
+	_ slog.LogValuer   = (*Array)(nil)
+	_ json.Marshaler   = (*Array)(nil)
+	_ json.Unmarshaler = (*Array)(nil)
 )

@@ -17,9 +17,12 @@ package wirebson
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"iter"
 	"log/slog"
 	"slices"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
 	"github.com/FerretDB/wire/internal/util/must"
@@ -253,12 +256,53 @@ func (doc *Document) Encode() (RawDocument, error) {
 	return buf.Bytes(), nil
 }
 
+// MarshalJSON implements [json.Marshaler].
+func (doc *Document) MarshalJSON() ([]byte, error) {
+	must.NotBeZero(doc)
+
+	d, err := toDriver(doc)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	b, err := bson.MarshalExtJSON(d, true, false)
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	return b, nil
+}
+
 // Decode returns itself to implement [AnyDocument].
 //
 // Receiver must not be nil.
 func (doc *Document) Decode() (*Document, error) {
 	must.NotBeZero(doc)
 	return doc, nil
+}
+
+// UnmarshalJSON implements [json.Unmarshaler].
+func (doc *Document) UnmarshalJSON(b []byte) error {
+	must.NotBeZero(doc)
+
+	var d bson.D
+	if err := bson.UnmarshalExtJSON(b, true, &d); err != nil {
+		return lazyerrors.Error(err)
+	}
+
+	v, err := fromDriver(d)
+	if err != nil {
+		return lazyerrors.Error(err)
+	}
+
+	switch v := v.(type) {
+	case *Document:
+		must.NotBeZero(v)
+		*doc = *v
+		return nil
+	default:
+		return lazyerrors.Errorf("expected *Document, got %T", v)
+	}
 }
 
 // LogValue implements [slog.LogValuer].
@@ -278,6 +322,8 @@ func (doc *Document) LogMessageIndent() string {
 
 // check interfaces
 var (
-	_ AnyDocument    = (*Document)(nil)
-	_ slog.LogValuer = (*Document)(nil)
+	_ AnyDocument      = (*Document)(nil)
+	_ slog.LogValuer   = (*Document)(nil)
+	_ json.Marshaler   = (*Document)(nil)
+	_ json.Unmarshaler = (*Document)(nil)
 )
