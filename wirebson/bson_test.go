@@ -801,6 +801,15 @@ func TestNormal(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, tc.raw, raw, "actual:\n"+hex.Dump(raw))
 			})
+
+			t.Run("ToDriverFromDrive", func(t *testing.T) {
+				d, err := toDriver(tc.doc)
+				require.NoError(t, err)
+
+				doc, err := fromDriver(d)
+				require.NoError(t, err)
+				assert.Equal(t, tc.doc, doc)
+			})
 		})
 	}
 }
@@ -1110,6 +1119,20 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		raw, err := doc.Encode()
 		require.NoError(t, err)
 		assert.Equal(t, rawDoc, raw)
+	})
+
+	t.Run("ToDriverFromDriver", func(t *testing.T) {
+		doc, err := rawDoc.DecodeDeep()
+		if err != nil {
+			return
+		}
+
+		d, err := toDriver(doc)
+		require.NoError(t, err)
+
+		doc2, err := fromDriver(d)
+		require.NoError(t, err)
+		assert.Equal(t, doc, doc2)
 	})
 }
 
