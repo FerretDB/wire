@@ -60,7 +60,7 @@ func lastErr(err error) error {
 	}
 }
 
-var lastUpdate = time.Date(2020, 2, 15, 9, 34, 33, 0, time.UTC).Local()
+var lastUpdate = time.Date(2020, 2, 15, 9, 34, 33, 0, time.UTC)
 
 //nolint:vet // for readability
 type testCase struct {
