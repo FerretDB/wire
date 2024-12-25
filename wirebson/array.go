@@ -15,7 +15,6 @@
 package wirebson
 
 import (
-	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"iter"
@@ -153,31 +152,41 @@ func (arr *Array) SortInterface(less func(a, b any) bool) sort.Interface {
 }
 
 // Encode encodes non-nil Array.
-//
-// TODO https://github.com/FerretDB/wire/issues/21
-// This method should accept a slice of bytes, not return it.
-// That would allow to avoid unnecessary allocations.
 func (arr *Array) Encode() (RawArray, error) {
 	must.NotBeZero(arr)
 
-	size := sizeArray(arr)
-	buf := bytes.NewBuffer(make([]byte, 0, size))
-
-	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
+	raw := make([]byte, Size(arr))
+	if err := arr.EncodeTo(raw); err != nil {
 		return nil, lazyerrors.Error(err)
 	}
 
-	for i, v := range arr.values {
-		if err := encodeField(buf, strconv.Itoa(i), v); err != nil {
-			return nil, lazyerrors.Error(err)
+	return raw, nil
+}
+
+// EncodeTo encodes non-nil Array.
+//
+// raw must be at least Size(arr) bytes long; otherwise, EncodeTo will panic.
+// Only raw[0:Size(arr)] bytes are modified.
+func (arr *Array) EncodeTo(raw RawArray) error {
+	must.NotBeZero(arr)
+
+	// ensure raw length early
+	s := sizeArray(arr)
+	raw[s-1] = 0
+
+	binary.LittleEndian.PutUint32(raw, uint32(s))
+
+	i := 4
+	for n, v := range arr.values {
+		w, err := encodeField(raw[i:], strconv.Itoa(n), v)
+		if err != nil {
+			return lazyerrors.Error(err)
 		}
+
+		i += w
 	}
 
-	if err := binary.Write(buf, binary.LittleEndian, byte(0)); err != nil {
-		return nil, lazyerrors.Error(err)
-	}
-
-	return buf.Bytes(), nil
+	return nil
 }
 
 // MarshalJSON implements [json.Marshaler].
