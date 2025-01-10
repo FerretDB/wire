@@ -149,6 +149,7 @@ func TestDecimal128(t *testing.T) {
 	opts := options.Client().ApplyURI(uri).SetAuth(options.Credential{Username: "username", Password: "password"})
 	mConn, err := mongo.Connect(opts)
 	require.NoError(t, err)
+
 	db := mConn.Database(t.Name())
 	require.NoError(t, db.Drop(ctx))
 
@@ -189,6 +190,7 @@ func TestDecimal128(t *testing.T) {
 	var res bson.A
 	err = c.All(ctx, &res)
 	require.NoError(t, err)
+
 	mExpected := bson.A{
 		bson.D{{"_id", "d"}, {"v", md}},
 		bson.D{{"_id", "md"}, {"v", md}},
