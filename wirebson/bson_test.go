@@ -294,7 +294,7 @@ var normalTestCases = []normalTestCase{
 			"int32", MustArray(int32(42), int32(0)),
 			"timestamp", MustArray(Timestamp(42), Timestamp(0)),
 			"int64", MustArray(int64(42), int64(0)),
-			"decimal128", MustArray(Decimal128{L: 42, H: 13}, Decimal128{}),
+			"decimal128", MustArray(Decimal128{H: 13, L: 42}, Decimal128{}),
 		),
 		mi: `
 		{
@@ -359,8 +359,8 @@ var normalTestCases = []normalTestCase{
 		    int64(0),
 		  ],
 		  "decimal128": [
-		    Decimal128(42,13),
-		    Decimal128(0,0),
+		    Decimal128(H:13,L:42),
+		    Decimal128(H:0,L:0),
 		  ],
 		}`,
 		j: `
@@ -731,11 +731,17 @@ var normalTestCases = []normalTestCase{
 			0x00,
 		},
 		doc: MustDocument(
-			"f", Decimal128{L: 42, H: 13},
+			"f", Decimal128{H: 13, L: 42},
 		),
 		mi: `
 		{
-		  "f": Decimal128(42,13),
+		  "f": Decimal128(H:13,L:42),
+		}`,
+		j: `
+		{
+		  "f": {
+		    "$numberDecimal": "2.39807672958224171050E-6156"
+		  }
 		}`,
 	},
 	{

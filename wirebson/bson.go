@@ -183,8 +183,8 @@ func fromDriver(v any) (any, error) {
 		h, l := v.GetBytes()
 
 		return Decimal128{
-			L: l,
 			H: h,
+			L: l,
 		}, nil
 
 	default:
