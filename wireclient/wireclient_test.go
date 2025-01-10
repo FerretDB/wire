@@ -24,6 +24,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
+
+	"github.com/FerretDB/wire"
+	"github.com/FerretDB/wire/wirebson"
 )
 
 // logWriter provides [io.Writer] for [testing.TB].
@@ -56,13 +62,21 @@ func logger(tb testing.TB) *slog.Logger {
 	return slog.New(h)
 }
 
-func TestConn(t *testing.T) {
+func setup(t testing.TB) string {
+	t.Helper()
+
 	if testing.Short() {
 		t.Skip("skipping integration tests for -short")
 	}
 
 	uri := os.Getenv("MONGODB_URI")
 	require.NotEmpty(t, uri, "MONGODB_URI environment variable must be set; set it or run tests with `go test -short`")
+
+	return uri
+}
+
+func TestConn(t *testing.T) {
+	uri := setup(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	t.Cleanup(cancel)
@@ -101,4 +115,69 @@ func TestConn(t *testing.T) {
 			assert.NoError(t, conn.Login(ctx, "username", "password", "admin"))
 		})
 	})
+}
+
+func TestDecimal128(t *testing.T) {
+	uri := setup(t)
+
+	d := wirebson.Decimal128{H: 13, L: 42}
+	md := bson.NewDecimal128(13, 42)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	t.Cleanup(cancel)
+
+	conn := ConnectPing(ctx, uri, logger(t))
+	require.NotNil(t, conn)
+
+	err := conn.Login(ctx, "username", "password", "admin")
+	require.NoError(t, err)
+
+	opts := options.Client().ApplyURI(uri).SetAuth(options.Credential{Username: "username", Password: "password"})
+	mConn, err := mongo.Connect(opts)
+	require.NoError(t, err)
+	db := mConn.Database(t.Name())
+	require.NoError(t, db.Drop(ctx))
+
+	_, body, err := conn.Request(ctx, wire.MustOpMsg(
+		"insert", "test",
+		"documents", wirebson.MustArray(wirebson.MustDocument("_id", "d", "v", d)),
+		"$db", t.Name(),
+	))
+	require.NoError(t, err)
+
+	doc, err := body.(*wire.OpMsg).DecodeDeepDocument()
+	require.NoError(t, err)
+	require.Equal(t, 1.0, doc.Get("ok"))
+
+	_, err = db.Collection("test").InsertOne(ctx, bson.D{{"_id", "md"}, {"v", md}})
+	require.NoError(t, err)
+
+	_, body, err = conn.Request(ctx, wire.MustOpMsg(
+		"find", "test",
+		"sort", wirebson.MustDocument("_id", int32(1)),
+		"$db", t.Name(),
+	))
+	require.NoError(t, err)
+
+	doc, err = body.(*wire.OpMsg).DecodeDeepDocument()
+	require.NoError(t, err)
+	require.Equal(t, 1.0, doc.Get("ok"))
+
+	expected := wirebson.MustArray(
+		wirebson.MustDocument("_id", "d", "v", d),
+		wirebson.MustDocument("_id", "md", "v", d),
+	)
+	require.Equal(t, expected, doc.Get("cursor").(*wirebson.Document).Get("firstBatch"))
+
+	c, err := db.Collection("test").Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{"_id", 1}}))
+	require.NoError(t, err)
+
+	var res bson.A
+	err = c.All(ctx, &res)
+	require.NoError(t, err)
+	mExpected := bson.A{
+		bson.D{{"_id", "d"}, {"v", md}},
+		bson.D{{"_id", "md"}, {"v", md}},
+	}
+	require.Equal(t, mExpected, res)
 }
