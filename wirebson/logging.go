@@ -335,10 +335,10 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 		b.WriteByte(')')
 
 	case Decimal128:
-		b.WriteString("Decimal128(")
-		b.WriteString(strconv.FormatUint(uint64(v.L), 10))
-		b.WriteByte(',')
+		b.WriteString("Decimal128(H:")
 		b.WriteString(strconv.FormatUint(uint64(v.H), 10))
+		b.WriteString(",L:")
+		b.WriteString(strconv.FormatUint(uint64(v.L), 10))
 		b.WriteByte(')')
 
 	default:

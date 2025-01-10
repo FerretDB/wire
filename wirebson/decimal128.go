@@ -21,8 +21,8 @@ import (
 
 // Decimal128 represents BSON scalar type decimal128.
 type Decimal128 struct {
-	L uint64
 	H uint64
+	L uint64
 }
 
 // sizeDecimal128 is a size of the encoding of [Decimal128] in bytes.
@@ -33,8 +33,8 @@ const sizeDecimal128 = 16
 // b must be at least 16 ([sizeDecimal128]) bytes long; otherwise, encodeDecimal128 will panic.
 // Only b[0:16] bytes are modified.
 func encodeDecimal128(b []byte, v Decimal128) {
-	binary.LittleEndian.PutUint64(b, uint64(v.L))
 	binary.LittleEndian.PutUint64(b[8:], uint64(v.H))
+	binary.LittleEndian.PutUint64(b, uint64(v.L))
 }
 
 // decodeDecimal128 decodes [Decimal128] value from b.
@@ -47,8 +47,8 @@ func decodeDecimal128(b []byte) (Decimal128, error) {
 		return res, fmt.Errorf("DecodeDecimal128: expected at least %d bytes, got %d: %w", sizeDecimal128, len(b), ErrDecodeShortInput)
 	}
 
-	res.L = binary.LittleEndian.Uint64(b[:8])
 	res.H = binary.LittleEndian.Uint64(b[8:])
+	res.L = binary.LittleEndian.Uint64(b[:8])
 
 	return res, nil
 }
