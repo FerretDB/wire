@@ -62,6 +62,7 @@ func logger(tb testing.TB) *slog.Logger {
 	return slog.New(h)
 }
 
+// setup waits for FerretDB or MongoDB to start and returns the URI.
 func setup(t testing.TB) string {
 	t.Helper()
 
@@ -72,10 +73,21 @@ func setup(t testing.TB) string {
 	uri := os.Getenv("MONGODB_URI")
 	require.NotEmpty(t, uri, "MONGODB_URI environment variable must be set; set it or run tests with `go test -short`")
 
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	conn := ConnectPing(ctx, uri, logger(t))
+	require.NotNil(t, conn)
+
+	err := conn.Close()
+	require.NoError(t, err)
+
 	return uri
 }
 
 func TestConn(t *testing.T) {
+	t.Parallel()
+
 	uri := setup(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -118,6 +130,8 @@ func TestConn(t *testing.T) {
 }
 
 func TestDecimal128(t *testing.T) {
+	t.Parallel()
+
 	uri := setup(t)
 
 	d := wirebson.Decimal128{H: 13, L: 42}
