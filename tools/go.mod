@@ -11,7 +11,7 @@ require (
 	golang.org/x/perf v0.0.0-20250106172127-400946f43c82
 	golang.org/x/pkgsite v0.0.0-20250108000304-840de57bb859
 	golang.org/x/tools v0.29.0
-	golang.org/x/vuln v1.1.3
+	golang.org/x/vuln v1.1.4
 	mvdan.cc/gofumpt v0.7.0
 )
 
