@@ -2,30 +2,23 @@
 # This file is used by integration tests.
 
 services:
-  mongodb:
+  database:
     build:
       context: .
-      dockerfile: ${MONGO_DOCKERFILE:-mongo}.Dockerfile
+      dockerfile: ${DOCKERFILE:-mongo}.Dockerfile
     ports:
       - 27017:27017
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=username
-      - MONGO_INITDB_ROOT_PASSWORD=password
+      # MongoDB
+      MONGO_INITDB_ROOT_USERNAME: username
+      MONGO_INITDB_ROOT_PASSWORD: password
 
-      - FERRETDB_POSTGRESQL_URL=postgres://username:password@postgres:5432/postgres
-      - FERRETDB_SETUP_USERNAME=username
-      - FERRETDB_SETUP_PASSWORD=password
-      - FERRETDB_SETUP_DATABASE=admin
-      - FERRETDB_TEST_ENABLE_NEW_AUTH=true
+      # FerretDB v1
+      FERRETDB_SETUP_USERNAME: username
+      FERRETDB_SETUP_PASSWORD: password
+      FERRETDB_SETUP_DATABASE: admin
+      FERRETDB_TEST_ENABLE_NEW_AUTH: true
 
-  postgres:
-    build:
-      context: .
-      dockerfile: ${POSTGRES_DOCKERFILE:-postgres}.Dockerfile
-    platform: linux/amd64
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_USER=username
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=postgres
+      # PostgreSQL for FerretDB v2
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
