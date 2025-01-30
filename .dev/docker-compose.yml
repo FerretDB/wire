@@ -22,10 +22,3 @@ services:
       # PostgreSQL for FerretDB v2
       POSTGRES_USER: username
       POSTGRES_PASSWORD: password
-      # POSTGRES_DB: postgres
-
-      # - FERRETDB_POSTGRESQL_URL=postgres://username:password@postgres:5432/postgres
-      # - FERRETDB_SETUP_USERNAME=username
-      # - FERRETDB_SETUP_PASSWORD=password
-      # - FERRETDB_SETUP_DATABASE=admin
-      # - FERRETDB_TEST_ENABLE_NEW_AUTH=true
