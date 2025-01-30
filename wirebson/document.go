@@ -107,6 +107,8 @@ func (doc *Document) Len() int {
 // FieldNames returns a slice of field names in the Document in the original order.
 //
 // If Document contains duplicate field names, the same name will appear multiple times.
+//
+// Deprecated: use [Document.Fields] instead.
 func (doc *Document) FieldNames() []string {
 	fields := make([]string, len(doc.fields))
 	for i, f := range doc.fields {
@@ -121,8 +123,7 @@ func (doc *Document) FieldNames() []string {
 // It returns nil if the field is not found.
 //
 // If Document contains duplicate field names, it returns the first one.
-// To get other fields, a for/range loop can be used with [Document.All],
-// or [Document.Len] with [Document.GetByIndex].
+// To get other fields, a for/range loop can be used with [Document.All].
 func (doc *Document) Get(name string) any {
 	for _, f := range doc.fields {
 		if f.name == name {
@@ -135,6 +136,8 @@ func (doc *Document) Get(name string) any {
 
 // GetByIndex returns the name and the value of the field at the given index (between 0 and [Document.Len]-1).
 // It panics if index is out of bounds.
+//
+// Deprecated: use [Document.All] instead.
 func (doc *Document) GetByIndex(i int) (string, any) {
 	f := doc.fields[i]
 	return f.name, f.value
