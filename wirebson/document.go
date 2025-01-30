@@ -15,7 +15,6 @@
 package wirebson
 
 import (
-	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"iter"
@@ -232,31 +231,41 @@ func (doc *Document) Command() string {
 }
 
 // Encode encodes non-nil Document.
-//
-// TODO https://github.com/FerretDB/wire/issues/21
-// This method should accept a slice of bytes, not return it.
-// That would allow to avoid unnecessary allocations.
 func (doc *Document) Encode() (RawDocument, error) {
 	must.NotBeZero(doc)
 
-	size := sizeDocument(doc)
-	buf := bytes.NewBuffer(make([]byte, 0, size))
-
-	if err := binary.Write(buf, binary.LittleEndian, uint32(size)); err != nil {
+	raw := make([]byte, Size(doc))
+	if err := doc.EncodeTo(raw); err != nil {
 		return nil, lazyerrors.Error(err)
 	}
 
+	return raw, nil
+}
+
+// EncodeTo encodes non-nil Document.
+//
+// raw must be at least Size(doc) bytes long; otherwise, EncodeTo will panic.
+// Only raw[0:Size(doc)] bytes are modified.
+func (doc *Document) EncodeTo(raw RawDocument) error {
+	must.NotBeZero(doc)
+
+	// ensure raw length early
+	s := sizeDocument(doc)
+	raw[s-1] = 0
+
+	binary.LittleEndian.PutUint32(raw, uint32(s))
+
+	i := 4
 	for _, f := range doc.fields {
-		if err := encodeField(buf, f.name, f.value); err != nil {
-			return nil, lazyerrors.Error(err)
+		w, err := encodeField(raw[i:], f.name, f.value)
+		if err != nil {
+			return lazyerrors.Error(err)
 		}
+
+		i += w
 	}
 
-	if err := binary.Write(buf, binary.LittleEndian, byte(0)); err != nil {
-		return nil, lazyerrors.Error(err)
-	}
-
-	return buf.Bytes(), nil
+	return nil
 }
 
 // MarshalJSON implements [json.Marshaler].
