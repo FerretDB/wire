@@ -85,6 +85,13 @@ func setup(t testing.TB) string {
 	return uri
 }
 
+// databaseName returns the database name for the test.
+func databaseName(t testing.TB) string {
+	t.Helper()
+
+	return strings.ReplaceAll(t.Name(), "/", "_")
+}
+
 func TestConn(t *testing.T) {
 	t.Parallel()
 
@@ -153,13 +160,13 @@ func TestTypes(t *testing.T) {
 		d := wirebson.Decimal128{H: 13, L: 42}
 		md := bson.NewDecimal128(13, 42)
 
-		db := mConn.Database(t.Name())
+		db := mConn.Database(databaseName(t))
 		require.NoError(t, db.Drop(ctx))
 
 		_, body, err := conn.Request(ctx, wire.MustOpMsg(
 			"insert", "test",
 			"documents", wirebson.MustArray(wirebson.MustDocument("_id", "d", "v", d)),
-			"$db", t.Name(),
+			"$db", db.Name(),
 		))
 		require.NoError(t, err)
 
@@ -173,7 +180,7 @@ func TestTypes(t *testing.T) {
 		_, body, err = conn.Request(ctx, wire.MustOpMsg(
 			"find", "test",
 			"sort", wirebson.MustDocument("_id", int32(1)),
-			"$db", t.Name(),
+			"$db", db.Name(),
 		))
 		require.NoError(t, err)
 
