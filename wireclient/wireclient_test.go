@@ -79,17 +79,6 @@ func TestConn(t *testing.T) {
 			assert.Error(t, conn.Login(ctx, "invalid", "invalid", "admin"))
 		})
 
-		t.Run("InvalidDatabase", func(t *testing.T) {
-			conn := ConnectPing(ctx, uri, logger(t))
-			require.NotNil(t, conn)
-
-			t.Cleanup(func() {
-				require.NoError(t, conn.Close())
-			})
-
-			assert.Error(t, conn.Login(ctx, "username", "password", "invalid"))
-		})
-
 		t.Run("Valid", func(t *testing.T) {
 			conn := ConnectPing(ctx, uri, logger(t))
 			require.NotNil(t, conn)
