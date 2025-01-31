@@ -1322,6 +1322,10 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 	})
 
 	t.Run("MarshalUnmarshal", func(t *testing.T) {
+		// TODO https://github.com/FerretDB/wire/issues/49
+		// See https://jira.mongodb.org/browse/GODRIVER-3476
+		t.Skip("https://github.com/FerretDB/wire/issues/49")
+
 		doc, err := rawDoc.DecodeDeep()
 		if err != nil {
 			return
