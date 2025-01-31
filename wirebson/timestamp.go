@@ -25,6 +25,21 @@ type Timestamp uint64
 // sizeTimestamp is a size of the encoding of [Timestamp] in bytes.
 const sizeTimestamp = 8
 
+// NewTimestamp creates a Timestamp using the provided time and increment.
+func NewTimestamp(t, i uint32) Timestamp {
+	return Timestamp(uint64(t)<<32 | uint64(i))
+}
+
+// T returns the time part of the timestamp.
+func (ts Timestamp) T() uint32 {
+	return uint32(ts >> 32)
+}
+
+// I returns the increment part of the timestamp.
+func (ts Timestamp) I() uint32 {
+	return uint32(ts)
+}
+
 // encodeTimestamp encodes [Timestamp] value v into b.
 //
 // b must be at least 8 ([sizeTimestamp]) bytes long; otherwise, encodeTimestamp will panic.

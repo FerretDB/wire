@@ -192,7 +192,7 @@ func TestTypes(t *testing.T) {
 			wirebson.MustDocument("_id", "d", "v", d),
 			wirebson.MustDocument("_id", "md", "v", d),
 		)
-		require.Equal(t, expected, doc.Get("cursor").(*wirebson.Document).Get("firstBatch"))
+		assert.Equal(t, expected, doc.Get("cursor").(*wirebson.Document).Get("firstBatch"))
 
 		c, err := db.Collection("test").Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{"_id", 1}}))
 		require.NoError(t, err)
@@ -205,10 +205,61 @@ func TestTypes(t *testing.T) {
 			bson.D{{"_id", "d"}, {"v", md}},
 			bson.D{{"_id", "md"}, {"v", md}},
 		}
-		require.Equal(t, mExpected, res)
+		assert.Equal(t, mExpected, res)
 	})
 
 	t.Run("Timestamp", func(t *testing.T) {
-		// FIXME
+		ts := wirebson.NewTimestamp(100, 500)
+		mts := bson.Timestamp{T: 100, I: 500}
+
+		require.EqualValues(t, 100, ts.T())
+		require.EqualValues(t, 500, ts.I())
+
+		db := mConn.Database(databaseName(t))
+		require.NoError(t, db.Drop(ctx))
+
+		_, body, err := conn.Request(ctx, wire.MustOpMsg(
+			"insert", "test",
+			"documents", wirebson.MustArray(wirebson.MustDocument("_id", "ts", "v", ts)),
+			"$db", db.Name(),
+		))
+		require.NoError(t, err)
+
+		doc, err := body.(*wire.OpMsg).DecodeDeepDocument()
+		require.NoError(t, err)
+		require.Equal(t, 1.0, doc.Get("ok"))
+
+		_, err = db.Collection("test").InsertOne(ctx, bson.D{{"_id", "mts"}, {"v", mts}})
+		require.NoError(t, err)
+
+		_, body, err = conn.Request(ctx, wire.MustOpMsg(
+			"find", "test",
+			"sort", wirebson.MustDocument("_id", int32(-1)),
+			"$db", db.Name(),
+		))
+		require.NoError(t, err)
+
+		doc, err = body.(*wire.OpMsg).DecodeDeepDocument()
+		require.NoError(t, err)
+		require.Equal(t, 1.0, doc.Get("ok"))
+
+		expected := wirebson.MustArray(
+			wirebson.MustDocument("_id", "ts", "v", ts),
+			wirebson.MustDocument("_id", "mts", "v", ts),
+		)
+		assert.Equal(t, expected, doc.Get("cursor").(*wirebson.Document).Get("firstBatch"))
+
+		c, err := db.Collection("test").Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{"_id", -1}}))
+		require.NoError(t, err)
+
+		var res bson.A
+		err = c.All(ctx, &res)
+		require.NoError(t, err)
+
+		mExpected := bson.A{
+			bson.D{{"_id", "ts"}, {"v", mts}},
+			bson.D{{"_id", "mts"}, {"v", mts}},
+		}
+		assert.Equal(t, mExpected, res)
 	})
 }
