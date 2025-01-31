@@ -105,7 +105,7 @@ func decodeScalarField(b []byte, t tag) (v any, size int, err error) {
 		size = sizeBinary(bin)
 
 	case tagUndefined:
-		err = lazyerrors.Errorf("unsupported tag %s: %w", t, ErrDecodeInvalidInput)
+		v = Undefined
 
 	case tagObjectID:
 		v, err = decodeObjectID(b)

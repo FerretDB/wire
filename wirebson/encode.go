@@ -119,6 +119,8 @@ func encodeScalarField(buf *bytes.Buffer, name string, v any) error {
 		buf.WriteByte(byte(tagString))
 	case Binary:
 		buf.WriteByte(byte(tagBinary))
+	case UndefinedType:
+		buf.WriteByte(byte(tagUndefined))
 	case ObjectID:
 		buf.WriteByte(byte(tagObjectID))
 	case bool:
@@ -172,6 +174,8 @@ func encodeScalarValue(b []byte, v any) {
 		encodeString(b, v)
 	case Binary:
 		encodeBinary(b, v)
+	case UndefinedType:
+		// nothing
 	case ObjectID:
 		encodeObjectID(b, v)
 	case bool:
