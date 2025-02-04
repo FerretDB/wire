@@ -283,6 +283,7 @@ var normalTestCases = []normalTestCase{
 				Binary{Subtype: BinaryUser, B: []byte{0x42}},
 				Binary{Subtype: BinaryGeneric, B: []byte{}},
 			),
+			"undefined", MustArray(Undefined),
 			"objectID", MustArray(ObjectID{0x42}, ObjectID{}),
 			"bool", MustArray(true, false),
 			"datetime", MustArray(
@@ -326,6 +327,9 @@ var normalTestCases = []normalTestCase{
 		  "binary": [
 		    Binary(user:Qg==),
 		    Binary(generic:),
+		  ],
+		  "undefined": [
+		    undefined,
 		  ],
 		  "objectID": [
 		    ObjectID(420000000000000000000000),
@@ -412,6 +416,11 @@ var normalTestCases = []normalTestCase{
 		        "base64": "",
 		        "subType": "00"
 		      }
+		    }
+		  ],
+		  "undefined": [
+		    {
+		      "$undefined": true
 		    }
 		  ],
 		  "objectID": [
@@ -591,6 +600,21 @@ var normalTestCases = []normalTestCase{
 		mi: `
 		{
 		  "f": Binary(user:dg==),
+		}`,
+	},
+	{
+		name: "undefinedDoc",
+		raw: RawDocument{
+			0x08, 0x00, 0x00, 0x00,
+			0x06, 0x66, 0x00,
+			0x00,
+		},
+		doc: MustDocument(
+			"f", Undefined,
+		),
+		mi: `
+		{
+		  "f": undefined,
 		}`,
 	},
 	{

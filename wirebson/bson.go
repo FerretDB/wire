@@ -26,6 +26,7 @@
 //	Double              float64
 //	String              string
 //	Binary data         Binary
+//	Undefined           UndefinedType
 //	ObjectId            ObjectID
 //	Boolean             bool
 //	Date                time.Time
@@ -64,7 +65,7 @@ type CompositeType interface {
 //
 // CString is not included as it is not a real BSON type.
 type ScalarType interface {
-	float64 | string | Binary | ObjectID | bool | time.Time | NullType | Regex | int32 | Timestamp | int64 | Decimal128
+	float64 | string | Binary | UndefinedType | ObjectID | bool | time.Time | NullType | Regex | int32 | Timestamp | int64 | Decimal128
 }
 
 // AnyDocument represents a BSON document type (both [*Document] and [RawDocument]).
@@ -97,6 +98,7 @@ func validBSONType(v any) error {
 	case float64:
 	case string:
 	case Binary:
+	case UndefinedType:
 	case ObjectID:
 	case bool:
 	case time.Time:
@@ -160,6 +162,8 @@ func fromDriver(v any) (any, error) {
 			Subtype: BinarySubtype(v.Subtype),
 			B:       v.Data,
 		}, nil
+	case bson.Undefined:
+		return Undefined, nil
 	case bson.ObjectID:
 		return ObjectID(v), nil
 	case bool:
@@ -234,6 +238,8 @@ func toDriver(v any) (any, error) {
 			Subtype: byte(v.Subtype),
 			Data:    v.B,
 		}, nil
+	case UndefinedType:
+		return bson.Undefined{}, nil
 	case ObjectID:
 		return bson.ObjectID(v), nil
 	case bool:
@@ -241,7 +247,7 @@ func toDriver(v any) (any, error) {
 	case time.Time:
 		return bson.NewDateTimeFromTime(v), nil
 	case NullType:
-		return nil, nil
+		return bson.Null{}, nil
 	case Regex:
 		return bson.Regex{
 			Pattern: v.Pattern,

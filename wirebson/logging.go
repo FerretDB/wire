@@ -110,6 +110,9 @@ func slogValue(v any, depth int) slog.Value {
 	case Binary:
 		return slog.StringValue(fmt.Sprintf("%#v", v))
 
+	case UndefinedType:
+		return slog.Value{}
+
 	case ObjectID:
 		return slog.StringValue("ObjectID(" + hex.EncodeToString(v[:]) + ")")
 
@@ -300,6 +303,9 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 		b.WriteByte(':')
 		b.WriteString(base64.StdEncoding.EncodeToString(v.B))
 		b.WriteByte(')')
+
+	case UndefinedType:
+		b.WriteString("undefined")
 
 	case ObjectID:
 		b.WriteString("ObjectID(")
