@@ -33,7 +33,11 @@ issues:
   max-same-issues: 0
 
   exclude-use-default: false
-  exclude-rules: []
+  exclude-rules:
+    # that's a valid usage of bson.D / bson.E
+    - linters: [govet]
+      text: "composites: go.mongodb.org/mongo-driver/v2/bson.E struct literal uses unkeyed fields"
+
 
 run:
   timeout: 3m

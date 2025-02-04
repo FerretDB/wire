@@ -24,6 +24,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
+
+	"github.com/FerretDB/wire"
+	"github.com/FerretDB/wire/wirebson"
 )
 
 // logWriter provides [io.Writer] for [testing.TB].
@@ -56,13 +62,40 @@ func logger(tb testing.TB) *slog.Logger {
 	return slog.New(h)
 }
 
-func TestConn(t *testing.T) {
+// setup waits for FerretDB or MongoDB to start and returns the URI.
+func setup(t testing.TB) string {
+	t.Helper()
+
 	if testing.Short() {
 		t.Skip("skipping integration tests for -short")
 	}
 
 	uri := os.Getenv("MONGODB_URI")
 	require.NotEmpty(t, uri, "MONGODB_URI environment variable must be set; set it or run tests with `go test -short`")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	conn := ConnectPing(ctx, uri, logger(t))
+	require.NotNil(t, conn)
+
+	err := conn.Close()
+	require.NoError(t, err)
+
+	return uri
+}
+
+// databaseName returns the database name for the test.
+func databaseName(t testing.TB) string {
+	t.Helper()
+
+	return strings.ReplaceAll(t.Name(), "/", "_")
+}
+
+func TestConn(t *testing.T) {
+	t.Parallel()
+
+	uri := setup(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	t.Cleanup(cancel)
@@ -89,5 +122,144 @@ func TestConn(t *testing.T) {
 
 			assert.NoError(t, conn.Login(ctx, "username", "password", "admin"))
 		})
+	})
+}
+
+func TestTypes(t *testing.T) {
+	t.Parallel()
+
+	uri := setup(t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	t.Cleanup(cancel)
+
+	var conn *Conn
+	var mConn *mongo.Client
+
+	// avoid shadowing err in subtests
+	{
+		var err error
+
+		conn = ConnectPing(ctx, uri, logger(t))
+		require.NotNil(t, conn)
+
+		err = conn.Login(ctx, "username", "password", "admin")
+		require.NoError(t, err)
+
+		opts := options.Client().ApplyURI(uri).SetAuth(options.Credential{Username: "username", Password: "password"})
+		mConn, err = mongo.Connect(opts)
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			require.NoError(t, conn.Close())
+			require.NoError(t, mConn.Disconnect(ctx))
+		})
+	}
+
+	t.Run("Decimal128", func(t *testing.T) {
+		d := wirebson.Decimal128{H: 13, L: 42}
+		md := bson.NewDecimal128(13, 42)
+
+		db := mConn.Database(databaseName(t))
+		require.NoError(t, db.Drop(ctx))
+
+		_, body, err := conn.Request(ctx, wire.MustOpMsg(
+			"insert", "test",
+			"documents", wirebson.MustArray(wirebson.MustDocument("_id", "d", "v", d)),
+			"$db", db.Name(),
+		))
+		require.NoError(t, err)
+
+		doc, err := body.(*wire.OpMsg).DecodeDeepDocument()
+		require.NoError(t, err)
+		require.Equal(t, 1.0, doc.Get("ok"))
+
+		_, err = db.Collection("test").InsertOne(ctx, bson.D{{"_id", "md"}, {"v", md}})
+		require.NoError(t, err)
+
+		_, body, err = conn.Request(ctx, wire.MustOpMsg(
+			"find", "test",
+			"sort", wirebson.MustDocument("_id", int32(1)),
+			"$db", db.Name(),
+		))
+		require.NoError(t, err)
+
+		doc, err = body.(*wire.OpMsg).DecodeDeepDocument()
+		require.NoError(t, err)
+		require.Equal(t, 1.0, doc.Get("ok"))
+
+		expected := wirebson.MustArray(
+			wirebson.MustDocument("_id", "d", "v", d),
+			wirebson.MustDocument("_id", "md", "v", d),
+		)
+		assert.Equal(t, expected, doc.Get("cursor").(*wirebson.Document).Get("firstBatch"))
+
+		c, err := db.Collection("test").Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{"_id", 1}}))
+		require.NoError(t, err)
+
+		var res bson.A
+		err = c.All(ctx, &res)
+		require.NoError(t, err)
+
+		mExpected := bson.A{
+			bson.D{{"_id", "d"}, {"v", md}},
+			bson.D{{"_id", "md"}, {"v", md}},
+		}
+		assert.Equal(t, mExpected, res)
+	})
+
+	t.Run("Timestamp", func(t *testing.T) {
+		ts := wirebson.NewTimestamp(100, 500)
+		mts := bson.Timestamp{T: 100, I: 500}
+
+		require.EqualValues(t, 100, ts.T())
+		require.EqualValues(t, 500, ts.I())
+
+		db := mConn.Database(databaseName(t))
+		require.NoError(t, db.Drop(ctx))
+
+		_, body, err := conn.Request(ctx, wire.MustOpMsg(
+			"insert", "test",
+			"documents", wirebson.MustArray(wirebson.MustDocument("_id", "ts", "v", ts)),
+			"$db", db.Name(),
+		))
+		require.NoError(t, err)
+
+		doc, err := body.(*wire.OpMsg).DecodeDeepDocument()
+		require.NoError(t, err)
+		require.Equal(t, 1.0, doc.Get("ok"))
+
+		_, err = db.Collection("test").InsertOne(ctx, bson.D{{"_id", "mts"}, {"v", mts}})
+		require.NoError(t, err)
+
+		_, body, err = conn.Request(ctx, wire.MustOpMsg(
+			"find", "test",
+			"sort", wirebson.MustDocument("_id", int32(-1)),
+			"$db", db.Name(),
+		))
+		require.NoError(t, err)
+
+		doc, err = body.(*wire.OpMsg).DecodeDeepDocument()
+		require.NoError(t, err)
+		require.Equal(t, 1.0, doc.Get("ok"))
+
+		expected := wirebson.MustArray(
+			wirebson.MustDocument("_id", "ts", "v", ts),
+			wirebson.MustDocument("_id", "mts", "v", ts),
+		)
+		assert.Equal(t, expected, doc.Get("cursor").(*wirebson.Document).Get("firstBatch"))
+
+		c, err := db.Collection("test").Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{"_id", -1}}))
+		require.NoError(t, err)
+
+		var res bson.A
+		err = c.All(ctx, &res)
+		require.NoError(t, err)
+
+		mExpected := bson.A{
+			bson.D{{"_id", "ts"}, {"v", mts}},
+			bson.D{{"_id", "mts"}, {"v", mts}},
+		}
+		assert.Equal(t, mExpected, res)
 	})
 }
