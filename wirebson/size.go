@@ -71,6 +71,8 @@ func sizeScalar(v any) int {
 		return sizeString(v)
 	case Binary:
 		return sizeBinary(v)
+	case UndefinedType:
+		return 0
 	case ObjectID:
 		return sizeObjectID
 	case bool:
