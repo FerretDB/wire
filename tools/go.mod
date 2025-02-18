@@ -1,6 +1,5 @@
 module github.com/FerretDB/wire/tools
 
-// TODO https://github.com/golangci/golangci-lint/pull/5396
 go 1.24
 
 toolchain go1.24.0
