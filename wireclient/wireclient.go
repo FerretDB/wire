@@ -157,7 +157,7 @@ func (c *Conn) Read(ctx context.Context) (*wire.MsgHeader, wire.MsgBody, error) 
 
 	c.l.DebugContext(
 		ctx,
-		fmt.Sprintf("<<<\n%s\n", body.StringIndent()),
+		fmt.Sprintf("<<<\n%s", body.StringIndent()),
 		slog.Int("length", int(header.MessageLength)),
 		slog.Int("id", int(header.RequestID)),
 		slog.Int("response_to", int(header.ResponseTo)),
@@ -173,7 +173,7 @@ func (c *Conn) Read(ctx context.Context) (*wire.MsgHeader, wire.MsgBody, error) 
 func (c *Conn) Write(ctx context.Context, header *wire.MsgHeader, body wire.MsgBody) error {
 	c.l.DebugContext(
 		ctx,
-		fmt.Sprintf(">>>\n%s\n", body.StringIndent()),
+		fmt.Sprintf(">>>\n%s", body.StringIndent()),
 		slog.Int("length", int(header.MessageLength)),
 		slog.Int("id", int(header.RequestID)),
 		slog.Int("response_to", int(header.ResponseTo)),
