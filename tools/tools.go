@@ -14,26 +14,4 @@
 
 package tools
 
-import (
-	_ "github.com/go-task/task/v3/cmd/task"
-	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	_ "github.com/quasilyte/go-consistent"
-	_ "golang.org/x/perf/cmd/benchstat"
-	_ "golang.org/x/pkgsite/cmd/pkgsite"
-	_ "golang.org/x/tools/cmd/deadcode"
-	_ "golang.org/x/tools/cmd/goimports"
-	_ "golang.org/x/tools/cmd/stringer"
-	_ "golang.org/x/vuln/cmd/govulncheck"
-	_ "mvdan.cc/gofumpt"
-)
-
-//go:generate go build -v -o ../bin/ github.com/go-task/task/v3/cmd/task
-//go:generate go build -v -o ../bin/ github.com/golangci/golangci-lint/cmd/golangci-lint
-//go:generate go build -v -o ../bin/ github.com/quasilyte/go-consistent
-//go:generate go build -v -o ../bin/ golang.org/x/perf/cmd/benchstat
-//go:generate go build -v -o ../bin/ golang.org/x/pkgsite/cmd/pkgsite
-//go:generate go build -v -o ../bin/ golang.org/x/tools/cmd/deadcode
-//go:generate go build -v -o ../bin/ golang.org/x/tools/cmd/goimports
-//go:generate go build -v -o ../bin/ golang.org/x/tools/cmd/stringer
-//go:generate go build -v -o ../bin/ golang.org/x/vuln/cmd/govulncheck
-//go:generate go build -v -o ../bin/ mvdan.cc/gofumpt
+//go:generate go build -v -o ../bin/ tool

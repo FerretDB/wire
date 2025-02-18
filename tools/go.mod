@@ -1,19 +1,20 @@
 module github.com/FerretDB/wire/tools
 
-// TODO https://github.com/golangci/golangci-lint/pull/5396
-go 1.23.0
+go 1.24
 
-toolchain go1.23.6
+toolchain go1.24.0
 
-require (
-	github.com/go-task/task/v3 v3.41.0
-	github.com/golangci/golangci-lint v1.64.2
-	github.com/quasilyte/go-consistent v0.6.1
-	golang.org/x/perf v0.0.0-20250210164336-884df5810d28
-	golang.org/x/pkgsite v0.0.0-20250210190023-b866f8692660
-	golang.org/x/tools v0.30.0
-	golang.org/x/vuln v1.1.4
-	mvdan.cc/gofumpt v0.7.0
+tool (
+	github.com/go-task/task/v3/cmd/task
+	github.com/golangci/golangci-lint/cmd/golangci-lint
+	github.com/quasilyte/go-consistent
+	golang.org/x/perf/cmd/benchstat
+	golang.org/x/pkgsite/cmd/pkgsite
+	golang.org/x/tools/cmd/deadcode
+	golang.org/x/tools/cmd/goimports
+	golang.org/x/tools/cmd/stringer
+	golang.org/x/vuln/cmd/govulncheck
+	mvdan.cc/gofumpt
 )
 
 require (
@@ -75,11 +76,12 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/ghostiam/protogetter v0.3.9 // indirect
-	github.com/go-critic/go-critic v0.11.5 // indirect
+	github.com/go-critic/go-critic v0.12.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.6.1 // indirect
 	github.com/go-git/go-git/v5 v5.13.1 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
+	github.com/go-task/task/v3 v3.41.0 // indirect
 	github.com/go-task/template v0.1.0 // indirect
 	github.com/go-toolsmith/astcast v1.1.0 // indirect
 	github.com/go-toolsmith/astcopy v1.1.0 // indirect
@@ -99,6 +101,7 @@ require (
 	github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a // indirect
 	github.com/golangci/go-printf-func-name v0.1.0 // indirect
 	github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d // indirect
+	github.com/golangci/golangci-lint v1.64.5 // indirect
 	github.com/golangci/misspell v0.6.0 // indirect
 	github.com/golangci/plugin-module-register v0.1.1 // indirect
 	github.com/golangci/revgrep v0.8.0 // indirect
@@ -109,7 +112,7 @@ require (
 	github.com/gordonklaus/ineffassign v0.1.0 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
 	github.com/gostaticanalysis/comment v1.4.2 // indirect
-	github.com/gostaticanalysis/forcetypeassert v0.1.0 // indirect
+	github.com/gostaticanalysis/forcetypeassert v0.2.0 // indirect
 	github.com/gostaticanalysis/nilerr v0.1.1 // indirect
 	github.com/hashicorp/go-immutable-radix/v2 v2.1.0 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
@@ -148,7 +151,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mattn/go-zglob v0.0.6 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
-	github.com/mgechev/revive v1.6.0 // indirect
+	github.com/mgechev/revive v1.6.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -157,7 +160,7 @@ require (
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nishanths/exhaustive v0.12.0 // indirect
 	github.com/nishanths/predeclared v0.2.2 // indirect
-	github.com/nunnatsa/ginkgolinter v0.18.4 // indirect
+	github.com/nunnatsa/ginkgolinter v0.19.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
@@ -168,6 +171,7 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
+	github.com/quasilyte/go-consistent v0.6.1 // indirect
 	github.com/quasilyte/go-ruleguard v0.4.3-0.20240823090925-0fe6f58b47b1 // indirect
 	github.com/quasilyte/go-ruleguard/dsl v0.3.22 // indirect
 	github.com/quasilyte/gogrep v0.5.0 // indirect
@@ -184,7 +188,7 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1 // indirect
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
 	github.com/sashamelentyev/usestdlibvars v1.28.0 // indirect
-	github.com/securego/gosec/v2 v2.22.0 // indirect
+	github.com/securego/gosec/v2 v2.22.1 // indirect
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sivchari/containedctx v1.0.3 // indirect
@@ -203,7 +207,7 @@ require (
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
-	github.com/tdakkota/asciicheck v0.3.0 // indirect
+	github.com/tdakkota/asciicheck v0.4.0 // indirect
 	github.com/tetafro/godot v1.4.20 // indirect
 	github.com/timakin/bodyclose v0.0.0-20241017074812-ed6a65f985e3 // indirect
 	github.com/timonwong/loggercheck v0.10.1 // indirect
@@ -227,20 +231,25 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.33.0 // indirect
-	golang.org/x/exp/typeparams v0.0.0-20241108190413-2d47ceb2692f // indirect
+	golang.org/x/exp/typeparams v0.0.0-20250210185358-939b2ce775ac // indirect
 	golang.org/x/mod v0.23.0 // indirect
 	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/perf v0.0.0-20250214215153-c95ad7d5b636 // indirect
+	golang.org/x/pkgsite v0.0.0-20250214205047-dd488e5da97a // indirect
 	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/telemetry v0.0.0-20240522233618-39ace7a40ae7 // indirect
 	golang.org/x/term v0.29.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
-	google.golang.org/protobuf v1.36.1 // indirect
+	golang.org/x/tools v0.30.0 // indirect
+	golang.org/x/vuln v1.1.4 // indirect
+	google.golang.org/protobuf v1.36.4 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/tools v0.6.0 // indirect
+	mvdan.cc/gofumpt v0.7.0 // indirect
 	mvdan.cc/sh/v3 v3.10.0 // indirect
 	mvdan.cc/unparam v0.0.0-20240528143540-8a5130ca722f // indirect
 	rsc.io/markdown v0.0.0-20231214224604-88bb533a6020 // indirect
