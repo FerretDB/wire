@@ -38,8 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # no ferretdb1 due to lack of decimal128 support
-        dockerfile: [mongo, ferretdb2]
+        dockerfile: [mongo, ferretdb]
 
     steps:
       # TODO https://github.com/FerretDB/github-actions/issues/211
