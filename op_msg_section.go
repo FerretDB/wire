@@ -19,7 +19,7 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// opMsgSection is one or more sections contained in an OpMsg.
+// opMsgSection represents a section contained in an OpMsg.
 type opMsgSection struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: Kind, Identifier, documents.
