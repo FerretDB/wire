@@ -769,6 +769,16 @@ var normalTestCases = []normalTestCase{
 		}`,
 	},
 	{
+		name: "emptyDoc",
+		raw: RawDocument{
+			0x05, 0x00, 0x00, 0x00, // document length
+			0x00, // end of document
+		},
+		doc: MustDocument(),
+		mi:  `{}`,
+		j:   `{}`,
+	},
+	{
 		name: "smallDoc",
 		raw: RawDocument{
 			0x0f, 0x00, 0x00, 0x00, // document length
@@ -782,6 +792,10 @@ var normalTestCases = []normalTestCase{
 		mi: `
 		{
 		  "foo": {},
+		}`,
+		j: `
+		{
+		  "foo": {}
 		}`,
 	},
 	{
@@ -1057,6 +1071,17 @@ func TestDecode(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestJSONNull(t *testing.T) {
+	var doc *Document
+	b, err := json.Marshal(doc)
+	require.NoError(t, err)
+	require.Equal(t, "null", string(b))
+
+	err = json.Unmarshal(b, &doc)
+	require.NoError(t, err)
+	assert.Nil(t, doc)
 }
 
 var drain any
