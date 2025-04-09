@@ -261,6 +261,7 @@ func (doc *Document) Encode() (RawDocument, error) {
 
 // MarshalJSON implements [json.Marshaler].
 func (doc *Document) MarshalJSON() ([]byte, error) {
+	// encoding/json does not call this method on nil
 	must.NotBeZero(doc)
 
 	d, err := toDriver(doc)
@@ -286,6 +287,7 @@ func (doc *Document) Decode() (*Document, error) {
 
 // UnmarshalJSON implements [json.Unmarshaler].
 func (doc *Document) UnmarshalJSON(b []byte) error {
+	// encoding/json does not call this method on nil
 	must.NotBeZero(doc)
 
 	var d bson.D
