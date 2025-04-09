@@ -19,8 +19,8 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// opMsgSection represents a section contained in an OpMsg.
-type opMsgSection struct {
+// OpMsgSection represents a section contained in an OpMsg.
+type OpMsgSection struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: Kind, Identifier, documents.
 
@@ -30,7 +30,7 @@ type opMsgSection struct {
 }
 
 // checkSections checks given sections.
-func checkSections(sections []opMsgSection) error {
+func checkSections(sections []OpMsgSection) error {
 	if len(sections) == 0 {
 		return lazyerrors.New("no sections")
 	}

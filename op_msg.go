@@ -33,7 +33,7 @@ type OpMsg struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: flags, sections, optional checksum.
 
-	sections []opMsgSection
+	sections []OpMsgSection
 	Flags    OpMsgFlags
 	checksum uint32
 }
@@ -45,7 +45,7 @@ func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	sections := []opMsgSection{{documents: []wirebson.RawDocument{raw}}}
+	sections := []OpMsgSection{{documents: []wirebson.RawDocument{raw}}}
 	if err = checkSections(sections); err != nil {
 		return nil, lazyerrors.Error(err)
 	}
@@ -177,7 +177,7 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 	offset := 4
 
 	for {
-		var section opMsgSection
+		var section OpMsgSection
 		section.kind = b[offset]
 		offset++
 

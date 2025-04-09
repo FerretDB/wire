@@ -30,7 +30,10 @@ type RawDocument []byte
 //
 // Receiver must not be nil.
 func (raw RawDocument) Encode() (RawDocument, error) {
-	must.BeTrue(raw != nil)
+	if raw == nil {
+		panic("raw is nil")
+	}
+
 	return raw, nil
 }
 
@@ -40,7 +43,9 @@ func (raw RawDocument) Encode() (RawDocument, error) {
 // nested documents and arrays are converted to RawDocument and RawArray respectively,
 // using raw's subslices without copying.
 func (raw RawDocument) Decode() (*Document, error) {
-	must.BeTrue(raw != nil)
+	if raw == nil {
+		panic("raw is nil")
+	}
 
 	res, err := raw.decode(decodeShallow)
 	if err != nil {
@@ -54,7 +59,9 @@ func (raw RawDocument) Decode() (*Document, error) {
 //
 // All nested documents and arrays are decoded recursively.
 func (raw RawDocument) DecodeDeep() (*Document, error) {
-	must.BeTrue(raw != nil)
+	if raw == nil {
+		panic("raw is nil")
+	}
 
 	res, err := raw.decode(decodeDeep)
 	if err != nil {

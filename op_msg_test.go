@@ -36,7 +36,7 @@ var msgTestCases = []testCase{
 			OpCode:        OpCodeMsg,
 		},
 		msgBody: &OpMsg{
-			sections: []opMsgSection{{
+			sections: []OpMsgSection{{
 				documents: []wirebson.RawDocument{makeRawDocument(
 					"buildInfo", int32(1),
 					"lsid", wirebson.MustDocument(
@@ -82,7 +82,7 @@ var msgTestCases = []testCase{
 			OpCode:        OpCodeMsg,
 		},
 		msgBody: &OpMsg{
-			sections: []opMsgSection{{
+			sections: []OpMsgSection{{
 				documents: []wirebson.RawDocument{makeRawDocument(
 					"version", "5.0.0",
 					"gitVersion", "1184f004a99660de6f5e745573419bda8a28c0e9",
@@ -187,7 +187,7 @@ var msgTestCases = []testCase{
 			OpCode:        OpCodeMsg,
 		},
 		msgBody: &OpMsg{
-			sections: []opMsgSection{
+			sections: []OpMsgSection{
 				{
 					documents: []wirebson.RawDocument{makeRawDocument(
 						"insert", "actor",
@@ -300,7 +300,7 @@ var msgTestCases = []testCase{
 			OpCode:        OpCodeMsg,
 		},
 		msgBody: &OpMsg{
-			sections: []opMsgSection{{
+			sections: []OpMsgSection{{
 				documents: []wirebson.RawDocument{makeRawDocument(
 					"insert", "values",
 					"documents", wirebson.MustArray(
@@ -370,7 +370,7 @@ var msgTestCases = []testCase{
 			OpCode:        OpCodeMsg,
 		},
 		msgBody: &OpMsg{
-			sections: []opMsgSection{
+			sections: []OpMsgSection{
 				{
 					documents: []wirebson.RawDocument{makeRawDocument(
 						"insert", "TestInsertSimple",
@@ -455,7 +455,7 @@ var msgTestCases = []testCase{
 		},
 		msgBody: &OpMsg{
 			Flags: OpMsgFlags(OpMsgChecksumPresent),
-			sections: []opMsgSection{
+			sections: []OpMsgSection{
 				{
 					kind:       1,
 					identifier: "documents",
@@ -556,7 +556,7 @@ var msgTestCases = []testCase{
 		},
 		msgBody: &OpMsg{
 			Flags: OpMsgFlags(OpMsgChecksumPresent),
-			sections: []opMsgSection{
+			sections: []OpMsgSection{
 				{
 					kind:       1,
 					identifier: "updates",
@@ -658,7 +658,7 @@ var msgTestCases = []testCase{
 		},
 		msgBody: &OpMsg{
 			Flags: OpMsgFlags(OpMsgChecksumPresent),
-			sections: []opMsgSection{
+			sections: []OpMsgSection{
 				{
 					kind:       1,
 					identifier: "documents",
