@@ -182,6 +182,7 @@ func (arr *Array) Encode() (RawArray, error) {
 
 // MarshalJSON implements [json.Marshaler].
 func (arr *Array) MarshalJSON() ([]byte, error) {
+	// encoding/json does not call this method on nil
 	must.NotBeZero(arr)
 
 	a, err := toDriver(arr)
@@ -207,6 +208,7 @@ func (arr *Array) Decode() (*Array, error) {
 
 // UnmarshalJSON implements [json.Unmarshaler].
 func (arr *Array) UnmarshalJSON(b []byte) error {
+	// encoding/json does not call this method on nil
 	must.NotBeZero(arr)
 
 	var a bson.A
