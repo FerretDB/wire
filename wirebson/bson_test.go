@@ -1340,6 +1340,10 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 	})
 
 	t.Run("MarshalUnmarshal", func(t *testing.T) {
+		// TODO https://github.com/FerretDB/wire/issues/49
+		// See https://jira.mongodb.org/browse/GODRIVER-3531
+		t.Skip("https://github.com/FerretDB/wire/issues/49")
+
 		doc, err := rawDoc.DecodeDeep()
 		if err != nil {
 			return
@@ -1351,7 +1355,7 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 
 		var doc2 *Document
 		err = json.Unmarshal(b, &doc2)
-		require.NoError(t, err)
+		require.NoError(t, err, "%s\n%s", doc.LogMessage(), b)
 	})
 }
 
