@@ -841,6 +841,19 @@ var normalTestCases = []normalTestCase{
 		  "": true
 		}`,
 	},
+	{
+		name: "RegexEscape", // https://jira.mongodb.org/browse/GODRIVER-3476
+		raw: RawDocument{
+			0x0f, 0x00, 0x00, 0x00, // document length
+			0x0b, 0x22, 0x60, 0x00, 0x22, 0x60, 0x00, 0x22, 0x60, 0x00, // weird regex
+			0x00, // end of document
+		},
+		doc: MustDocument(
+			`"`+"`", Regex{Pattern: `"` + "`", Options: `"` + "`"},
+		),
+		mi: "{\n  \"\\\"`\": /\"`/\"`,\n}",
+		j:  "{\n  \"\\\"`\": {\n    \"$regularExpression\": {\n      \"pattern\": \"\\\"`\",\n      \"options\": \"\\\"`\"\n    }\n  }\n}",
+	},
 }
 
 // decodeTestCases represents test cases for unsuccessful decoding.
@@ -981,7 +994,12 @@ func TestNormal(t *testing.T) {
 				assert.NotContains(t, ls, "called too many times")
 
 				assert.NotEmpty(t, doc.LogMessage())
-				assert.Equal(t, strings.ReplaceAll(testutil.Unindent(tc.mi), `"`, "`"), doc.LogMessageIndent())
+				require.NotEmpty(t, tc.mi)
+				mi := testutil.Unindent(tc.mi)
+				if !strings.Contains(tc.mi, "`") {
+					mi = strings.ReplaceAll(mi, `"`, "`")
+				}
+				assert.Equal(t, mi, doc.LogMessageIndent())
 
 				raw, err := tc.doc.Encode()
 				require.NoError(t, err)
@@ -1348,7 +1366,7 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 
 	t.Run("MarshalUnmarshal", func(t *testing.T) {
 		// TODO https://github.com/FerretDB/wire/issues/49
-		// See https://jira.mongodb.org/browse/GODRIVER-3476
+		// See https://jira.mongodb.org/browse/GODRIVER-3531
 		t.Skip("https://github.com/FerretDB/wire/issues/49")
 
 		doc, err := rawDoc.DecodeDeep()
@@ -1362,7 +1380,7 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 
 		var doc2 *Document
 		err = json.Unmarshal(b, &doc2)
-		require.NoError(t, err)
+		require.NoError(t, err, "%s\n%s", doc.LogMessage(), b)
 	})
 }
 
