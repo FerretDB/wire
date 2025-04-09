@@ -24,28 +24,37 @@ type BinarySubtype byte
 
 const (
 	// BinaryGeneric represents a BSON Binary generic subtype.
-	BinaryGeneric = BinarySubtype(0x00) // generic
+	BinaryGeneric = BinarySubtype(0) // generic
 
 	// BinaryFunction represents a BSON Binary function subtype.
-	BinaryFunction = BinarySubtype(0x01) // function
+	BinaryFunction = BinarySubtype(1) // function
 
 	// BinaryGenericOld represents a BSON Binary generic-old subtype.
-	BinaryGenericOld = BinarySubtype(0x02) // generic-old
+	BinaryGenericOld = BinarySubtype(2) // generic-old
 
 	// BinaryUUIDOld represents a BSON Binary UUID old subtype.
-	BinaryUUIDOld = BinarySubtype(0x03) // uuid-old
+	BinaryUUIDOld = BinarySubtype(3) // uuid-old
 
 	// BinaryUUID represents a BSON Binary UUID subtype.
-	BinaryUUID = BinarySubtype(0x04) // uuid
+	BinaryUUID = BinarySubtype(4) // uuid
 
 	// BinaryMD5 represents a BSON Binary MD5 subtype.
-	BinaryMD5 = BinarySubtype(0x05) // md5
+	BinaryMD5 = BinarySubtype(5) // md5
 
 	// BinaryEncrypted represents a BSON Binary encrypted subtype.
-	BinaryEncrypted = BinarySubtype(0x06) // encrypted
+	BinaryEncrypted = BinarySubtype(6) // encrypted
+
+	// BinaryCompressed represents a BSON Binary compressed column subtype.
+	BinaryCompressed = BinarySubtype(7) // compressed
+
+	// BinarySensitive represents a BSON Binary sensitive subtype.
+	BinarySensitive = BinarySubtype(8) // sensitive
+
+	// BinaryVector represents a BSON Binary vector subtype.
+	BinaryVector = BinarySubtype(9) // vector
 
 	// BinaryUser represents a BSON Binary user-defined subtype.
-	BinaryUser = BinarySubtype(0x80) // user
+	BinaryUser = BinarySubtype(128) // user
 )
 
 // Binary represents BSON scalar type binary.

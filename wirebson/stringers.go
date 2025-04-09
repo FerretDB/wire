@@ -84,21 +84,24 @@ func _() {
 	_ = x[BinaryUUID-4]
 	_ = x[BinaryMD5-5]
 	_ = x[BinaryEncrypted-6]
+	_ = x[BinaryCompressed-7]
+	_ = x[BinarySensitive-8]
+	_ = x[BinaryVector-9]
 	_ = x[BinaryUser-128]
 }
 
 const (
-	_BinarySubtype_name_0 = "genericfunctiongeneric-olduuid-olduuidmd5encrypted"
+	_BinarySubtype_name_0 = "genericfunctiongeneric-olduuid-olduuidmd5encryptedcompressedsensitivevector"
 	_BinarySubtype_name_1 = "user"
 )
 
 var (
-	_BinarySubtype_index_0 = [...]uint8{0, 7, 15, 26, 34, 38, 41, 50}
+	_BinarySubtype_index_0 = [...]uint8{0, 7, 15, 26, 34, 38, 41, 50, 60, 69, 75}
 )
 
 func (i BinarySubtype) String() string {
 	switch {
-	case i <= 6:
+	case i <= 9:
 		return _BinarySubtype_name_0[_BinarySubtype_index_0[i]:_BinarySubtype_index_0[i+1]]
 	case i == 128:
 		return _BinarySubtype_name_1
