@@ -69,74 +69,6 @@ func MustOpMsg(pairs ...any) *OpMsg {
 	return msg
 }
 
-// RawSection0 returns the value of first section with kind 0.
-//
-// Most callers should use [OpMsg.RawDocument] instead.
-func (msg *OpMsg) RawSection0() wirebson.RawDocument {
-	for _, s := range msg.sections {
-		if s.Kind == 0 {
-			return s.documents[0]
-		}
-	}
-
-	return nil
-}
-
-// RawSections returns the value of section with kind 0 and the value of all sections with kind 1.
-//
-// Most callers should use [OpMsg.RawDocument] instead.
-func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
-	var spec wirebson.RawDocument
-	var seq []byte
-
-	for _, s := range msg.sections {
-		switch s.Kind {
-		case 0:
-			spec = s.documents[0]
-
-		case 1:
-			for _, d := range s.documents {
-				seq = append(seq, d...)
-			}
-		}
-	}
-
-	return spec, seq
-}
-
-// RawDocument returns the value of msg as a [wirebson.RawDocument].
-//
-// The error is returned if msg contains anything other than a single section of kind 0
-// with a single document.
-func (msg *OpMsg) RawDocument() (wirebson.RawDocument, error) {
-	if err := checkSections(msg.sections); err != nil {
-		return nil, err
-	}
-
-	s := msg.sections[0]
-	if s.Kind != 0 || s.Identifier != "" {
-		return nil, lazyerrors.Errorf(`expected section 0/"", got %d/%q`, s.Kind, s.Identifier)
-	}
-
-	return s.documents[0], nil
-}
-
-// DecodeDeepDocument returns the value of msg as deeply-decoded [*wirebson.Document].
-//
-// The error is returned if msg contains anything other than a single section of kind 0
-// with a single document.
-//
-// Most callers do not need deeply-decoded document and should use more effective combination of
-// [OpMsg.RawDocument] and [wirebson.RawDocument.Decode] instead.
-func (msg *OpMsg) DecodeDeepDocument() (*wirebson.Document, error) {
-	raw, err := msg.RawDocument()
-	if err != nil {
-		return nil, err
-	}
-
-	return raw.DecodeDeep()
-}
-
 func (msg *OpMsg) msgbody() {}
 
 // check implements [MsgBody].
@@ -317,6 +249,74 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 	}
 
 	return b, nil
+}
+
+// RawSection0 returns the value of first section with kind 0.
+//
+// Most callers should use [OpMsg.RawDocument] instead.
+func (msg *OpMsg) RawSection0() wirebson.RawDocument {
+	for _, s := range msg.sections {
+		if s.Kind == 0 {
+			return s.documents[0]
+		}
+	}
+
+	return nil
+}
+
+// RawSections returns the value of section with kind 0 and the value of all sections with kind 1.
+//
+// Most callers should use [OpMsg.RawDocument] instead.
+func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
+	var spec wirebson.RawDocument
+	var seq []byte
+
+	for _, s := range msg.sections {
+		switch s.Kind {
+		case 0:
+			spec = s.documents[0]
+
+		case 1:
+			for _, d := range s.documents {
+				seq = append(seq, d...)
+			}
+		}
+	}
+
+	return spec, seq
+}
+
+// RawDocument returns the value of msg as a [wirebson.RawDocument].
+//
+// The error is returned if msg contains anything other than a single section of kind 0
+// with a single document.
+func (msg *OpMsg) RawDocument() (wirebson.RawDocument, error) {
+	if err := checkSections(msg.sections); err != nil {
+		return nil, err
+	}
+
+	s := msg.sections[0]
+	if s.Kind != 0 || s.Identifier != "" {
+		return nil, lazyerrors.Errorf(`expected section 0/"", got %d/%q`, s.Kind, s.Identifier)
+	}
+
+	return s.documents[0], nil
+}
+
+// DecodeDeepDocument returns the value of msg as deeply-decoded [*wirebson.Document].
+//
+// The error is returned if msg contains anything other than a single section of kind 0
+// with a single document.
+//
+// Most callers do not need deeply-decoded document and should use more effective combination of
+// [OpMsg.RawDocument] and [wirebson.RawDocument.Decode] instead.
+func (msg *OpMsg) DecodeDeepDocument() (*wirebson.Document, error) {
+	raw, err := msg.RawDocument()
+	if err != nil {
+		return nil, err
+	}
+
+	return raw.DecodeDeep()
 }
 
 // logMessage returns a string representation for logging.
