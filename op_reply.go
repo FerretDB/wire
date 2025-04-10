@@ -45,6 +45,17 @@ func NewOpReply(doc wirebson.AnyDocument) (*OpReply, error) {
 	return &OpReply{document: raw}, nil
 }
 
+// MustOpReply creates a new OpReply message constructed from the given pairs of field names and values.
+// It panics on error.
+func MustOpReply(pairs ...any) *OpReply {
+	reply, err := NewOpReply(wirebson.MustDocument(pairs...))
+	if err != nil {
+		panic(err)
+	}
+
+	return reply
+}
+
 func (reply *OpReply) msgbody() {}
 
 // check implements [MsgBody].
@@ -115,7 +126,8 @@ func (reply *OpReply) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Document returns reply document.
+// Document returns decoded document, or nil.
+// Only top-level fields are decoded.
 func (reply *OpReply) Document() (*wirebson.Document, error) {
 	if reply.document == nil {
 		return nil, nil
@@ -124,18 +136,23 @@ func (reply *OpReply) Document() (*wirebson.Document, error) {
 	return reply.document.Decode()
 }
 
-// RawDocument returns raw document.
-func (reply *OpReply) RawDocument() wirebson.RawDocument {
+// Document returns deeply decoded document, or nil.
+func (reply *OpReply) DocumentDeep() (*wirebson.Document, error) {
+	if reply.document == nil {
+		return nil, nil
+	}
+
+	return reply.document.DecodeDeep()
+}
+
+// DocumentRaw returns raw document (that might be nil).
+func (reply *OpReply) DocumentRaw() wirebson.RawDocument {
 	return reply.document
 }
 
-// SetDocument sets reply document.
-func (reply *OpReply) SetDocument(doc *wirebson.Document) {
-	var err error
-	reply.document, err = doc.Encode()
-	if err != nil {
-		panic(err)
-	}
+// Deprecated: use DocumentRaw instead.
+func (reply *OpReply) RawDocument() wirebson.RawDocument {
+	return reply.DocumentRaw()
 }
 
 // logMessage returns a string representation for logging.
@@ -155,7 +172,7 @@ func (reply *OpReply) logMessage(logFunc func(v any) string) string {
 	} else {
 		must.NoError(m.Add("NumberReturned", int32(1)))
 
-		doc, err := reply.document.DecodeDeep()
+		doc, err := reply.DocumentDeep()
 		if err == nil {
 			must.NoError(m.Add("Document", doc))
 		} else {

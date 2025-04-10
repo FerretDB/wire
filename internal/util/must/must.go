@@ -39,13 +39,3 @@ func NotBeZero[T comparable](v T) {
 		panic(fmt.Sprintf("v has zero value (%#v)", v))
 	}
 }
-
-// BeTrue panic if the b is not true.
-//
-// Use that function only for static initialization, test code, or statemants that
-// "can't" be false. When in doubt, don't.
-func BeTrue(b bool) {
-	if !b {
-		panic("not true")
-	}
-}

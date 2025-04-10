@@ -135,9 +135,12 @@ func testMessages(t *testing.T, testCases []testCase) {
 
 				if msg, ok := tc.msgBody.(*OpMsg); ok {
 					assert.NotPanics(t, func() {
+						_, _ = msg.Document()
+						_, _ = msg.DocumentDeep()
+						_, _ = msg.DocumentRaw()
+
 						_ = msg.RawSection0()
 						_, _ = msg.RawSections()
-						_, _ = msg.RawDocument()
 					})
 				}
 			})
@@ -219,9 +222,12 @@ func fuzzMessages(f *testing.F, testCases []testCase) {
 
 				if msg, ok := msgBody.(*OpMsg); ok {
 					assert.NotPanics(t, func() {
+						_, _ = msg.Document()
+						_, _ = msg.DocumentDeep()
+						_, _ = msg.DocumentRaw()
+
 						_ = msg.RawSection0()
 						_, _ = msg.RawSections()
-						_, _ = msg.RawDocument()
 					})
 				}
 			}

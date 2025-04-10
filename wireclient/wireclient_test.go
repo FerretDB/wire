@@ -170,7 +170,7 @@ func TestTypes(t *testing.T) {
 		))
 		require.NoError(t, err)
 
-		doc, err := body.(*wire.OpMsg).DecodeDeepDocument()
+		doc, err := body.(*wire.OpMsg).DocumentDeep()
 		require.NoError(t, err)
 		require.Equal(t, 1.0, doc.Get("ok"))
 
@@ -184,7 +184,7 @@ func TestTypes(t *testing.T) {
 		))
 		require.NoError(t, err)
 
-		doc, err = body.(*wire.OpMsg).DecodeDeepDocument()
+		doc, err = body.(*wire.OpMsg).DocumentDeep()
 		require.NoError(t, err)
 		require.Equal(t, 1.0, doc.Get("ok"))
 
@@ -225,7 +225,7 @@ func TestTypes(t *testing.T) {
 		))
 		require.NoError(t, err)
 
-		doc, err := body.(*wire.OpMsg).DecodeDeepDocument()
+		doc, err := body.(*wire.OpMsg).DocumentDeep()
 		require.NoError(t, err)
 		require.Equal(t, 1.0, doc.Get("ok"))
 
@@ -239,7 +239,7 @@ func TestTypes(t *testing.T) {
 		))
 		require.NoError(t, err)
 
-		doc, err = body.(*wire.OpMsg).DecodeDeepDocument()
+		doc, err = body.(*wire.OpMsg).DocumentDeep()
 		require.NoError(t, err)
 		require.Equal(t, 1.0, doc.Get("ok"))
 

@@ -45,6 +45,17 @@ func NewOpQuery(doc wirebson.AnyDocument) (*OpQuery, error) {
 	return &OpQuery{query: raw}, nil
 }
 
+// MustOpQuery creates a new OpQuery message constructed from the given pairs of field names and values.
+// It panics on error.
+func MustOpQuery(pairs ...any) *OpQuery {
+	query, err := NewOpQuery(wirebson.MustDocument(pairs...))
+	if err != nil {
+		panic(err)
+	}
+
+	return query
+}
+
 func (query *OpQuery) msgbody() {}
 
 // check implements [MsgBody].
@@ -143,17 +154,42 @@ func (query *OpQuery) MarshalBinary() ([]byte, error) {
 
 // Query returns decoded query document.
 // Only top-level fields are decoded.
-func (query *OpQuery) Query() *wirebson.Document {
-	if query.query == nil {
-		return nil
+func (query *OpQuery) Query() (*wirebson.Document, error) {
+	return query.query.Decode()
+}
+
+// Query returns deeply decoded query document.
+func (query *OpQuery) QueryDeep() (*wirebson.Document, error) {
+	return query.query.DecodeDeep()
+}
+
+// QueryRaw returns raw query (that might be nil).
+func (query *OpQuery) QueryRaw() wirebson.RawDocument {
+	return query.query
+}
+
+// ReturnFieldsSelector returns decoded returnFieldsSelector document, or nil.
+// Only top-level fields are decoded.
+func (query *OpQuery) ReturnFieldsSelector() (*wirebson.Document, error) {
+	if query.returnFieldsSelector == nil {
+		return nil, nil
 	}
 
-	doc, err := query.query.Decode()
-	if err != nil {
-		panic(err)
+	return query.returnFieldsSelector.Decode()
+}
+
+// ReturnFieldsSelector returns deeply decoded returnFieldsSelector document, or nil.
+func (query *OpQuery) ReturnFieldsSelectorDeep() (*wirebson.Document, error) {
+	if query.returnFieldsSelector == nil {
+		return nil, nil
 	}
 
-	return doc
+	return query.returnFieldsSelector.DecodeDeep()
+}
+
+// ReturnFieldsSelectorRaw returns raw returnFieldsSelector (that might be nil).
+func (query *OpQuery) ReturnFieldsSelectorRaw() wirebson.RawDocument {
+	return query.returnFieldsSelector
 }
 
 // logMessage returns a string representation for logging.
@@ -169,20 +205,20 @@ func (query *OpQuery) logMessage(logFunc func(v any) string) string {
 		"NumberToReturn", query.NumberToReturn,
 	)
 
-	doc, err := query.query.DecodeDeep()
+	doc, err := query.QueryDeep()
 	if err == nil {
 		must.NoError(m.Add("Query", doc))
 	} else {
 		must.NoError(m.Add("QueryError", err.Error()))
 	}
 
-	if query.returnFieldsSelector != nil {
-		doc, err = query.returnFieldsSelector.DecodeDeep()
-		if err == nil {
+	doc, err = query.ReturnFieldsSelectorDeep()
+	if err == nil {
+		if doc != nil {
 			must.NoError(m.Add("ReturnFieldsSelector", doc))
-		} else {
-			must.NoError(m.Add("ReturnFieldsSelectorError", err.Error()))
 		}
+	} else {
+		must.NoError(m.Add("ReturnFieldsSelectorError", err.Error()))
 	}
 
 	return logFunc(m)

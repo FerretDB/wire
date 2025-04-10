@@ -19,7 +19,6 @@ import (
 	"strconv"
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
-	"github.com/FerretDB/wire/internal/util/must"
 )
 
 // RawArray represents a single BSON array in the binary encoded form.
@@ -31,7 +30,10 @@ type RawArray []byte
 //
 // Receiver must not be nil.
 func (raw RawArray) Encode() (RawArray, error) {
-	must.BeTrue(raw != nil)
+	if raw == nil {
+		panic("raw is nil")
+	}
+
 	return raw, nil
 }
 
@@ -41,7 +43,9 @@ func (raw RawArray) Encode() (RawArray, error) {
 // nested documents and arrays are converted to RawDocument and RawArray respectively,
 // using raw's subslices without copying.
 func (raw RawArray) Decode() (*Array, error) {
-	must.BeTrue(raw != nil)
+	if raw == nil {
+		panic("raw is nil")
+	}
 
 	res, err := raw.decode(decodeShallow)
 	if err != nil {
@@ -57,7 +61,9 @@ func (raw RawArray) Decode() (*Array, error) {
 //
 // Receiver must not be nil.
 func (raw RawArray) DecodeDeep() (*Array, error) {
-	must.BeTrue(raw != nil)
+	if raw == nil {
+		panic("raw is nil")
+	}
 
 	res, err := raw.decode(decodeDeep)
 	if err != nil {

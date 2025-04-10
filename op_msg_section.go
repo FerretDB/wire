@@ -63,5 +63,9 @@ func checkSections(sections []opMsgSection) error {
 		}
 	}
 
+	if !kind0Found {
+		return lazyerrors.New("no kind 0 section")
+	}
+
 	return nil
 }
