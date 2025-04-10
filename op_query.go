@@ -141,7 +141,7 @@ func (query *OpQuery) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Query returns decoded query document.
+// Query returns decoded query document, or nil.
 // Only top-level fields are decoded.
 func (query *OpQuery) Query() (*wirebson.Document, error) {
 	if query.query == nil {
@@ -151,12 +151,21 @@ func (query *OpQuery) Query() (*wirebson.Document, error) {
 	return query.query.Decode()
 }
 
-// RawQuery returns raw query.
-func (query *OpQuery) RawQuery() wirebson.RawDocument {
+// Query returns deeply decoded query document, or nil.
+func (query *OpQuery) QueryDeep() (*wirebson.Document, error) {
+	if query.query == nil {
+		return nil, nil
+	}
+
+	return query.query.DecodeDeep()
+}
+
+// QueryRaw returns raw query (that might be nil).
+func (query *OpQuery) QueryRaw() wirebson.RawDocument {
 	return query.query
 }
 
-// ReturnFieldsSelector returns decoded returnFieldsSelector document.
+// ReturnFieldsSelector returns decoded returnFieldsSelector document, or nil.
 // Only top-level fields are decoded.
 func (query *OpQuery) ReturnFieldsSelector() (*wirebson.Document, error) {
 	if query.returnFieldsSelector == nil {
@@ -166,8 +175,17 @@ func (query *OpQuery) ReturnFieldsSelector() (*wirebson.Document, error) {
 	return query.returnFieldsSelector.Decode()
 }
 
-// RawReturnFieldsSelector returns raw returnFieldsSelector.
-func (query *OpQuery) RawReturnFieldsSelector() wirebson.RawDocument {
+// ReturnFieldsSelector returns deeply decoded returnFieldsSelector document, or nil.
+func (query *OpQuery) ReturnFieldsSelectorDeep() (*wirebson.Document, error) {
+	if query.returnFieldsSelector == nil {
+		return nil, nil
+	}
+
+	return query.returnFieldsSelector.DecodeDeep()
+}
+
+// ReturnFieldsSelectorRaw returns raw returnFieldsSelector (that might be nil).
+func (query *OpQuery) ReturnFieldsSelectorRaw() wirebson.RawDocument {
 	return query.returnFieldsSelector
 }
 
@@ -184,20 +202,22 @@ func (query *OpQuery) logMessage(logFunc func(v any) string) string {
 		"NumberToReturn", query.NumberToReturn,
 	)
 
-	doc, err := query.query.DecodeDeep()
+	doc, err := query.QueryDeep()
 	if err == nil {
-		must.NoError(m.Add("Query", doc))
+		if doc != nil {
+			must.NoError(m.Add("Query", doc))
+		}
 	} else {
 		must.NoError(m.Add("QueryError", err.Error()))
 	}
 
-	if query.returnFieldsSelector != nil {
-		doc, err = query.returnFieldsSelector.DecodeDeep()
-		if err == nil {
+	doc, err = query.ReturnFieldsSelectorDeep()
+	if err == nil {
+		if doc != nil {
 			must.NoError(m.Add("ReturnFieldsSelector", doc))
-		} else {
-			must.NoError(m.Add("ReturnFieldsSelectorError", err.Error()))
 		}
+	} else {
+		must.NoError(m.Add("ReturnFieldsSelectorError", err.Error()))
 	}
 
 	return logFunc(m)
