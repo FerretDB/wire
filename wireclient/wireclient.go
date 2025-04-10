@@ -272,7 +272,7 @@ func (c *Conn) Ping(ctx context.Context) error {
 		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
 	}
 
-	res, err := resBody.(*wire.OpMsg).DecodeDeepDocument()
+	res, err := resBody.(*wire.OpMsg).DocumentDeep()
 	if err != nil {
 		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
 	}
@@ -338,7 +338,7 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 		}
 
 		var res *wirebson.Document
-		if res, err = resBody.(*wire.OpMsg).DecodeDeepDocument(); err != nil {
+		if res, err = resBody.(*wire.OpMsg).DocumentDeep(); err != nil {
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
@@ -402,7 +402,7 @@ func (c *Conn) checkAuth(ctx context.Context) error {
 		return fmt.Errorf("wireclient.Conn.checkAuth: %w", err)
 	}
 
-	res, err := resBody.(*wire.OpMsg).DecodeDeepDocument()
+	res, err := resBody.(*wire.OpMsg).DocumentDeep()
 	if err != nil {
 		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
 	}

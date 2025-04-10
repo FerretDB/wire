@@ -19,18 +19,18 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// OpMsgSection represents a section contained in an OpMsg.
-type OpMsgSection struct {
+// opMsgSection represents a section contained in an OpMsg.
+type opMsgSection struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: Kind, Identifier, documents.
 
-	Identifier string
+	identifier string
 	documents  []wirebson.RawDocument
-	Kind       byte
+	kind       byte
 }
 
 // checkSections checks given sections.
-func checkSections(sections []OpMsgSection) error {
+func checkSections(sections []opMsgSection) error {
 	if len(sections) == 0 {
 		return lazyerrors.New("no sections")
 	}
@@ -38,14 +38,14 @@ func checkSections(sections []OpMsgSection) error {
 	var kind0Found bool
 
 	for _, s := range sections {
-		switch s.Kind {
+		switch s.kind {
 		case 0:
 			if kind0Found {
 				return lazyerrors.New("multiple kind 0 sections")
 			}
 			kind0Found = true
 
-			if s.Identifier != "" {
+			if s.identifier != "" {
 				return lazyerrors.New("kind 0 section has identifier")
 			}
 
@@ -54,13 +54,17 @@ func checkSections(sections []OpMsgSection) error {
 			}
 
 		case 1:
-			if s.Identifier == "" {
+			if s.identifier == "" {
 				return lazyerrors.New("kind 1 section has no identifier")
 			}
 
 		default:
-			return lazyerrors.Errorf("unknown kind %d", s.Kind)
+			return lazyerrors.Errorf("unknown kind %d", s.kind)
 		}
+	}
+
+	if !kind0Found {
+		return lazyerrors.New("no kind 0 section")
 	}
 
 	return nil
