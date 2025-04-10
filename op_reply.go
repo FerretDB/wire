@@ -139,6 +139,11 @@ func (reply *OpReply) DocumentRaw() wirebson.RawDocument {
 	return reply.document
 }
 
+// Deprecated: use DocumentRaw instead.
+func (reply *OpReply) RawDocument() wirebson.RawDocument {
+	return reply.DocumentRaw()
+}
+
 // logMessage returns a string representation for logging.
 func (reply *OpReply) logMessage(logFunc func(v any) string) string {
 	if reply == nil {

@@ -141,22 +141,14 @@ func (query *OpQuery) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Query returns decoded query document, or nil.
+// Query returns decoded query document.
 // Only top-level fields are decoded.
 func (query *OpQuery) Query() (*wirebson.Document, error) {
-	if query.query == nil {
-		return nil, nil
-	}
-
 	return query.query.Decode()
 }
 
-// Query returns deeply decoded query document, or nil.
+// Query returns deeply decoded query document.
 func (query *OpQuery) QueryDeep() (*wirebson.Document, error) {
-	if query.query == nil {
-		return nil, nil
-	}
-
 	return query.query.DecodeDeep()
 }
 
@@ -204,9 +196,7 @@ func (query *OpQuery) logMessage(logFunc func(v any) string) string {
 
 	doc, err := query.QueryDeep()
 	if err == nil {
-		if doc != nil {
-			must.NoError(m.Add("Query", doc))
-		}
+		must.NoError(m.Add("Query", doc))
 	} else {
 		must.NoError(m.Add("QueryError", err.Error()))
 	}
