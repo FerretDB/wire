@@ -24,9 +24,9 @@ type OpMsgSection struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: Kind, Identifier, documents.
 
-	identifier string
+	Identifier string
 	documents  []wirebson.RawDocument
-	kind       byte
+	Kind       byte
 }
 
 // checkSections checks given sections.
@@ -38,14 +38,14 @@ func checkSections(sections []OpMsgSection) error {
 	var kind0Found bool
 
 	for _, s := range sections {
-		switch s.kind {
+		switch s.Kind {
 		case 0:
 			if kind0Found {
 				return lazyerrors.New("multiple kind 0 sections")
 			}
 			kind0Found = true
 
-			if s.identifier != "" {
+			if s.Identifier != "" {
 				return lazyerrors.New("kind 0 section has identifier")
 			}
 
@@ -54,12 +54,12 @@ func checkSections(sections []OpMsgSection) error {
 			}
 
 		case 1:
-			if s.identifier == "" {
+			if s.Identifier == "" {
 				return lazyerrors.New("kind 1 section has no identifier")
 			}
 
 		default:
-			return lazyerrors.Errorf("unknown kind %d", s.kind)
+			return lazyerrors.Errorf("unknown kind %d", s.Kind)
 		}
 	}
 

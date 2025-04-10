@@ -143,17 +143,32 @@ func (query *OpQuery) MarshalBinary() ([]byte, error) {
 
 // Query returns decoded query document.
 // Only top-level fields are decoded.
-func (query *OpQuery) Query() *wirebson.Document {
+func (query *OpQuery) Query() (*wirebson.Document, error) {
 	if query.query == nil {
-		return nil
+		return nil, nil
 	}
 
-	doc, err := query.query.Decode()
-	if err != nil {
-		panic(err)
+	return query.query.Decode()
+}
+
+// RawQuery returns raw query.
+func (query *OpQuery) RawQuery() wirebson.RawDocument {
+	return query.query
+}
+
+// ReturnFieldsSelector returns decoded returnFieldsSelector document.
+// Only top-level fields are decoded.
+func (query *OpQuery) ReturnFieldsSelector() (*wirebson.Document, error) {
+	if query.returnFieldsSelector == nil {
+		return nil, nil
 	}
 
-	return doc
+	return query.returnFieldsSelector.Decode()
+}
+
+// RawReturnFieldsSelector returns raw returnFieldsSelector.
+func (query *OpQuery) RawReturnFieldsSelector() wirebson.RawDocument {
+	return query.returnFieldsSelector
 }
 
 // logMessage returns a string representation for logging.

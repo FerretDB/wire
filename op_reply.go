@@ -115,7 +115,8 @@ func (reply *OpReply) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Document returns reply document.
+// Document returns decoded reply document.
+// Only top-level fields are decoded.
 func (reply *OpReply) Document() (*wirebson.Document, error) {
 	if reply.document == nil {
 		return nil, nil
@@ -127,15 +128,6 @@ func (reply *OpReply) Document() (*wirebson.Document, error) {
 // RawDocument returns raw document.
 func (reply *OpReply) RawDocument() wirebson.RawDocument {
 	return reply.document
-}
-
-// SetDocument sets reply document.
-func (reply *OpReply) SetDocument(doc *wirebson.Document) {
-	var err error
-	reply.document, err = doc.Encode()
-	if err != nil {
-		panic(err)
-	}
 }
 
 // logMessage returns a string representation for logging.

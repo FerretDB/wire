@@ -22,3 +22,8 @@ package wire
 // Debug set to true performs additional slow checks during encoding/decoding that are not normally required.
 // It is exposed mainly to simplify testing.
 var Debug bool
+
+// CheckNaNs set to true returns an error if float64 NaN value is present in wire messages.
+//
+// TODO https://github.com/FerretDB/wire/issues/73
+var CheckNaNs bool

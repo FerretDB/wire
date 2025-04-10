@@ -23,11 +23,6 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// CheckNaNs set to true returns an error if float64 NaN value is present in wire messages.
-//
-// TODO https://github.com/FerretDB/wire/issues/73
-var CheckNaNs bool
-
 // OpMsg is the main wire protocol message type.
 type OpMsg struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
@@ -79,7 +74,7 @@ func MustOpMsg(pairs ...any) *OpMsg {
 // Most callers should use [OpMsg.RawDocument] instead.
 func (msg *OpMsg) RawSection0() wirebson.RawDocument {
 	for _, s := range msg.sections {
-		if s.kind == 0 {
+		if s.Kind == 0 {
 			return s.documents[0]
 		}
 	}
@@ -95,7 +90,7 @@ func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
 	var seq []byte
 
 	for _, s := range msg.sections {
-		switch s.kind {
+		switch s.Kind {
 		case 0:
 			spec = s.documents[0]
 
@@ -119,8 +114,8 @@ func (msg *OpMsg) RawDocument() (wirebson.RawDocument, error) {
 	}
 
 	s := msg.sections[0]
-	if s.kind != 0 || s.identifier != "" {
-		return nil, lazyerrors.Errorf(`expected section 0/"", got %d/%q`, s.kind, s.identifier)
+	if s.Kind != 0 || s.Identifier != "" {
+		return nil, lazyerrors.Errorf(`expected section 0/"", got %d/%q`, s.Kind, s.Identifier)
 	}
 
 	return s.documents[0], nil
@@ -178,10 +173,10 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 
 	for {
 		var section OpMsgSection
-		section.kind = b[offset]
+		section.Kind = b[offset]
 		offset++
 
-		switch section.kind {
+		switch section.Kind {
 		case 0:
 			l, err := wirebson.FindRaw(b[offset:])
 			if err != nil {
@@ -209,13 +204,13 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 				return lazyerrors.Errorf("len(b) = %d, offset = %d", len(b), offset)
 			}
 
-			section.identifier, err = wirebson.DecodeCString(b[offset:])
+			section.Identifier, err = wirebson.DecodeCString(b[offset:])
 			if err != nil {
 				return lazyerrors.Error(err)
 			}
 
-			offset += wirebson.SizeCString(section.identifier)
-			secSize -= wirebson.SizeCString(section.identifier)
+			offset += wirebson.SizeCString(section.Identifier)
+			secSize -= wirebson.SizeCString(section.Identifier)
 
 			for secSize != 0 {
 				if secSize < 0 {
@@ -237,7 +232,7 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 			}
 
 		default:
-			return lazyerrors.Errorf("kind is %d", section.kind)
+			return lazyerrors.Errorf("kind is %d", section.Kind)
 		}
 
 		msg.sections = append(msg.sections, section)
@@ -289,15 +284,15 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 	binary.LittleEndian.PutUint32(b, uint32(msg.Flags))
 
 	for _, section := range msg.sections {
-		b = append(b, section.kind)
+		b = append(b, section.Kind)
 
-		switch section.kind {
+		switch section.Kind {
 		case 0:
 			b = append(b, section.documents[0]...)
 
 		case 1:
-			sec := make([]byte, wirebson.SizeCString(section.identifier))
-			wirebson.EncodeCString(sec, section.identifier)
+			sec := make([]byte, wirebson.SizeCString(section.Identifier))
+			wirebson.EncodeCString(sec, section.Identifier)
 
 			for _, doc := range section.documents {
 				sec = append(sec, doc...)
@@ -309,7 +304,7 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 			b = append(b, sec...)
 
 		default:
-			return nil, lazyerrors.Errorf("kind is %d", section.kind)
+			return nil, lazyerrors.Errorf("kind is %d", section.Kind)
 		}
 	}
 
@@ -338,10 +333,10 @@ func (msg *OpMsg) logMessage(logFunc func(v any) string) string {
 	sections := wirebson.MakeArray(len(msg.sections))
 	for _, section := range msg.sections {
 		s := wirebson.MustDocument(
-			"Kind", int32(section.kind),
+			"Kind", int32(section.Kind),
 		)
 
-		switch section.kind {
+		switch section.Kind {
 		case 0:
 			doc, err := section.documents[0].DecodeDeep()
 			if err == nil {
@@ -351,7 +346,7 @@ func (msg *OpMsg) logMessage(logFunc func(v any) string) string {
 			}
 
 		case 1:
-			must.NoError(s.Add("Identifier", section.identifier))
+			must.NoError(s.Add("Identifier", section.Identifier))
 			docs := wirebson.MakeArray(len(section.documents))
 
 			for _, d := range section.documents {
@@ -366,7 +361,7 @@ func (msg *OpMsg) logMessage(logFunc func(v any) string) string {
 			must.NoError(s.Add("Documents", docs))
 
 		default:
-			panic(fmt.Sprintf("unknown kind %d", section.kind))
+			panic(fmt.Sprintf("unknown kind %d", section.Kind))
 		}
 
 		must.NoError(sections.Add(s))
