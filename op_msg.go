@@ -66,6 +66,7 @@ func MustOpMsg(pairs ...any) *OpMsg {
 	if err != nil {
 		panic(err)
 	}
+
 	return msg
 }
 
@@ -73,6 +74,10 @@ func (msg *OpMsg) msgbody() {}
 
 // check implements [MsgBody].
 func (msg *OpMsg) check() error {
+	if err := checkSections(msg.sections); err != nil {
+		return err
+	}
+
 	for _, s := range msg.sections {
 		for _, d := range s.documents {
 			doc, err := d.DecodeDeep()
@@ -201,10 +206,6 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 
 // MarshalBinary writes an OpMsg to a byte array.
 func (msg *OpMsg) MarshalBinary() ([]byte, error) {
-	if err := checkSections(msg.sections); err != nil {
-		return nil, lazyerrors.Error(err)
-	}
-
 	if Debug {
 		if err := msg.check(); err != nil {
 			return nil, lazyerrors.Error(err)
@@ -251,41 +252,6 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// RawSection0 returns the value of first section with kind 0.
-//
-// Most callers should use [OpMsg.DocumentRaw] instead.
-func (msg *OpMsg) RawSection0() wirebson.RawDocument {
-	for _, s := range msg.sections {
-		if s.kind == 0 {
-			return s.documents[0]
-		}
-	}
-
-	return nil
-}
-
-// RawSections returns the value of section with kind 0 and the value of all sections with kind 1.
-//
-// Most callers should use [OpMsg.DocumentRaw] instead.
-func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
-	var spec wirebson.RawDocument
-	var seq []byte
-
-	for _, s := range msg.sections {
-		switch s.kind {
-		case 0:
-			spec = s.documents[0]
-
-		case 1:
-			for _, d := range s.documents {
-				seq = append(seq, d...)
-			}
-		}
-	}
-
-	return spec, seq
-}
-
 // Document returns the value of msg as decoded [*wirebson.Document].
 // Only top-level fields are decoded.
 //
@@ -318,8 +284,8 @@ func (msg *OpMsg) DocumentDeep() (*wirebson.Document, error) {
 // The error is returned if msg contains anything other than a single section of kind 0
 // with a single document.
 func (msg *OpMsg) DocumentRaw() (wirebson.RawDocument, error) {
-	if err := checkSections(msg.sections); err != nil {
-		return nil, err
+	if l := len(msg.sections); l != 1 {
+		return nil, lazyerrors.Errorf("expected 1 section, got %d", l)
 	}
 
 	s := msg.sections[0]
@@ -333,6 +299,41 @@ func (msg *OpMsg) DocumentRaw() (wirebson.RawDocument, error) {
 // Deprecated: use DocumentRaw instead.
 func (msg *OpMsg) RawDocument() (wirebson.RawDocument, error) {
 	return msg.DocumentRaw()
+}
+
+// RawSection0 returns the value of the section with kind 0.
+//
+// Most callers should use [OpMsg.DocumentRaw] instead.
+func (msg *OpMsg) RawSection0() wirebson.RawDocument {
+	for _, s := range msg.sections {
+		if s.kind == 0 {
+			return s.documents[0]
+		}
+	}
+
+	return nil
+}
+
+// RawSections returns the value of section with kind 0 and the value of all sections with kind 1.
+//
+// Most callers should use [OpMsg.DocumentRaw] instead.
+func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
+	var spec wirebson.RawDocument
+	var seq []byte
+
+	for _, s := range msg.sections {
+		switch s.kind {
+		case 0:
+			spec = s.documents[0]
+
+		case 1:
+			for _, d := range s.documents {
+				seq = append(seq, d...)
+			}
+		}
+	}
+
+	return spec, seq
 }
 
 // logMessage returns a string representation for logging.

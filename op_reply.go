@@ -45,6 +45,17 @@ func NewOpReply(doc wirebson.AnyDocument) (*OpReply, error) {
 	return &OpReply{document: raw}, nil
 }
 
+// MustOpReply creates a new OpReply message constructed from the given pairs of field names and values.
+// It panics on error.
+func MustOpReply(pairs ...any) *OpReply {
+	reply, err := NewOpReply(wirebson.MustDocument(pairs...))
+	if err != nil {
+		panic(err)
+	}
+
+	return reply
+}
+
 func (reply *OpReply) msgbody() {}
 
 // check implements [MsgBody].

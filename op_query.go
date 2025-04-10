@@ -45,6 +45,17 @@ func NewOpQuery(doc wirebson.AnyDocument) (*OpQuery, error) {
 	return &OpQuery{query: raw}, nil
 }
 
+// MustOpQuery creates a new OpQuery message constructed from the given pairs of field names and values.
+// It panics on error.
+func MustOpQuery(pairs ...any) *OpQuery {
+	query, err := NewOpQuery(wirebson.MustDocument(pairs...))
+	if err != nil {
+		panic(err)
+	}
+
+	return query
+}
+
 func (query *OpQuery) msgbody() {}
 
 // check implements [MsgBody].
