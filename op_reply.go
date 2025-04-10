@@ -126,7 +126,7 @@ func (reply *OpReply) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Document returns decoded document document, or nil.
+// Document returns decoded document, or nil.
 // Only top-level fields are decoded.
 func (reply *OpReply) Document() (*wirebson.Document, error) {
 	if reply.document == nil {
@@ -136,7 +136,7 @@ func (reply *OpReply) Document() (*wirebson.Document, error) {
 	return reply.document.Decode()
 }
 
-// Document returns deeply decoded document document, or nil.
+// Document returns deeply decoded document, or nil.
 func (reply *OpReply) DocumentDeep() (*wirebson.Document, error) {
 	if reply.document == nil {
 		return nil, nil
