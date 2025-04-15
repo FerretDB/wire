@@ -23,6 +23,8 @@ import (
 )
 
 // OpQuery is a deprecated request message type.
+//
+// Message is checked during construction by [NewOpQuery], [MustOpQuery], or [OpQuery.UnmarshalBinaryNocopy].
 type OpQuery struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: flags, collection name, number to skip, number to return, query, fields selector.
@@ -42,7 +44,17 @@ func NewOpQuery(doc wirebson.AnyDocument) (*OpQuery, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	return &OpQuery{query: raw}, nil
+	query := &OpQuery{
+		query: raw,
+	}
+
+	if Debug || CheckNaNs {
+		if err = query.check(); err != nil {
+			return nil, lazyerrors.Error(err)
+		}
+	}
+
+	return query, nil
 }
 
 // MustOpQuery creates a new OpQuery message constructed from the given pairs of field names and values.
@@ -64,11 +76,23 @@ func (query *OpQuery) check() error {
 		if _, err := d.DecodeDeep(); err != nil {
 			return lazyerrors.Error(err)
 		}
+
+		if CheckNaNs {
+			if err := checkNaN(d); err != nil {
+				return err
+			}
+		}
 	}
 
 	if s := query.returnFieldsSelector; s != nil {
 		if _, err := s.DecodeDeep(); err != nil {
 			return lazyerrors.Error(err)
+		}
+
+		if CheckNaNs {
+			if err := checkNaN(s); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -117,7 +141,7 @@ func (query *OpQuery) UnmarshalBinaryNocopy(b []byte) error {
 		query.returnFieldsSelector = b[selectorLow:]
 	}
 
-	if Debug {
+	if Debug || CheckNaNs {
 		if err = query.check(); err != nil {
 			return lazyerrors.Error(err)
 		}
@@ -128,12 +152,6 @@ func (query *OpQuery) UnmarshalBinaryNocopy(b []byte) error {
 
 // MarshalBinary implements [MsgBody].
 func (query *OpQuery) MarshalBinary() ([]byte, error) {
-	if Debug {
-		if err := query.check(); err != nil {
-			return nil, lazyerrors.Error(err)
-		}
-	}
-
 	nameSize := wirebson.SizeCString(query.FullCollectionName)
 	b := make([]byte, 12+nameSize+len(query.query)+len(query.returnFieldsSelector))
 
@@ -153,7 +171,7 @@ func (query *OpQuery) MarshalBinary() ([]byte, error) {
 }
 
 // Query returns decoded frozen query document.
-// Only top-level fields are decoded.
+// It may be shallowly or deeply decoded.
 func (query *OpQuery) Query() (*wirebson.Document, error) {
 	doc, err := query.query.Decode()
 	if err != nil {
@@ -181,7 +199,7 @@ func (query *OpQuery) QueryRaw() wirebson.RawDocument {
 }
 
 // ReturnFieldsSelector returns decoded frozen returnFieldsSelector document, or nil.
-// Only top-level fields are decoded.
+// It may be shallowly or deeply decoded.
 func (query *OpQuery) ReturnFieldsSelector() (*wirebson.Document, error) {
 	if query.returnFieldsSelector == nil {
 		return nil, nil
