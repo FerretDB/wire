@@ -152,15 +152,27 @@ func (query *OpQuery) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Query returns decoded query document.
+// Query returns decoded frozen query document.
 // Only top-level fields are decoded.
 func (query *OpQuery) Query() (*wirebson.Document, error) {
-	return query.query.Decode()
+	doc, err := query.query.Decode()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
-// Query returns deeply decoded query document.
+// Query returns deeply decoded frozen query document.
 func (query *OpQuery) QueryDeep() (*wirebson.Document, error) {
-	return query.query.DecodeDeep()
+	doc, err := query.query.DecodeDeep()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
 // QueryRaw returns raw query (that might be nil).
@@ -168,23 +180,35 @@ func (query *OpQuery) QueryRaw() wirebson.RawDocument {
 	return query.query
 }
 
-// ReturnFieldsSelector returns decoded returnFieldsSelector document, or nil.
+// ReturnFieldsSelector returns decoded frozen returnFieldsSelector document, or nil.
 // Only top-level fields are decoded.
 func (query *OpQuery) ReturnFieldsSelector() (*wirebson.Document, error) {
 	if query.returnFieldsSelector == nil {
 		return nil, nil
 	}
 
-	return query.returnFieldsSelector.Decode()
+	doc, err := query.returnFieldsSelector.Decode()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
-// ReturnFieldsSelector returns deeply decoded returnFieldsSelector document, or nil.
+// ReturnFieldsSelector returns deeply decoded frozen returnFieldsSelector document, or nil.
 func (query *OpQuery) ReturnFieldsSelectorDeep() (*wirebson.Document, error) {
 	if query.returnFieldsSelector == nil {
 		return nil, nil
 	}
 
-	return query.returnFieldsSelector.DecodeDeep()
+	doc, err := query.returnFieldsSelector.DecodeDeep()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
 // ReturnFieldsSelectorRaw returns raw returnFieldsSelector (that might be nil).

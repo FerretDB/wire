@@ -126,23 +126,35 @@ func (reply *OpReply) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Document returns decoded document, or nil.
+// Document returns decoded frozen document, or nil.
 // Only top-level fields are decoded.
 func (reply *OpReply) Document() (*wirebson.Document, error) {
 	if reply.document == nil {
 		return nil, nil
 	}
 
-	return reply.document.Decode()
+	doc, err := reply.document.Decode()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
-// Document returns deeply decoded document, or nil.
+// Document returns deeply decoded frozen document, or nil.
 func (reply *OpReply) DocumentDeep() (*wirebson.Document, error) {
 	if reply.document == nil {
 		return nil, nil
 	}
 
-	return reply.document.DecodeDeep()
+	doc, err := reply.document.DecodeDeep()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
 // DocumentRaw returns raw document (that might be nil).

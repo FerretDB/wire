@@ -7,10 +7,7 @@ toolchain go1.24.2
 require (
 	github.com/stretchr/testify v1.10.0
 	github.com/xdg-go/scram v1.1.2
-
-	// TODO https://github.com/FerretDB/wire/issues/49
-	// see https://jira.mongodb.org/browse/GODRIVER-3476
-	go.mongodb.org/mongo-driver/v2 v2.1.1-0.20250407150314-cd295b66f41d
+	go.mongodb.org/mongo-driver/v2 v2.2.0
 )
 
 require (

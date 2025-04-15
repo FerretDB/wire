@@ -252,7 +252,7 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Document returns the value of msg as decoded [*wirebson.Document].
+// Document returns the value of msg as decoded frozen [*wirebson.Document].
 // Only top-level fields are decoded.
 //
 // The error is returned if msg contains anything other than a single section of kind 0
@@ -260,23 +260,35 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 func (msg *OpMsg) Document() (*wirebson.Document, error) {
 	raw, err := msg.DocumentRaw()
 	if err != nil {
-		return nil, err
+		return nil, lazyerrors.Error(err)
 	}
 
-	return raw.Decode()
+	doc, err := raw.Decode()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
-// DocumentDeep returns the value of msg as deeply-decoded [*wirebson.Document].
+// DocumentDeep returns the value of msg as deeply decoded frozen [*wirebson.Document].
 //
 // The error is returned if msg contains anything other than a single section of kind 0
 // with a single document.
 func (msg *OpMsg) DocumentDeep() (*wirebson.Document, error) {
 	raw, err := msg.DocumentRaw()
 	if err != nil {
-		return nil, err
+		return nil, lazyerrors.Error(err)
 	}
 
-	return raw.DecodeDeep()
+	doc, err := raw.DecodeDeep()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
 // DocumentRaw returns the value of msg as a [wirebson.DocumentRaw].
