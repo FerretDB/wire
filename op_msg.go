@@ -24,6 +24,8 @@ import (
 )
 
 // OpMsg is the main wire protocol message type.
+//
+// Message is checked during construction by [NewOpMsg], [MustOpMsg], or [OpMsg.UnmarshalBinaryNocopy].
 type OpMsg struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: flags, sections, optional checksum.
@@ -40,13 +42,12 @@ func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	sections := []opMsgSection{{documents: []wirebson.RawDocument{raw}}}
-	if err = checkSections(sections); err != nil {
-		return nil, lazyerrors.Error(err)
+	msg := &OpMsg{
+		sections: []opMsgSection{{documents: []wirebson.RawDocument{raw}}},
 	}
 
-	msg := OpMsg{
-		sections: sections,
+	if err = checkSections(msg.sections); err != nil {
+		return nil, lazyerrors.Error(err)
 	}
 
 	if Debug || CheckNaNs {
@@ -55,7 +56,7 @@ func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
 		}
 	}
 
-	return &msg, nil
+	return msg, nil
 }
 
 // MustOpMsg creates a message with a single section of kind 0 with a single document
@@ -79,18 +80,16 @@ func (msg *OpMsg) check() error {
 	}
 
 	for _, s := range msg.sections {
-		for _, d := range s.documents {
-			doc, err := d.DecodeDeep()
+		for _, raw := range s.documents {
+			d, err := raw.DecodeDeep()
 			if err != nil {
 				return lazyerrors.Error(err)
 			}
 
-			if !CheckNaNs {
-				continue
-			}
-
-			if err = checkNaN(doc); err != nil {
-				return err
+			if CheckNaNs {
+				if err = checkNaN(d); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -206,12 +205,6 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 
 // MarshalBinary writes an OpMsg to a byte array.
 func (msg *OpMsg) MarshalBinary() ([]byte, error) {
-	if Debug {
-		if err := msg.check(); err != nil {
-			return nil, lazyerrors.Error(err)
-		}
-	}
-
 	b := make([]byte, 4, 16)
 
 	binary.LittleEndian.PutUint32(b, uint32(msg.Flags))
@@ -253,7 +246,7 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 }
 
 // Document returns the value of msg as decoded frozen [*wirebson.Document].
-// Only top-level fields are decoded.
+// It may be shallowly or deeply decoded.
 //
 // The error is returned if msg contains anything other than a single section of kind 0
 // with a single document.
