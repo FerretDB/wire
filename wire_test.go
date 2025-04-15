@@ -215,21 +215,21 @@ func fuzzMessages(f *testing.F, testCases []testCase) {
 				t.Skip()
 			}
 
-			if msgBody.check() != nil {
-				assert.NotEmpty(t, msgHeader.String())
-				assert.NotEmpty(t, msgBody.StringIndent())
-				assert.NotEmpty(t, msgBody.String())
+			assert.NotEmpty(t, msgHeader.String())
+			assert.NotEmpty(t, msgBody.StringIndent())
+			assert.NotEmpty(t, msgBody.String())
 
-				if msg, ok := msgBody.(*OpMsg); ok {
-					assert.NotPanics(t, func() {
-						_, _ = msg.Document()
-						_, _ = msg.DocumentDeep()
-						_, _ = msg.DocumentRaw()
+			require.NoError(t, msgBody.check())
 
-						_ = msg.RawSection0()
-						_, _ = msg.RawSections()
-					})
-				}
+			if msg, ok := msgBody.(*OpMsg); ok {
+				assert.NotPanics(t, func() {
+					_, _ = msg.Document()
+					_, _ = msg.DocumentDeep()
+					_, _ = msg.DocumentRaw()
+
+					_ = msg.RawSection0()
+					_, _ = msg.RawSections()
+				})
 			}
 
 			// remove random tail
