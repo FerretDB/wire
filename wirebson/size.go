@@ -92,6 +92,6 @@ func sizeScalar(v any) int {
 	case Decimal128:
 		return sizeDecimal128
 	default:
-		panic(fmt.Sprintf("unsupported type %T", v))
+		panic(fmt.Sprintf("invalid BSON type %T", v))
 	}
 }
