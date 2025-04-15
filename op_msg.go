@@ -76,7 +76,7 @@ func (msg *OpMsg) msgbody() {}
 // check implements [MsgBody].
 func (msg *OpMsg) check() error {
 	if err := checkSections(msg.sections); err != nil {
-		return err
+		return lazyerrors.Error(err)
 	}
 
 	for _, s := range msg.sections {
@@ -88,7 +88,7 @@ func (msg *OpMsg) check() error {
 
 			if CheckNaNs {
 				if err = checkNaN(d); err != nil {
-					return err
+					return lazyerrors.Error(err)
 				}
 			}
 		}

@@ -79,7 +79,7 @@ func (reply *OpReply) check() error {
 
 		if CheckNaNs {
 			if err := checkNaN(d); err != nil {
-				return err
+				return lazyerrors.Error(err)
 			}
 		}
 	}

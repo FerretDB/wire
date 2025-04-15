@@ -16,10 +16,12 @@ package wire
 
 import (
 	"math"
+	"slices"
 	"testing"
 
 	"github.com/FerretDB/wire/internal/util/testutil"
 	"github.com/FerretDB/wire/wirebson"
+	"github.com/stretchr/testify/require"
 )
 
 // msgTestCases represents test cases for OP_MSG decoding/encoding.
@@ -689,21 +691,21 @@ func TestMsg(t *testing.T) {
 	})
 
 	t.Run("CheckNaNs", func(t *testing.T) {
+		i := slices.IndexFunc(msgTestCases, func(tc testCase) bool {
+			return tc.name == "NaN"
+		})
+
+		require.Positive(t, i)
+
 		CheckNaNs = true
-		t.Cleanup(func() { CheckNaNs = false })
+		msgTestCases[i].err = "NaN is not supported"
 
-		tcs := make([]testCase, len(msgTestCases))
-		copy(tcs, msgTestCases)
+		t.Cleanup(func() {
+			CheckNaNs = false
+			msgTestCases[i].err = ""
+		})
 
-		for i, tc := range msgTestCases {
-			if tc.name == "NaN" {
-				tcs[i].err = "NaN is not supported"
-
-				break
-			}
-		}
-
-		testMessages(t, tcs)
+		testMessages(t, msgTestCases)
 	})
 }
 
