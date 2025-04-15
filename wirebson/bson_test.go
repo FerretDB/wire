@@ -276,8 +276,7 @@ var normalTestCases = []normalTestCase{
 				MustArray("foo"),
 				MustArray(),
 			),
-			// TODO https://github.com/FerretDB/wire/issues/73
-			"float64", MustArray(42.13, 0.0, math.Copysign(0, -1), math.Inf(1), math.Inf(-1)),
+			"float64", MustArray(42.13, 0.0, math.Copysign(0, -1), math.Inf(1), math.Inf(-1), math.NaN(), math.Float64frombits(0x7ff8000f000f0001)),
 			"string", MustArray("foo", ""),
 			"binary", MustArray(
 				Binary{Subtype: BinaryUser, B: []byte{0x42}},
@@ -319,6 +318,8 @@ var normalTestCases = []normalTestCase{
 		    -0.0,
 		    +Inf,
 		    -Inf,
+		    NaN,
+		    NaN(111111111111000000000000000111100000000000011110000000000000001),
 		  ],
 		  "string": [
 		    "foo",
@@ -398,6 +399,12 @@ var normalTestCases = []normalTestCase{
 		    },
 		    {
 		      "$numberDouble": "-Infinity"
+		    },
+		    {
+		      "$numberDouble": "NaN"
+		    },
+		    {
+		      "$numberDouble": "NaN"
 		    }
 		  ],
 		  "string": [

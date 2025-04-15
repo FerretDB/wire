@@ -94,12 +94,12 @@ func slogValue(v any, depth int) slog.Value {
 	case float64:
 		// for JSON handler to work
 		switch {
-		case math.IsNaN(v):
-			return slog.StringValue("NaN")
 		case math.IsInf(v, 1):
 			return slog.StringValue("+Inf")
 		case math.IsInf(v, -1):
 			return slog.StringValue("-Inf")
+		case math.IsNaN(v):
+			return slog.StringValue("NaN")
 		}
 
 		return slog.Float64Value(v)
@@ -271,6 +271,12 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 
 	case float64:
 		switch {
+		case math.IsInf(v, 1):
+			b.WriteString("+Inf")
+
+		case math.IsInf(v, -1):
+			b.WriteString("-Inf")
+
 		case math.IsNaN(v):
 			if bits := math.Float64bits(v); bits != nanBits {
 				fmt.Fprintf(b, "NaN(%b)", bits)
@@ -278,12 +284,6 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 			}
 
 			b.WriteString("NaN")
-
-		case math.IsInf(v, 1):
-			b.WriteString("+Inf")
-
-		case math.IsInf(v, -1):
-			b.WriteString("-Inf")
 
 		default:
 			res := strconv.FormatFloat(v, 'f', -1, 64)
