@@ -1027,6 +1027,9 @@ func TestNormal(t *testing.T) {
 				var doc *Document
 				err = json.Unmarshal([]byte(tc.j), &doc)
 				require.NoError(t, err)
+
+				// FIXME
+				// wiretest.AssertEqual(t, tc.doc, doc)
 				assert.Equal(t, tc.doc, doc)
 			})
 		})
