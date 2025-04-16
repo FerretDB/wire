@@ -12,32 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wiretest
+package wirebson
 
 import (
 	"math"
 	"testing"
-	"time"
 
-	"github.com/FerretDB/wire/wirebson"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEqual(t *testing.T) {
 	t.Parallel()
 
-	AssertEqual(
-		t,
-		wirebson.MustDocument("foo", "bar", "baz", int32(42)),
-		wirebson.MustDocument("foo", "bar", "baz", int32(42)),
-	)
+	assert.True(t, Equal(math.NaN(), math.NaN()))
+	assert.True(t, Equal(math.NaN(), math.Float64frombits(0x7FF8000000000010)))
 
-	AssertEqual(t, math.Inf(+1), math.Inf(+1))
+	assert.True(t, Equal(math.Inf(+1), math.Inf(+1)))
+	assert.False(t, Equal(math.Inf(+1), math.Inf(-1)))
 
-	AssertEqual(t, 0.0, math.Copysign(0, +1))
-
-	AssertEqual(
-		t,
-		time.Date(2022, time.March, 11, 8, 8, 42, 123456789, time.FixedZone("Test", int(3*time.Hour.Seconds()))),
-		time.Date(2022, time.March, 11, 5, 8, 42, 123456789, time.UTC),
-	)
+	assert.True(t, Equal(0.0, math.Copysign(0, +1)))
+	assert.False(t, Equal(0.0, math.Copysign(0, -1)))
 }

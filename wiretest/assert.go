@@ -25,22 +25,8 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// dumpSlice returns string representation for debugging.
-func dumpSlice[T wirebson.Type](tb testing.TB, s []T) string {
-	tb.Helper()
-
-	arr := wirebson.MakeArray(len(s))
-
-	for _, v := range s {
-		err := arr.Add(v)
-		require.NoError(tb, err)
-	}
-
-	return wirebson.LogMessageIndent(arr)
-}
-
 // diff returns a readable form of given values and the difference between them.
-func diff[T wirebson.Type](tb testing.TB, expected, actual T) (expectedS string, actualS string, diff string) {
+func diff(tb testing.TB, expected, actual any) (expectedS string, actualS string, diff string) {
 	expectedS = wirebson.LogMessageIndent(expected)
 	actualS = wirebson.LogMessageIndent(actual)
 
@@ -58,9 +44,9 @@ func diff[T wirebson.Type](tb testing.TB, expected, actual T) (expectedS string,
 }
 
 // diffSlices returns a readable form of given slices and the difference between them.
-func diffSlices[T wirebson.Type](tb testing.TB, expected, actual []T) (expectedS string, actualS string, diff string) {
-	expectedS = dumpSlice(tb, expected)
-	actualS = dumpSlice(tb, actual)
+func diffSlices(tb testing.TB, expected, actual []any) (expectedS string, actualS string, diff string) {
+	expectedS = wirebson.LogMessageIndent(wirebson.MustArray(expected...))
+	actualS = wirebson.LogMessageIndent(wirebson.MustArray(actual...))
 
 	var err error
 	diff, err = difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
