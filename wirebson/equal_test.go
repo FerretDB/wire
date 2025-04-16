@@ -25,7 +25,7 @@ func TestEqual(t *testing.T) {
 	t.Parallel()
 
 	assert.True(t, Equal(math.NaN(), math.NaN()))
-	assert.True(t, Equal(math.NaN(), math.Float64frombits(0x7FF8000000000010)))
+	assert.True(t, Equal(math.NaN(), math.Float64frombits(0x7ff8000000000010)))
 
 	assert.True(t, Equal(math.Inf(+1), math.Inf(+1)))
 	assert.False(t, Equal(math.Inf(+1), math.Inf(-1)))
