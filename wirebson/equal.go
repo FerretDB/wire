@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"iter"
 	"math"
+	"slices"
 	"time"
 )
 
@@ -34,6 +35,7 @@ import (
 //     Other values are compared by their bits.
 //     That handles all other values, including infinities, negative zeros, etc.
 //   - time.Time values are compared using the Equal method.
+//   - Regex options are compared ignoring order.
 func Equal(v1, v2 any) bool {
 	if err := validBSONType(v1); err != nil {
 		panic(err)
@@ -226,7 +228,15 @@ func equalScalars(v1, v2 any) bool {
 			return false
 		}
 
-		return s1.Pattern == s2.Pattern && s1.Options == s2.Options
+		if s1.Pattern != s2.Pattern {
+			return false
+		}
+
+		o1 := []rune(s1.Options)
+		o2 := []rune(s2.Options)
+		slices.Sort(o1)
+		slices.Sort(o2)
+		return slices.Equal(o1, o2)
 
 	case int32:
 		s2, ok := v2.(int32)

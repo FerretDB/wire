@@ -778,6 +778,29 @@ var normalTestCases = []normalTestCase{
 		}`,
 	},
 	{
+		name: "decimal128DocPrec",
+		raw: RawDocument{
+			0x18, 0x00, 0x00, 0x00,
+			0x13, 0x66, 0x00,
+			0x30, 0x30, 0x31, 0x30, 0x30, 0x31, 0x30, 0x30,
+			0x31, 0x31, 0x30, 0x31, 0x30, 0xff, 0x31, 0x30,
+			0x00,
+		},
+		doc: MustDocument(
+			"f", Decimal128{H: 3472837370128118065, L: 3472329395739373616},
+		),
+		mi: `
+		{
+		  "f": Decimal128(H:3472837370128118065,L:3472329395739373616),
+		}`,
+		j: `
+		{
+		  "f": {
+		    "$numberDecimal": "103681294822929121827017235.39812400"
+		  }
+		}`,
+	},
+	{
 		name: "emptyDoc",
 		raw: RawDocument{
 			0x05, 0x00, 0x00, 0x00, // document length
@@ -1029,6 +1052,11 @@ func TestNormal(t *testing.T) {
 				var doc *Document
 				err = json.Unmarshal([]byte(tc.j), &doc)
 				require.NoError(t, err)
+
+				// TODO https://github.com/FerretDB/wire/issues/49
+				if strings.Contains(tc.j, `$numberDecimal`) {
+					t.Skip("https://github.com/FerretDB/wire/issues/49")
+				}
 
 				assertEqual(t, tc.doc, doc)
 			})
@@ -1375,22 +1403,37 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 	})
 
 	t.Run("MarshalUnmarshal", func(t *testing.T) {
-		// TODO https://github.com/FerretDB/wire/issues/49
-		// See https://jira.mongodb.org/browse/GODRIVER-3531
-		t.Skip("https://github.com/FerretDB/wire/issues/49")
-
 		doc, err := rawDoc.DecodeDeep()
 		if err != nil {
 			return
 		}
 
 		b, err := json.Marshal(doc)
+		j := string(b)
 		d, _ := toDriver(doc)
 		require.NoError(t, err, "%s\n%#v", doc.LogMessage(), d)
 
 		var doc2 *Document
 		err = json.Unmarshal(b, &doc2)
+		if err != nil {
+			if strings.Contains(err.Error(), "$invalid $numberDecimal string") {
+				// TODO https://github.com/FerretDB/wire/issues/49
+				// See https://jira.mongodb.org/browse/GODRIVER-3531
+				t.Skip()
+			}
+		}
+
 		require.NoError(t, err, "%s\n%s", doc.LogMessage(), b)
+
+		// invalid UTF-8 bytes can't survive marshaling/unmarshaling
+		if strings.Contains(j, `\ufffd`) { // Unicode replacement rune
+			t.Skip()
+		}
+
+		// TODO https://github.com/FerretDB/wire/issues/49
+		if strings.Contains(j, `$numberDecimal`) {
+			t.Skip()
+		}
 
 		assertEqual(t, doc, doc2)
 	})
