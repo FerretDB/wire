@@ -79,9 +79,9 @@ func TestLogging(t *testing.T) {
 			name: "Numbers",
 			doc: MustDocument(
 				"f64", 42.0,
-				"zero", math.Copysign(0, 1),
+				"zero", math.Copysign(0, +1),
 				"neg_zero", math.Copysign(0, -1),
-				"inf", math.Inf(1),
+				"inf", math.Inf(+1),
 				"neg_inf", math.Inf(-1),
 				"nan", math.NaN(),
 				"nan_weird", math.Float64frombits(0x7ff8000f000f0001),

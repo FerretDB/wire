@@ -278,7 +278,12 @@ var normalTestCases = []normalTestCase{
 				MustArray("foo"),
 				MustArray(),
 			),
-			"float64", MustArray(42.13, 0.0, math.Copysign(0, -1), math.Inf(1), math.Inf(-1), math.NaN(), math.Float64frombits(0x7ff8000f000f0001)),
+			"float64", MustArray(
+				42.13,
+				math.Copysign(0, +1), math.Copysign(0, -1),
+				math.Inf(+1), math.Inf(-1),
+				math.NaN(), math.Float64frombits(0x7ff8000f000f0001),
+			),
 			"string", MustArray("foo", ""),
 			"binary", MustArray(
 				Binary{Subtype: BinaryUser, B: []byte{0x42}},

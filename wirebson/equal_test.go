@@ -24,12 +24,12 @@ import (
 func TestEqual(t *testing.T) {
 	t.Parallel()
 
-	assert.True(t, Equal(math.NaN(), math.NaN()))
-	assert.True(t, Equal(math.NaN(), math.Float64frombits(0x7ff8000000000010)))
+	assert.True(t, Equal(0.0, math.Copysign(0, +1)))
+	assert.False(t, Equal(0.0, math.Copysign(0, -1)))
 
 	assert.True(t, Equal(math.Inf(+1), math.Inf(+1)))
 	assert.False(t, Equal(math.Inf(+1), math.Inf(-1)))
 
-	assert.True(t, Equal(0.0, math.Copysign(0, +1)))
-	assert.False(t, Equal(0.0, math.Copysign(0, -1)))
+	assert.True(t, Equal(math.NaN(), math.NaN()))
+	assert.True(t, Equal(math.NaN(), math.Float64frombits(0x7ff8000f000f0001)))
 }
