@@ -16,114 +16,15 @@ package wiretest
 
 import (
 	"bytes"
-	"fmt"
 	"math"
 	"slices"
 	"testing"
 	"time"
 
-	"github.com/pmezard/go-difflib/difflib"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/FerretDB/wire/wirebson"
 )
-
-// dump returns string representation for debugging.
-func dump[T wirebson.Type](tb testing.TB, v T) string {
-	tb.Helper()
-
-	return wirebson.LogMessageIndent(v)
-}
-
-// dumpSlice returns string representation for debugging.
-func dumpSlice[T wirebson.Type](tb testing.TB, s []T) string {
-	tb.Helper()
-
-	arr := wirebson.MakeArray(len(s))
-
-	for _, v := range s {
-		err := arr.Add(v)
-		require.NoError(tb, err)
-	}
-
-	return wirebson.LogMessageIndent(arr)
-}
-
-// AssertEqual asserts that two BSON values are equal.
-func AssertEqual[T wirebson.Type](tb testing.TB, expected, actual T) bool {
-	tb.Helper()
-
-	if equal(tb, expected, actual) {
-		return true
-	}
-
-	expectedS, actualS, diff := diffValues(tb, expected, actual)
-	msg := fmt.Sprintf("Not equal: \nexpected: %s\nactual  : %s\n%s", expectedS, actualS, diff)
-
-	return assert.Fail(tb, msg)
-}
-
-// AssertEqualSlices asserts that two BSON slices are equal.
-func AssertEqualSlices[T wirebson.Type](tb testing.TB, expected, actual []T) bool {
-	tb.Helper()
-
-	allEqual := len(expected) == len(actual)
-	if allEqual {
-		for i, e := range expected {
-			a := actual[i]
-			if !equal(tb, e, a) {
-				allEqual = false
-				break
-			}
-		}
-	}
-
-	if allEqual {
-		return true
-	}
-
-	expectedS, actualS, diff := diffSlices(tb, expected, actual)
-	msg := fmt.Sprintf("Not equal: \nexpected: %s\nactual  : %s\n%s", expectedS, actualS, diff)
-
-	return assert.Fail(tb, msg)
-}
-
-// diffValues returns a readable form of given values and the difference between them.
-func diffValues[T wirebson.Type](tb testing.TB, expected, actual T) (expectedS string, actualS string, diff string) {
-	expectedS = dump(tb, expected)
-	actualS = dump(tb, actual)
-
-	var err error
-	diff, err = difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
-		A:        difflib.SplitLines(expectedS),
-		FromFile: "expected",
-		B:        difflib.SplitLines(actualS),
-		ToFile:   "actual",
-		Context:  1,
-	})
-	require.NoError(tb, err)
-
-	return
-}
-
-// diffSlices returns a readable form of given slices and the difference between them.
-func diffSlices[T wirebson.Type](tb testing.TB, expected, actual []T) (expectedS string, actualS string, diff string) {
-	expectedS = dumpSlice(tb, expected)
-	actualS = dumpSlice(tb, actual)
-
-	var err error
-	diff, err = difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
-		A:        difflib.SplitLines(expectedS),
-		FromFile: "expected",
-		B:        difflib.SplitLines(actualS),
-		ToFile:   "actual",
-		Context:  1,
-	})
-	require.NoError(tb, err)
-
-	return
-}
 
 // equal compares any BSON values in a way that is useful for tests:
 //   - float64 NaNs are equal to each other;
@@ -228,15 +129,7 @@ func equalScalars(tb testing.TB, v1, v2 any) bool {
 			return false
 		}
 
-		if math.IsNaN(s1) {
-			return math.IsNaN(s2)
-		}
-
-		if s1 == 0 && s2 == 0 {
-			return math.Signbit(s1) == math.Signbit(s2)
-		}
-
-		return s1 == s2
+		return math.Float64bits(s1) == math.Float64bits(s2)
 
 	case string:
 		s2, ok := v2.(string)
