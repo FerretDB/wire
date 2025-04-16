@@ -195,6 +195,6 @@ func encodeScalarValue(b []byte, v any) {
 	case Decimal128:
 		encodeDecimal128(b, v)
 	default:
-		panic(fmt.Sprintf("unsupported type %T", v))
+		panic(fmt.Sprintf("invalid BSON type %T", v))
 	}
 }
