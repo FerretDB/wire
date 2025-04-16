@@ -17,11 +17,13 @@ package wirebson
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"math"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/pmezard/go-difflib/difflib"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -319,7 +321,7 @@ var normalTestCases = []normalTestCase{
 		    +Inf,
 		    -Inf,
 		    NaN,
-		    NaN(111111111111000000000000000111100000000000011110000000000000001),
+		    NaN,
 		  ],
 		  "string": [
 		    "foo",
@@ -994,7 +996,7 @@ func TestNormal(t *testing.T) {
 			t.Run("DecodeDeepEncode", func(t *testing.T) {
 				doc, err := tc.raw.DecodeDeep()
 				require.NoError(t, err)
-				assert.Equal(t, tc.doc, doc)
+				assertEqual(t, tc.doc, doc)
 
 				ls := doc.LogValue().Resolve().String()
 				assert.NotContains(t, ls, "panicked")
@@ -1028,9 +1030,7 @@ func TestNormal(t *testing.T) {
 				err = json.Unmarshal([]byte(tc.j), &doc)
 				require.NoError(t, err)
 
-				// FIXME
-				// wiretest.AssertEqual(t, tc.doc, doc)
-				assert.Equal(t, tc.doc, doc)
+				assertEqual(t, tc.doc, doc)
 			})
 		})
 	}
@@ -1391,6 +1391,8 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		var doc2 *Document
 		err = json.Unmarshal(b, &doc2)
 		require.NoError(t, err, "%s\n%s", doc.LogMessage(), b)
+
+		assertEqual(t, doc, doc2)
 	})
 }
 
@@ -1414,4 +1416,29 @@ func FuzzDocument(f *testing.F) {
 			testRawDocument(t, rawDoc)
 		})
 	})
+}
+
+// assertEqual asserts that two BSON values are equal.
+// It is copied from the wiretest package to avoid a circular dependency.
+func assertEqual(tb testing.TB, expected, actual any) bool {
+	tb.Helper()
+
+	if assert.True(tb, Equal(expected, actual)) {
+		return true
+	}
+
+	expectedS := LogMessageIndent(expected)
+	actualS := LogMessageIndent(actual)
+
+	diff, err := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
+		A:        difflib.SplitLines(expectedS),
+		FromFile: "expected",
+		B:        difflib.SplitLines(actualS),
+		ToFile:   "actual",
+		Context:  1,
+	})
+	require.NoError(tb, err)
+
+	msg := fmt.Sprintf("Not equal:\n\nexpected:\n%s\n\nactual:\n%s\n\ndiff:\n%s", expectedS, actualS, diff)
+	return assert.Fail(tb, msg)
 }

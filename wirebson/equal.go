@@ -30,8 +30,9 @@ import (
 //
 //   - Documents and arrays are compared by their length and then by content.
 //     They are decoded as needed; raw values are compared directly without decoding.
-//   - float64 values are compared by their bits.
-//     That handles all values, including various NaNs, infinities, negative zeros, etc.
+//   - float64 NaNs values are considered equal independently of their payload.
+//     Other values are compared by their bits.
+//     That handles all other values, including infinities, negative zeros, etc.
 //   - time.Time values are compared using the Equal method.
 func Equal(v1, v2 any) bool {
 	if err := validBSONType(v1); err != nil {
@@ -164,7 +165,11 @@ func equalScalars(v1, v2 any) bool {
 			return false
 		}
 
-		// handles all values, including various NaNs
+		// for JSON compatibility
+		if math.IsNaN(s1) {
+			return math.IsNaN(s2)
+		}
+
 		return math.Float64bits(s1) == math.Float64bits(s2)
 
 	case string:
@@ -183,10 +188,9 @@ func equalScalars(v1, v2 any) bool {
 
 		return s1.Subtype == s2.Subtype && bytes.Equal(s1.B, s2.B)
 
-	// FIXME
-	// case UndefinedType:
-	// 	_, ok := v2.(UndefinedType)
-	// 	return ok
+	case UndefinedType:
+		_, ok := v2.(UndefinedType)
+		return ok
 
 	case ObjectID:
 		s2, ok := v2.(ObjectID)

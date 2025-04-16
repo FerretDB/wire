@@ -98,13 +98,13 @@ func TestLogging(t *testing.T) {
 			  "inf": +Inf,
 			  "neg_inf": -Inf,
 			  "nan": NaN,
-			  "nan_weird": NaN(111111111111000000000000000111100000000000011110000000000000001),
+			  "nan_weird": NaN,
 			  "i32": 42,
 			  "i64": int64(42),
 			}`, `"`, "`",
 			),
 			m: "{`f64`: 42.0, `zero`: 0.0, `neg_zero`: -0.0, `inf`: +Inf, `neg_inf`: -Inf, `nan`: NaN, " +
-				"`nan_weird`: NaN(111111111111000000000000000111100000000000011110000000000000001), " +
+				"`nan_weird`: NaN, " +
 				"`i32`: 42, `i64`: int64(42)}",
 		},
 		{
