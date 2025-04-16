@@ -28,6 +28,8 @@ import (
 
 // diff returns a readable form of given values and the difference between them.
 func diff(tb testing.TB, expected, actual any) (expectedS string, actualS string, diff string) {
+	tb.Helper()
+
 	expectedS = wirebson.LogMessageIndent(expected)
 	actualS = wirebson.LogMessageIndent(actual)
 
@@ -46,6 +48,8 @@ func diff(tb testing.TB, expected, actual any) (expectedS string, actualS string
 
 // diffSlices returns a readable form of given slices and the difference between them.
 func diffSlices(tb testing.TB, expected, actual []any) (expectedS string, actualS string, diff string) {
+	tb.Helper()
+
 	expectedS = wirebson.LogMessageIndent(wirebson.MustArray(expected...))
 	actualS = wirebson.LogMessageIndent(wirebson.MustArray(actual...))
 
