@@ -10,7 +10,7 @@ require (
 
 	// TODO https://github.com/FerretDB/wire/issues/49
 	// see https://jira.mongodb.org/browse/GODRIVER-3476
-	go.mongodb.org/mongo-driver/v2 v2.1.1-0.20250407150314-cd295b66f41d
+	go.mongodb.org/mongo-driver/v2 v2.2.0
 )
 
 require (
