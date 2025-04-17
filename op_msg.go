@@ -286,12 +286,8 @@ func (msg *OpMsg) DocumentRaw() (wirebson.RawDocument, error) {
 		return nil, lazyerrors.Errorf("expected 1 section, got %d", l)
 	}
 
-	s := msg.sections[0]
-	if s.kind != 0 || s.identifier != "" {
-		return nil, lazyerrors.Errorf(`expected section 0/"", got %d/%q`, s.kind, s.identifier)
-	}
-
-	return s.documents[0], nil
+	// the rest is checkout by checkSections
+	return msg.sections[0].documents[0], nil
 }
 
 // Deprecated: use DocumentRaw instead.
