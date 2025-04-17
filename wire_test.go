@@ -140,8 +140,8 @@ func testMessages(t *testing.T, testCases []testCase) {
 						_, _ = msgBody.DocumentDeep()
 						_, _ = msgBody.DocumentRaw()
 
-						_ = msgBody.RawSection0()
-						_, _ = msgBody.RawSections()
+						_, _ = msgBody.Section0()
+						_, _, _, _ = msgBody.Sections()
 					})
 				}
 			})
@@ -229,8 +229,8 @@ func fuzzMessages(f *testing.F, testCases []testCase) {
 					_, _ = msgBody.DocumentDeep()
 					_, _ = msgBody.DocumentRaw()
 
-					_ = msgBody.RawSection0()
-					_, _ = msgBody.RawSections()
+					_, _ = msgBody.Section0()
+					_, _, _, _ = msgBody.Sections()
 				})
 			}
 
