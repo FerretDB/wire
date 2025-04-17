@@ -299,17 +299,25 @@ func (msg *OpMsg) RawDocument() (wirebson.RawDocument, error) {
 	return msg.DocumentRaw()
 }
 
-// RawSection0 returns the value of the section with kind 0.
+// Document0 returns the frozen [*wirebson.Document] decoded from the section of kind 0.
+// It may be shallowly or deeply decoded.
 //
-// Most callers should use [OpMsg.DocumentRaw] instead.
-func (msg *OpMsg) RawSection0() wirebson.RawDocument {
+// Most callers should use [OpMsg.Document] instead.
+func (msg *OpMsg) Document0() (*wirebson.Document, error) {
 	for _, s := range msg.sections {
 		if s.kind == 0 {
-			return s.documents[0]
+			doc, err := s.documents[0].Decode()
+			if err != nil {
+				return nil, lazyerrors.Error(err)
+			}
+
+			doc.Freeze()
+			return doc, nil
 		}
 	}
 
-	return nil
+	// that is already checked by checkSections
+	panic("not reached")
 }
 
 // RawSections returns the value of section with kind 0 and the value of all sections with kind 1.
