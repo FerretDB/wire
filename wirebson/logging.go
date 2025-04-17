@@ -28,9 +28,6 @@ import (
 // logMaxDepth is the maximum depth of a recursive representation of a BSON value.
 const logMaxDepth = 20
 
-// nanBits is the most common pattern of a NaN float64 value, the same as math.Float64bits(math.NaN()).
-const nanBits = 0b111111111111000000000000000000000000000000000000000000000000001
-
 // slogValue returns a compact representation of any BSON value as [slog.Value].
 // It may change over time.
 //
@@ -94,12 +91,12 @@ func slogValue(v any, depth int) slog.Value {
 	case float64:
 		// for JSON handler to work
 		switch {
-		case math.IsNaN(v):
-			return slog.StringValue("NaN")
 		case math.IsInf(v, 1):
 			return slog.StringValue("+Inf")
 		case math.IsInf(v, -1):
 			return slog.StringValue("-Inf")
+		case math.IsNaN(v):
+			return slog.StringValue("NaN")
 		}
 
 		return slog.Float64Value(v)
@@ -271,19 +268,14 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 
 	case float64:
 		switch {
-		case math.IsNaN(v):
-			if bits := math.Float64bits(v); bits != nanBits {
-				fmt.Fprintf(b, "NaN(%b)", bits)
-				return
-			}
-
-			b.WriteString("NaN")
-
 		case math.IsInf(v, 1):
 			b.WriteString("+Inf")
 
 		case math.IsInf(v, -1):
 			b.WriteString("-Inf")
+
+		case math.IsNaN(v):
+			b.WriteString("NaN")
 
 		default:
 			res := strconv.FormatFloat(v, 'f', -1, 64)

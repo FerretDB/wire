@@ -12,13 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package wire provides [MongoDB wire protocol] implementation.
-//
-// [MongoDB wire protocol]: https://www.mongodb.com/docs/manual/reference/mongodb-wire-protocol/
-package wire
+package wirebson
 
-//go:generate ./bin/stringer -linecomment -output stringers.go -type OpCode,OpMsgFlagBit,OpQueryFlagBit,OpReplyFlagBit
+import (
+	"math"
+	"testing"
 
-// Debug set to true performs additional slow checks during encoding/decoding that are not normally required.
-// It is exposed mainly to simplify testing.
-var Debug bool
+	"github.com/stretchr/testify/assert"
+)
+
+func TestEqual(t *testing.T) {
+	t.Parallel()
+
+	assert.True(t, Equal(0.0, math.Copysign(0, +1)))
+	assert.False(t, Equal(0.0, math.Copysign(0, -1)))
+
+	assert.True(t, Equal(math.Inf(+1), math.Inf(+1)))
+	assert.False(t, Equal(math.Inf(+1), math.Inf(-1)))
+
+	assert.True(t, Equal(math.NaN(), math.NaN()))
+	assert.True(t, Equal(math.NaN(), math.Float64frombits(0x7ff8000f000f0001)))
+}
