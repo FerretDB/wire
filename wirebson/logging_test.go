@@ -79,32 +79,32 @@ func TestLogging(t *testing.T) {
 			name: "Numbers",
 			doc: MustDocument(
 				"f64", 42.0,
-				"inf", float64(math.Inf(1)),
-				"neg_inf", float64(math.Inf(-1)),
-				"zero", math.Copysign(0, 1),
+				"zero", math.Copysign(0, +1),
 				"neg_zero", math.Copysign(0, -1),
-				"nan", float64(math.NaN()),
-				"nan_weird", float64(math.Float64frombits(0x7ff8000f000f0001)),
+				"inf", math.Inf(+1),
+				"neg_inf", math.Inf(-1),
+				"nan", math.NaN(),
+				"nan_weird", math.Float64frombits(0x7ff8000f000f0001),
 				"i32", int32(42),
 				"i64", int64(42),
 			),
-			t: `v.f64=42 v.inf=+Inf v.neg_inf=-Inf v.zero=0 v.neg_zero=-0 v.nan=NaN v.nan_weird=NaN v.i32=42 v.i64=42`,
-			j: `{"v":{"f64":42,"inf":"+Inf","neg_inf":"-Inf","zero":0,"neg_zero":-0,"nan":"NaN","nan_weird":"NaN","i32":42,"i64":42}}`,
+			t: `v.f64=42 v.zero=0 v.neg_zero=-0 v.inf=+Inf v.neg_inf=-Inf v.nan=NaN v.nan_weird=NaN v.i32=42 v.i64=42`,
+			j: `{"v":{"f64":42,"zero":0,"neg_zero":-0,"inf":"+Inf","neg_inf":"-Inf","nan":"NaN","nan_weird":"NaN","i32":42,"i64":42}}`,
 			mi: strings.ReplaceAll(`
 			{
 			  "f64": 42.0,
-			  "inf": +Inf,
-			  "neg_inf": -Inf,
 			  "zero": 0.0,
 			  "neg_zero": -0.0,
+			  "inf": +Inf,
+			  "neg_inf": -Inf,
 			  "nan": NaN,
-			  "nan_weird": NaN(111111111111000000000000000111100000000000011110000000000000001),
+			  "nan_weird": NaN,
 			  "i32": 42,
 			  "i64": int64(42),
 			}`, `"`, "`",
 			),
-			m: "{`f64`: 42.0, `inf`: +Inf, `neg_inf`: -Inf, `zero`: 0.0, `neg_zero`: -0.0, `nan`: NaN, " +
-				"`nan_weird`: NaN(111111111111000000000000000111100000000000011110000000000000001), " +
+			m: "{`f64`: 42.0, `zero`: 0.0, `neg_zero`: -0.0, `inf`: +Inf, `neg_inf`: -Inf, `nan`: NaN, " +
+				"`nan_weird`: NaN, " +
 				"`i32`: 42, `i64`: int64(42)}",
 		},
 		{

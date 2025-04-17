@@ -16,12 +16,10 @@ package wire
 
 import (
 	"math"
-	"slices"
 	"testing"
 
 	"github.com/FerretDB/wire/internal/util/testutil"
 	"github.com/FerretDB/wire/wirebson"
-	"github.com/stretchr/testify/require"
 )
 
 // msgTestCases represents test cases for OP_MSG decoding/encoding.
@@ -268,7 +266,7 @@ var msgTestCases = []testCase{
 		err:       wirebson.ErrDecodeInvalidInput.Error(),
 	},
 	{
-		name: "NaN", // name is used in [TestMsg], changing it would fail the test
+		name: "NaN",
 		expectedB: []byte{
 			0x79, 0x00, 0x00, 0x00, // MessageLength
 			0x11, 0x00, 0x00, 0x00, // RequestID
@@ -684,29 +682,8 @@ var msgTestCases = []testCase{
 }
 
 func TestMsg(t *testing.T) {
-	// do not run this test in parallel as it changes global variable [CheckNaNs]
-
-	t.Run("DoNotCheckNaNs", func(t *testing.T) {
-		testMessages(t, msgTestCases)
-	})
-
-	t.Run("CheckNaNs", func(t *testing.T) {
-		i := slices.IndexFunc(msgTestCases, func(tc testCase) bool {
-			return tc.name == "NaN"
-		})
-
-		require.Positive(t, i)
-
-		CheckNaNs = true
-		msgTestCases[i].err = "NaN is not supported"
-
-		t.Cleanup(func() {
-			CheckNaNs = false
-			msgTestCases[i].err = ""
-		})
-
-		testMessages(t, msgTestCases)
-	})
+	t.Parallel()
+	testMessages(t, msgTestCases)
 }
 
 func FuzzMsg(f *testing.F) {

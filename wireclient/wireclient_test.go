@@ -30,6 +30,7 @@ import (
 
 	"github.com/FerretDB/wire"
 	"github.com/FerretDB/wire/wirebson"
+	"github.com/FerretDB/wire/wiretest"
 )
 
 // logWriter provides [io.Writer] for [testing.TB].
@@ -192,7 +193,7 @@ func TestTypes(t *testing.T) {
 			wirebson.MustDocument("_id", "d", "v", d),
 			wirebson.MustDocument("_id", "md", "v", d),
 		)
-		assert.Equal(t, expected, doc.Get("cursor").(*wirebson.Document).Get("firstBatch"))
+		wiretest.AssertEqual(t, expected, doc.Get("cursor").(*wirebson.Document).Get("firstBatch"))
 
 		c, err := db.Collection("test").Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{"_id", 1}}))
 		require.NoError(t, err)
@@ -247,7 +248,7 @@ func TestTypes(t *testing.T) {
 			wirebson.MustDocument("_id", "ts", "v", ts),
 			wirebson.MustDocument("_id", "mts", "v", ts),
 		)
-		assert.Equal(t, expected, doc.Get("cursor").(*wirebson.Document).Get("firstBatch"))
+		wiretest.AssertEqual(t, expected, doc.Get("cursor").(*wirebson.Document).Get("firstBatch"))
 
 		c, err := db.Collection("test").Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{"_id", -1}}))
 		require.NoError(t, err)

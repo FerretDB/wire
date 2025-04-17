@@ -12,13 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package wire provides [MongoDB wire protocol] implementation.
-//
-// [MongoDB wire protocol]: https://www.mongodb.com/docs/manual/reference/mongodb-wire-protocol/
-package wire
+package wiretest
 
-//go:generate ./bin/stringer -linecomment -output stringers.go -type OpCode,OpMsgFlagBit,OpQueryFlagBit,OpReplyFlagBit
+import (
+	"math"
+	"testing"
+)
 
-// Debug set to true performs additional slow checks during encoding/decoding that are not normally required.
-// It is exposed mainly to simplify testing.
-var Debug bool
+func TestEqual(t *testing.T) {
+	t.Parallel()
+
+	AssertEqualSlices(t,
+		[]any{0.0, math.Copysign(0, +1), math.NaN()},
+		[]any{0.0, math.Copysign(0, +1), math.Float64frombits(0x7ff8000f000f0001)},
+	)
+}

@@ -17,11 +17,13 @@ package wirebson
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"math"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/pmezard/go-difflib/difflib"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -276,8 +278,12 @@ var normalTestCases = []normalTestCase{
 				MustArray("foo"),
 				MustArray(),
 			),
-			// TODO https://github.com/FerretDB/wire/issues/73
-			"float64", MustArray(42.13, 0.0, math.Copysign(0, -1), math.Inf(1), math.Inf(-1)),
+			"float64", MustArray(
+				42.13,
+				math.Copysign(0, +1), math.Copysign(0, -1),
+				math.Inf(+1), math.Inf(-1),
+				math.NaN(), math.Float64frombits(0x7ff8000f000f0001),
+			),
 			"string", MustArray("foo", ""),
 			"binary", MustArray(
 				Binary{Subtype: BinaryUser, B: []byte{0x42}},
@@ -319,6 +325,8 @@ var normalTestCases = []normalTestCase{
 		    -0.0,
 		    +Inf,
 		    -Inf,
+		    NaN,
+		    NaN,
 		  ],
 		  "string": [
 		    "foo",
@@ -398,6 +406,12 @@ var normalTestCases = []normalTestCase{
 		    },
 		    {
 		      "$numberDouble": "-Infinity"
+		    },
+		    {
+		      "$numberDouble": "NaN"
+		    },
+		    {
+		      "$numberDouble": "NaN"
 		    }
 		  ],
 		  "string": [
@@ -769,6 +783,29 @@ var normalTestCases = []normalTestCase{
 		}`,
 	},
 	{
+		name: "decimal128DocPrec",
+		raw: RawDocument{
+			0x18, 0x00, 0x00, 0x00,
+			0x13, 0x66, 0x00,
+			0x30, 0x30, 0x31, 0x30, 0x30, 0x31, 0x30, 0x30,
+			0x31, 0x31, 0x30, 0x31, 0x30, 0xff, 0x31, 0x30,
+			0x00,
+		},
+		doc: MustDocument(
+			"f", Decimal128{H: 3472837370128118065, L: 3472329395739373616},
+		),
+		mi: `
+		{
+		  "f": Decimal128(H:3472837370128118065,L:3472329395739373616),
+		}`,
+		j: `
+		{
+		  "f": {
+		    "$numberDecimal": "103681294822929121827017235.39812400"
+		  }
+		}`,
+	},
+	{
 		name: "emptyDoc",
 		raw: RawDocument{
 			0x05, 0x00, 0x00, 0x00, // document length
@@ -987,7 +1024,7 @@ func TestNormal(t *testing.T) {
 			t.Run("DecodeDeepEncode", func(t *testing.T) {
 				doc, err := tc.raw.DecodeDeep()
 				require.NoError(t, err)
-				assert.Equal(t, tc.doc, doc)
+				assertEqual(t, tc.doc, doc)
 
 				ls := doc.LogValue().Resolve().String()
 				assert.NotContains(t, ls, "panicked")
@@ -1020,7 +1057,13 @@ func TestNormal(t *testing.T) {
 				var doc *Document
 				err = json.Unmarshal([]byte(tc.j), &doc)
 				require.NoError(t, err)
-				assert.Equal(t, tc.doc, doc)
+
+				// TODO https://github.com/FerretDB/wire/issues/49
+				if strings.Contains(tc.j, `$numberDecimal`) {
+					t.Skip("https://github.com/FerretDB/wire/issues/49")
+				}
+
+				assertEqual(t, tc.doc, doc)
 			})
 		})
 	}
@@ -1371,6 +1414,7 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		}
 
 		b, err := json.Marshal(doc)
+		j := string(b)
 		d, _ := toDriver(doc)
 		require.NoError(t, err, "%s\n%#v", doc.LogMessage(), d)
 
@@ -1385,6 +1429,18 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		}
 
 		require.NoError(t, err, "%s\n%s", doc.LogMessage(), b)
+
+		// invalid UTF-8 bytes can't survive marshaling/unmarshaling
+		if strings.Contains(j, `\ufffd`) { // Unicode replacement rune
+			t.Skip()
+		}
+
+		// TODO https://github.com/FerretDB/wire/issues/49
+		if strings.Contains(j, `$numberDecimal`) {
+			t.Skip()
+		}
+
+		assertEqual(t, doc, doc2)
 	})
 }
 
@@ -1408,4 +1464,29 @@ func FuzzDocument(f *testing.F) {
 			testRawDocument(t, rawDoc)
 		})
 	})
+}
+
+// assertEqual asserts that two BSON values are equal.
+// It is copied from the wiretest package to avoid a circular dependency.
+func assertEqual(tb testing.TB, expected, actual any) bool {
+	tb.Helper()
+
+	if assert.True(tb, Equal(expected, actual)) {
+		return true
+	}
+
+	expectedS := LogMessageIndent(expected)
+	actualS := LogMessageIndent(actual)
+
+	diff, err := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
+		A:        difflib.SplitLines(expectedS),
+		FromFile: "expected",
+		B:        difflib.SplitLines(actualS),
+		ToFile:   "actual",
+		Context:  1,
+	})
+	require.NoError(tb, err)
+
+	msg := fmt.Sprintf("Not equal:\n\nexpected:\n%s\n\nactual:\n%s\n\ndiff:\n%s", expectedS, actualS, diff)
+	return assert.Fail(tb, msg)
 }

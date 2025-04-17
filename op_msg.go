@@ -50,7 +50,7 @@ func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	if Debug || CheckNaNs {
+	if Debug {
 		if err = msg.check(); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
@@ -80,16 +80,9 @@ func (msg *OpMsg) check() error {
 	}
 
 	for _, s := range msg.sections {
-		for _, raw := range s.documents {
-			d, err := raw.DecodeDeep()
-			if err != nil {
+		for _, d := range s.documents {
+			if _, err := d.DecodeDeep(); err != nil {
 				return lazyerrors.Error(err)
-			}
-
-			if CheckNaNs {
-				if err = checkNaN(d); err != nil {
-					return lazyerrors.Error(err)
-				}
 			}
 		}
 	}
@@ -194,7 +187,7 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 		return lazyerrors.Error(err)
 	}
 
-	if Debug || CheckNaNs {
+	if Debug {
 		if err := msg.check(); err != nil {
 			return lazyerrors.Error(err)
 		}
