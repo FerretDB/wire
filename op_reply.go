@@ -48,7 +48,7 @@ func NewOpReply(doc wirebson.AnyDocument) (*OpReply, error) {
 		document: raw,
 	}
 
-	if Debug || CheckNaNs {
+	if Debug {
 		if err = reply.check(); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
@@ -75,12 +75,6 @@ func (reply *OpReply) check() error {
 	if d := reply.document; d != nil {
 		if _, err := d.DecodeDeep(); err != nil {
 			return lazyerrors.Error(err)
-		}
-
-		if CheckNaNs {
-			if err := checkNaN(d); err != nil {
-				return lazyerrors.Error(err)
-			}
 		}
 	}
 

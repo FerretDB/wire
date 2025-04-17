@@ -48,7 +48,7 @@ func NewOpQuery(doc wirebson.AnyDocument) (*OpQuery, error) {
 		query: raw,
 	}
 
-	if Debug || CheckNaNs {
+	if Debug {
 		if err = query.check(); err != nil {
 			return nil, lazyerrors.Error(err)
 		}
@@ -76,23 +76,11 @@ func (query *OpQuery) check() error {
 		if _, err := d.DecodeDeep(); err != nil {
 			return lazyerrors.Error(err)
 		}
-
-		if CheckNaNs {
-			if err := checkNaN(d); err != nil {
-				return lazyerrors.Error(err)
-			}
-		}
 	}
 
 	if s := query.returnFieldsSelector; s != nil {
 		if _, err := s.DecodeDeep(); err != nil {
 			return lazyerrors.Error(err)
-		}
-
-		if CheckNaNs {
-			if err := checkNaN(s); err != nil {
-				return lazyerrors.Error(err)
-			}
 		}
 	}
 
@@ -141,7 +129,7 @@ func (query *OpQuery) UnmarshalBinaryNocopy(b []byte) error {
 		query.returnFieldsSelector = b[selectorLow:]
 	}
 
-	if Debug || CheckNaNs {
+	if Debug {
 		if err = query.check(); err != nil {
 			return lazyerrors.Error(err)
 		}
