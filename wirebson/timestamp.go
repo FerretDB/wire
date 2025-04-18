@@ -53,7 +53,10 @@ func encodeTimestamp(b []byte, v Timestamp) {
 // If there is not enough bytes, decodeTimestamp will return a wrapped [ErrDecodeShortInput].
 func decodeTimestamp(b []byte) (Timestamp, error) {
 	if len(b) < sizeTimestamp {
-		return 0, fmt.Errorf("DecodeTimestamp: expected at least %d bytes, got %d: %w", sizeTimestamp, len(b), ErrDecodeShortInput)
+		return 0, fmt.Errorf(
+			"DecodeTimestamp: expected at least %d bytes, got %d: %w",
+			sizeTimestamp, len(b), ErrDecodeShortInput,
+		)
 	}
 
 	return Timestamp(binary.LittleEndian.Uint64(b)), nil

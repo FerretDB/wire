@@ -34,18 +34,23 @@ formatters:
     - gci
     - gofumpt
     - goimports
+    - golines
 
   settings:
     gci:
       sections:
         - standard
         - default
-        - prefix(github.com/FerretDB/wire)
+        - localmodule
+      no-inline-comments: false
+      no-prefix-comments: true
     gofumpt:
       extra-rules: true
     goimports:
       local-prefixes:
         - github.com/FerretDB/wire
+    golines:
+      max-len: 130
 
   exclusions:
     generated: strict

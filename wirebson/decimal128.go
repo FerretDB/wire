@@ -44,7 +44,10 @@ func decodeDecimal128(b []byte) (Decimal128, error) {
 	var res Decimal128
 
 	if len(b) < sizeDecimal128 {
-		return res, fmt.Errorf("DecodeDecimal128: expected at least %d bytes, got %d: %w", sizeDecimal128, len(b), ErrDecodeShortInput)
+		return res, fmt.Errorf(
+			"DecodeDecimal128: expected at least %d bytes, got %d: %w",
+			sizeDecimal128, len(b), ErrDecodeShortInput,
+		)
 	}
 
 	res.H = binary.LittleEndian.Uint64(b[8:])
