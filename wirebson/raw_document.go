@@ -26,17 +26,6 @@ import (
 // It generally references a part of a larger slice, not a copy.
 type RawDocument []byte
 
-// Clone returns a deep copy of the RawDocument.
-func (raw RawDocument) Clone() RawDocument {
-	if raw == nil {
-		panic("raw is nil")
-	}
-
-	res := make([]byte, len(raw))
-	copy(res, raw)
-	return res
-}
-
 // Encode returns itself to implement the [AnyDocument] interface.
 //
 // Receiver must not be nil.
