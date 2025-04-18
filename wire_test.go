@@ -62,7 +62,7 @@ func lastErr(err error) error {
 
 var lastUpdate = time.Date(2020, 2, 15, 9, 34, 33, 0, time.UTC)
 
-//nolint:vet // for readability
+//nolint:govet // for readability
 type testCase struct {
 	name      string
 	headerB   []byte

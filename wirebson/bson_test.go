@@ -32,7 +32,7 @@ import (
 
 // normalTestCase represents a single test case for successful decoding/encoding.
 //
-//nolint:vet // for readability
+//nolint:govet // for readability
 type normalTestCase struct {
 	name string
 	raw  RawDocument
@@ -43,7 +43,7 @@ type normalTestCase struct {
 
 // decodeTestCase represents a single test case for unsuccessful decoding.
 //
-//nolint:vet // for readability
+//nolint:govet // for readability
 type decodeTestCase struct {
 	name string
 	raw  RawDocument

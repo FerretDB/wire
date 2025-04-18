@@ -30,12 +30,12 @@ func (as arraySort) Len() int {
 }
 
 // Less implements [sort.Interface].
-func (as arraySort) Less(i int, j int) bool {
+func (as arraySort) Less(i, j int) bool {
 	return as.less(as.arr.Get(i), as.arr.Get(j))
 }
 
 // Swap implements [sort.Interface].
-func (as arraySort) Swap(i int, j int) {
+func (as arraySort) Swap(i, j int) {
 	a := as.arr.Get(i)
 	as.arr.Replace(i, as.arr.Get(j))
 	as.arr.Replace(j, a)
