@@ -64,33 +64,33 @@ func logger(tb testing.TB) *slog.Logger {
 }
 
 // setup waits for FerretDB or MongoDB to start and returns the URI.
-func setup(t testing.TB) string {
-	t.Helper()
+func setup(tb testing.TB) string {
+	tb.Helper()
 
 	if testing.Short() {
-		t.Skip("skipping integration tests for -short")
+		tb.Skip("skipping integration tests for -short")
 	}
 
 	uri := os.Getenv("MONGODB_URI")
-	require.NotEmpty(t, uri, "MONGODB_URI environment variable must be set; set it or run tests with `go test -short`")
+	require.NotEmpty(tb, uri, "MONGODB_URI environment variable must be set; set it or run tests with `go test -short`")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	conn := ConnectPing(ctx, uri, logger(t))
-	require.NotNil(t, conn)
+	conn := ConnectPing(ctx, uri, logger(tb))
+	require.NotNil(tb, conn)
 
 	err := conn.Close()
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
 	return uri
 }
 
 // databaseName returns the database name for the test.
-func databaseName(t testing.TB) string {
-	t.Helper()
+func databaseName(tb testing.TB) string {
+	tb.Helper()
 
-	return strings.ReplaceAll(t.Name(), "/", "_")
+	return strings.ReplaceAll(tb.Name(), "/", "_")
 }
 
 func TestConn(t *testing.T) {
