@@ -68,6 +68,17 @@ func sizeBinary(v Binary) int {
 	return len(v.B) + 5
 }
 
+// cloneBinary returns a copy of the [Binary] value v.
+func cloneBinary(v Binary) Binary {
+	b := make([]byte, len(v.B))
+	copy(b, v.B)
+
+	return Binary{
+		B:       b,
+		Subtype: v.Subtype,
+	}
+}
+
 // encodeBinary encodes [Binary] value v into b.
 //
 // b must be at least len(v.B)+5 ([sizeBinary]) bytes long; otherwise, encodeBinary will panic.

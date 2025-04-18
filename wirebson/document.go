@@ -84,6 +84,15 @@ func MakeDocument(cap int) *Document {
 	}
 }
 
+// Clone returns a deep unfrozen copy of the Document.
+func (doc *Document) Clone() *Document {
+	raw, err := doc.Encode()
+	must.NoError(err)
+
+	raw.Decode()
+	panic("not implemented")
+}
+
 // Freeze prevents Document from further field modifications.
 // Any methods that would modify Document fields will panic.
 //

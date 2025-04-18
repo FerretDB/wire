@@ -26,6 +26,17 @@ import (
 // It generally references a part of a larger slice, not a copy.
 type RawArray []byte
 
+// Clone returns a deep copy of the RawArray.
+func (raw RawArray) Clone() RawArray {
+	if raw == nil {
+		panic("raw is nil")
+	}
+
+	res := make([]byte, len(raw))
+	copy(res, raw)
+	return res
+}
+
 // Encode returns itself to implement the [AnyArray] interface.
 //
 // Receiver must not be nil.

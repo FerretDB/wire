@@ -67,6 +67,11 @@ func MakeArray(cap int) *Array {
 	}
 }
 
+// Clone returns a deep unfrozen copy of the Array.
+func (arr *Array) Clone() *Array {
+	panic("not implemented")
+}
+
 // Freeze prevents Array from further modifications.
 // Any methods that would modify the Array will panic.
 //
