@@ -24,6 +24,8 @@ import (
 )
 
 // OpMsg is the main wire protocol message type.
+//
+// Message is checked during construction by [NewOpMsg], [MustOpMsg], or [OpMsg.UnmarshalBinaryNocopy].
 type OpMsg struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: flags, sections, optional checksum.
@@ -40,13 +42,12 @@ func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	sections := []opMsgSection{{documents: []wirebson.RawDocument{raw}}}
-	if err = checkSections(sections); err != nil {
-		return nil, lazyerrors.Error(err)
+	msg := &OpMsg{
+		sections: []opMsgSection{{documents: []wirebson.RawDocument{raw}}},
 	}
 
-	msg := OpMsg{
-		sections: sections,
+	if err = checkSections(msg.sections); err != nil {
+		return nil, lazyerrors.Error(err)
 	}
 
 	if Debug {
@@ -55,7 +56,7 @@ func NewOpMsg(doc wirebson.AnyDocument) (*OpMsg, error) {
 		}
 	}
 
-	return &msg, nil
+	return msg, nil
 }
 
 // MustOpMsg creates a message with a single section of kind 0 with a single document
@@ -75,7 +76,7 @@ func (msg *OpMsg) msgbody() {}
 // check implements [MsgBody].
 func (msg *OpMsg) check() error {
 	if err := checkSections(msg.sections); err != nil {
-		return err
+		return lazyerrors.Error(err)
 	}
 
 	for _, s := range msg.sections {
@@ -197,12 +198,6 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 
 // MarshalBinary writes an OpMsg to a byte array.
 func (msg *OpMsg) MarshalBinary() ([]byte, error) {
-	if Debug {
-		if err := msg.check(); err != nil {
-			return nil, lazyerrors.Error(err)
-		}
-	}
-
 	b := make([]byte, 4, 16)
 
 	binary.LittleEndian.PutUint32(b, uint32(msg.Flags))
@@ -243,31 +238,43 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Document returns the value of msg as decoded [*wirebson.Document].
-// Only top-level fields are decoded.
+// Document returns the value of msg as decoded frozen [*wirebson.Document].
+// It may be shallowly or deeply decoded.
 //
 // The error is returned if msg contains anything other than a single section of kind 0
 // with a single document.
 func (msg *OpMsg) Document() (*wirebson.Document, error) {
 	raw, err := msg.DocumentRaw()
 	if err != nil {
-		return nil, err
+		return nil, lazyerrors.Error(err)
 	}
 
-	return raw.Decode()
+	doc, err := raw.Decode()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
-// DocumentDeep returns the value of msg as deeply-decoded [*wirebson.Document].
+// DocumentDeep returns the value of msg as deeply decoded frozen [*wirebson.Document].
 //
 // The error is returned if msg contains anything other than a single section of kind 0
 // with a single document.
 func (msg *OpMsg) DocumentDeep() (*wirebson.Document, error) {
 	raw, err := msg.DocumentRaw()
 	if err != nil {
-		return nil, err
+		return nil, lazyerrors.Error(err)
 	}
 
-	return raw.DecodeDeep()
+	doc, err := raw.DecodeDeep()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
 // DocumentRaw returns the value of msg as a [wirebson.DocumentRaw].
@@ -279,12 +286,8 @@ func (msg *OpMsg) DocumentRaw() (wirebson.RawDocument, error) {
 		return nil, lazyerrors.Errorf("expected 1 section, got %d", l)
 	}
 
-	s := msg.sections[0]
-	if s.kind != 0 || s.identifier != "" {
-		return nil, lazyerrors.Errorf(`expected section 0/"", got %d/%q`, s.kind, s.identifier)
-	}
-
-	return s.documents[0], nil
+	// the rest is checkout by checkSections
+	return msg.sections[0].documents[0], nil
 }
 
 // Deprecated: use DocumentRaw instead.
@@ -292,23 +295,35 @@ func (msg *OpMsg) RawDocument() (wirebson.RawDocument, error) {
 	return msg.DocumentRaw()
 }
 
-// RawSection0 returns the value of the section with kind 0.
+// Section0 returns the frozen [*wirebson.Document] decoded from the section of kind 0.
+// It may be shallowly or deeply decoded.
 //
-// Most callers should use [OpMsg.DocumentRaw] instead.
-func (msg *OpMsg) RawSection0() wirebson.RawDocument {
+// Most callers should use [OpMsg.Document] instead.
+func (msg *OpMsg) Section0() (*wirebson.Document, error) {
 	for _, s := range msg.sections {
 		if s.kind == 0 {
-			return s.documents[0]
+			doc, err := s.documents[0].Decode()
+			if err != nil {
+				return nil, lazyerrors.Error(err)
+			}
+
+			doc.Freeze()
+			return doc, nil
 		}
 	}
 
-	return nil
+	// that is already checked by checkSections
+	panic("not reached")
 }
 
-// RawSections returns the value of section with kind 0 and the value of all sections with kind 1.
+// Sections returns the frozen [*wirebson.Document] decoded from the section of kind 0
+// (it may be shallowly or deeply decoded),
+// the raw value of that document,
+// and the concatenation of raw values of all sections with kind 1.
 //
-// Most callers should use [OpMsg.DocumentRaw] instead.
-func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
+// Most callers should use [OpMsg.Document] instead.
+func (msg *OpMsg) Sections() (*wirebson.Document, wirebson.RawDocument, []byte, error) {
+	var doc *wirebson.Document
 	var spec wirebson.RawDocument
 	var seq []byte
 
@@ -317,6 +332,13 @@ func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
 		case 0:
 			spec = s.documents[0]
 
+			var err error
+			if doc, err = spec.Decode(); err != nil {
+				return nil, nil, nil, lazyerrors.Error(err)
+			}
+
+			doc.Freeze()
+
 		case 1:
 			for _, d := range s.documents {
 				seq = append(seq, d...)
@@ -324,7 +346,7 @@ func (msg *OpMsg) RawSections() (wirebson.RawDocument, []byte) {
 		}
 	}
 
-	return spec, seq
+	return doc, spec, seq, nil
 }
 
 // logMessage returns a string representation for logging.

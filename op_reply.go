@@ -24,6 +24,8 @@ import (
 
 // OpReply is a deprecated response message type.
 //
+// Message is checked during construction by [NewOpReply], [MustOpReply], or [OpReply.UnmarshalBinaryNocopy].
+//
 // Only up to one returned document is supported.
 type OpReply struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
@@ -42,7 +44,17 @@ func NewOpReply(doc wirebson.AnyDocument) (*OpReply, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	return &OpReply{document: raw}, nil
+	reply := &OpReply{
+		document: raw,
+	}
+
+	if Debug {
+		if err = reply.check(); err != nil {
+			return nil, lazyerrors.Error(err)
+		}
+	}
+
+	return reply, nil
 }
 
 // MustOpReply creates a new OpReply message constructed from the given pairs of field names and values.
@@ -104,12 +116,6 @@ func (reply *OpReply) UnmarshalBinaryNocopy(b []byte) error {
 
 // MarshalBinary implements [MsgBody].
 func (reply *OpReply) MarshalBinary() ([]byte, error) {
-	if Debug {
-		if err := reply.check(); err != nil {
-			return nil, lazyerrors.Error(err)
-		}
-	}
-
 	b := make([]byte, 20+len(reply.document))
 
 	binary.LittleEndian.PutUint32(b[0:4], uint32(reply.Flags))
@@ -126,23 +132,35 @@ func (reply *OpReply) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Document returns decoded document, or nil.
-// Only top-level fields are decoded.
+// Document returns decoded frozen document, or nil.
+// It may be shallowly or deeply decoded.
 func (reply *OpReply) Document() (*wirebson.Document, error) {
 	if reply.document == nil {
 		return nil, nil
 	}
 
-	return reply.document.Decode()
+	doc, err := reply.document.Decode()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
-// Document returns deeply decoded document, or nil.
+// Document returns deeply decoded frozen document, or nil.
 func (reply *OpReply) DocumentDeep() (*wirebson.Document, error) {
 	if reply.document == nil {
 		return nil, nil
 	}
 
-	return reply.document.DecodeDeep()
+	doc, err := reply.document.DecodeDeep()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	doc.Freeze()
+	return doc, nil
 }
 
 // DocumentRaw returns raw document (that might be nil).
