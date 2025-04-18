@@ -42,6 +42,7 @@
 package wirebson
 
 import (
+	"slices"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -116,15 +117,13 @@ func validBSONType(v any) error {
 	return nil
 }
 
-// fromDriver converts MongoDB driver value ([bson.D], [bson.A], etc) to wirebson value.
-func fromDriver(v any) (any, error) {
+// FromDriver converts MongoDB driver v2 value ([bson.D], [bson.A], etc) to wirebson value.
+func FromDriver(v any) (any, error) {
 	switch v := v.(type) {
-	// composite types
-
 	case bson.D:
 		doc := MakeDocument(len(v))
 		for _, e := range v {
-			val, err := fromDriver(e.Value)
+			val, err := FromDriver(e.Value)
 			if err != nil {
 				return nil, lazyerrors.Error(err)
 			}
@@ -139,7 +138,7 @@ func fromDriver(v any) (any, error) {
 	case bson.A:
 		arr := MakeArray(len(v))
 		for _, e := range v {
-			val, err := fromDriver(e)
+			val, err := FromDriver(e)
 			if err != nil {
 				return nil, lazyerrors.Error(err)
 			}
@@ -151,16 +150,14 @@ func fromDriver(v any) (any, error) {
 
 		return arr, nil
 
-	// scalar types (in the same order as in bson package)
-
 	case float64:
 		return v, nil
 	case string:
 		return v, nil
 	case bson.Binary:
 		return Binary{
+			B:       slices.Clip(slices.Clone(v.Data)),
 			Subtype: BinarySubtype(v.Subtype),
-			B:       v.Data,
 		}, nil
 	case bson.Undefined:
 		return Undefined, nil
@@ -180,7 +177,7 @@ func fromDriver(v any) (any, error) {
 	case int32:
 		return v, nil
 	case bson.Timestamp:
-		return Timestamp(uint64(v.T)<<32 | uint64(v.I)), nil
+		return NewTimestamp(v.T, v.I), nil
 	case int64:
 		return v, nil
 	case bson.Decimal128:
@@ -196,15 +193,13 @@ func fromDriver(v any) (any, error) {
 	}
 }
 
-// toDriver converts wirebson value to MongoDB driver value (bson.D, bson.A, etc).
-func toDriver(v any) (any, error) {
+// ToDriver converts wirebson value to MongoDB driver v2 value (bson.D, bson.A, etc).
+func ToDriver(v any) (any, error) {
 	switch v := v.(type) {
-	// composite types
-
 	case *Document:
 		doc := make(bson.D, 0, v.Len())
 		for k, v := range v.All() {
-			val, err := toDriver(v)
+			val, err := ToDriver(v)
 			if err != nil {
 				return nil, lazyerrors.Error(err)
 			}
@@ -217,7 +212,7 @@ func toDriver(v any) (any, error) {
 	case *Array:
 		arr := make(bson.A, v.Len())
 		for i, v := range v.All() {
-			val, err := toDriver(v)
+			val, err := ToDriver(v)
 			if err != nil {
 				return nil, lazyerrors.Error(err)
 			}
@@ -227,8 +222,6 @@ func toDriver(v any) (any, error) {
 
 		return arr, nil
 
-	// scalar types (in the same order as in bson package)
-
 	case float64:
 		return v, nil
 	case string:
@@ -236,7 +229,7 @@ func toDriver(v any) (any, error) {
 	case Binary:
 		return bson.Binary{
 			Subtype: byte(v.Subtype),
-			Data:    v.B,
+			Data:    slices.Clip(slices.Clone(v.B)),
 		}, nil
 	case UndefinedType:
 		return bson.Undefined{}, nil
@@ -256,10 +249,7 @@ func toDriver(v any) (any, error) {
 	case int32:
 		return v, nil
 	case Timestamp:
-		return bson.Timestamp{
-			T: uint32(v >> 32),
-			I: uint32(v),
-		}, nil
+		return bson.Timestamp{T: v.T(), I: v.I()}, nil
 	case int64:
 		return v, nil
 	case Decimal128:
