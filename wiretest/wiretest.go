@@ -114,3 +114,21 @@ func AssertEqualSlices[T any](tb testing.TB, expected, actual []T) bool {
 	msg := fmt.Sprintf("Not equal:\n\nexpected:\n%s\n\nactual:\n%s\n\ndiff:\n%s", expectedS, actualS, diff)
 	return assert.Fail(tb, msg)
 }
+
+// FromDriver converts MongoDB driver v2 value ([bson.D], [bson.A], etc) to wirebson value.
+func FromDriver(tb testing.TB, v any) any {
+	tb.Helper()
+
+	res, err := wirebson.FromDriver(v)
+	require.NoError(tb, err)
+	return res
+}
+
+// ToDriver converts wirebson value to MongoDB driver v2 value (bson.D, bson.A, etc).
+func ToDriver(tb testing.TB, v any) any {
+	tb.Helper()
+
+	res, err := wirebson.ToDriver(v)
+	require.NoError(tb, err)
+	return res
+}
