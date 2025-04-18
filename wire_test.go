@@ -62,7 +62,7 @@ func lastErr(err error) error {
 
 var lastUpdate = time.Date(2020, 2, 15, 9, 34, 33, 0, time.UTC)
 
-//nolint:vet // for readability
+//nolint:govet // for readability
 type testCase struct {
 	name      string
 	headerB   []byte
@@ -135,14 +135,12 @@ func testMessages(t *testing.T, testCases []testCase) {
 
 				switch msgBody := msgBody.(type) {
 				case *OpMsg:
-					assert.NotPanics(t, func() {
-						_, _ = msgBody.Document()
-						_, _ = msgBody.DocumentDeep()
-						_, _ = msgBody.DocumentRaw()
+					_, _ = msgBody.Document()
+					_, _ = msgBody.DocumentDeep()
+					_, _ = msgBody.DocumentRaw()
 
-						_, _ = msgBody.Section0()
-						_, _, _, _ = msgBody.Sections()
-					})
+					_, _ = msgBody.Section0()
+					_, _, _, _ = msgBody.Sections()
 				}
 			})
 
@@ -224,14 +222,12 @@ func fuzzMessages(f *testing.F, testCases []testCase) {
 
 			switch msgBody := msgBody.(type) {
 			case *OpMsg:
-				assert.NotPanics(t, func() {
-					_, _ = msgBody.Document()
-					_, _ = msgBody.DocumentDeep()
-					_, _ = msgBody.DocumentRaw()
+				_, _ = msgBody.Document()
+				_, _ = msgBody.DocumentDeep()
+				_, _ = msgBody.DocumentRaw()
 
-					_, _ = msgBody.Section0()
-					_, _, _, _ = msgBody.Sections()
-				})
+				_, _ = msgBody.Section0()
+				_, _, _, _ = msgBody.Sections()
 			}
 
 			// remove random tail

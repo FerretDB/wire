@@ -144,11 +144,13 @@ func (reply *OpReply) Document() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	doc.Freeze()
+	// TODO https://github.com/FerretDB/wire/issues/108
+	// doc.Freeze()
+
 	return doc, nil
 }
 
-// Document returns deeply decoded frozen document, or nil.
+// DocumentDeep returns deeply decoded frozen document, or nil.
 func (reply *OpReply) DocumentDeep() (*wirebson.Document, error) {
 	if reply.document == nil {
 		return nil, nil
@@ -159,7 +161,9 @@ func (reply *OpReply) DocumentDeep() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	doc.Freeze()
+	// TODO https://github.com/FerretDB/wire/issues/108
+	// doc.Freeze()
+
 	return doc, nil
 }
 

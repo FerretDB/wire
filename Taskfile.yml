@@ -64,14 +64,16 @@ tasks:
 
   fmt:
     desc: "Run code formatters"
+    run: once
     cmds:
-      - bin/gofumpt -w .
+      - bin/golangci-lint fmt
 
   lint:
     desc: "Run linters"
+    deps: [fmt]
     cmds:
+      - bin/golangci-lint run
       - bin/go-consistent -pedantic . ./wirebson ./wireclient ./internal/...
-      - bin/golangci-lint run --config=.golangci.yml
       - bin/govulncheck -test -show=verbose,color ./...
 
   test-short:

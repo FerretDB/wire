@@ -166,18 +166,22 @@ func (query *OpQuery) Query() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	doc.Freeze()
+	// TODO https://github.com/FerretDB/wire/issues/108
+	// doc.Freeze()
+
 	return doc, nil
 }
 
-// Query returns deeply decoded frozen query document.
+// QueryDeep returns deeply decoded frozen query document.
 func (query *OpQuery) QueryDeep() (*wirebson.Document, error) {
 	doc, err := query.query.DecodeDeep()
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}
 
-	doc.Freeze()
+	// TODO https://github.com/FerretDB/wire/issues/108
+	// doc.Freeze()
+
 	return doc, nil
 }
 
@@ -198,11 +202,13 @@ func (query *OpQuery) ReturnFieldsSelector() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	doc.Freeze()
+	// TODO https://github.com/FerretDB/wire/issues/108
+	// doc.Freeze()
+
 	return doc, nil
 }
 
-// ReturnFieldsSelector returns deeply decoded frozen returnFieldsSelector document, or nil.
+// ReturnFieldsSelectorDeep returns deeply decoded frozen returnFieldsSelector document, or nil.
 func (query *OpQuery) ReturnFieldsSelectorDeep() (*wirebson.Document, error) {
 	if query.returnFieldsSelector == nil {
 		return nil, nil
@@ -213,7 +219,9 @@ func (query *OpQuery) ReturnFieldsSelectorDeep() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	doc.Freeze()
+	// TODO https://github.com/FerretDB/wire/issues/108
+	// doc.Freeze()
+
 	return doc, nil
 }
 

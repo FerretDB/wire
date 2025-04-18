@@ -40,7 +40,10 @@ func decodeObjectID(b []byte) (ObjectID, error) {
 	var res ObjectID
 
 	if len(b) < sizeObjectID {
-		return res, fmt.Errorf("DecodeObjectID: expected at least %d bytes, got %d: %w", sizeObjectID, len(b), ErrDecodeShortInput)
+		return res, fmt.Errorf(
+			"DecodeObjectID: expected at least %d bytes, got %d: %w",
+			sizeObjectID, len(b), ErrDecodeShortInput,
+		)
 	}
 
 	copy(res[:], b)

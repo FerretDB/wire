@@ -1,43 +1,64 @@
 ---
+# TODO https://github.com/FerretDB/wire/issues/4
+
+version: "2"
+
 linters:
-  disable-all: true
+  default: none
   enable:
-    # TODO https://github.com/FerretDB/wire/issues/4
     - asciicheck
-    - gci
-    - goimports
     - govet
     - staticcheck
 
-# https://golangci-lint.run/usage/linters/
-linters-settings:
-  # asciicheck
-  gci:
-    sections:
-      - standard
-      - default
-      - prefix(github.com/FerretDB/wire)
-    skip-generated: false
-  goimports:
-    local-prefixes: github.com/FerretDB/wire
-  govet:
-    enable-all: true
-    settings:
-      shadow:
-        strict: true
-  staticcheck:
-    checks: [all]
+  # https://golangci-lint.run/usage/linters/
+  settings:
+    # asciicheck
+    govet:
+      enable-all: true
+      settings:
+        shadow:
+          strict: true
+    staticcheck:
+      checks: [all]
+
+  exclusions:
+    generated: strict
+    warn-unused: true
+    rules:
+      # that's a valid usage of bson.D / bson.E
+      - linters: [govet]
+        text: "\\Qcomposites: go.mongodb.org/mongo-driver/v2/bson.E struct literal uses unkeyed fields"
+
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
+    - golines
+
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
+      no-inline-comments: false
+      no-prefix-comments: true
+    gofumpt:
+      extra-rules: true
+    goimports:
+      local-prefixes:
+        - github.com/FerretDB/wire
+    golines:
+      max-len: 130
+
+  exclusions:
+    generated: strict
+    warn-unused: true
 
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
 
-  exclude-use-default: false
-  exclude-rules:
-    # that's a valid usage of bson.D / bson.E
-    - linters: [govet]
-      text: "composites: go.mongodb.org/mongo-driver/v2/bson.E struct literal uses unkeyed fields"
-
-
 run:
-  timeout: 3m
+  timeout: 1m
