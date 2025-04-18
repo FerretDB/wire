@@ -1059,6 +1059,7 @@ func TestNormal(t *testing.T) {
 				require.NoError(t, err)
 
 				// TODO https://github.com/FerretDB/wire/issues/49
+				// https://jira.mongodb.org/browse/GODRIVER-3531
 				if strings.Contains(tc.j, `$numberDecimal`) {
 					t.Skip("https://github.com/FerretDB/wire/issues/49")
 				}
@@ -1436,6 +1437,7 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		}
 
 		// TODO https://github.com/FerretDB/wire/issues/49
+		// https://jira.mongodb.org/browse/GODRIVER-3531
 		if strings.Contains(j, `$numberDecimal`) {
 			t.Skip()
 		}
