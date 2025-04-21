@@ -47,11 +47,21 @@ func diff(tb testing.TB, expected, actual any) (expectedS, actualS, diff string)
 }
 
 // diffSlices returns a readable form of given slices and the difference between them.
-func diffSlices(tb testing.TB, expected, actual []any) (expectedS, actualS, diff string) {
+func diffSlices[T any](tb testing.TB, expected, actual []T) (expectedS, actualS, diff string) {
 	tb.Helper()
 
-	expectedS = wirebson.LogMessageIndent(wirebson.MustArray(expected...))
-	actualS = wirebson.LogMessageIndent(wirebson.MustArray(actual...))
+	expectedA := wirebson.MakeArray(len(expected))
+	for _, v := range expected {
+		require.NoError(tb, expectedA.Add(v))
+	}
+
+	actualA := wirebson.MakeArray(len(actual))
+	for _, v := range actual {
+		require.NoError(tb, actualA.Add(v))
+	}
+
+	expectedS = wirebson.LogMessageIndent(expectedA)
+	actualS = wirebson.LogMessageIndent(actualA)
 
 	var err error
 	diff, err = difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
@@ -81,7 +91,7 @@ func AssertEqual(tb testing.TB, expected, actual any) bool {
 }
 
 // AssertEqualSlices asserts that two BSON slices are equal.
-func AssertEqualSlices(tb testing.TB, expected, actual []any) bool {
+func AssertEqualSlices[T any](tb testing.TB, expected, actual []T) bool {
 	tb.Helper()
 
 	allEqual := len(expected) == len(actual)
@@ -103,4 +113,22 @@ func AssertEqualSlices(tb testing.TB, expected, actual []any) bool {
 
 	msg := fmt.Sprintf("Not equal:\n\nexpected:\n%s\n\nactual:\n%s\n\ndiff:\n%s", expectedS, actualS, diff)
 	return assert.Fail(tb, msg)
+}
+
+// FromDriver converts MongoDB driver v2 value ([bson.D], [bson.A], etc) to wirebson value.
+func FromDriver(tb testing.TB, v any) any {
+	tb.Helper()
+
+	res, err := wirebson.FromDriver(v)
+	require.NoError(tb, err)
+	return res
+}
+
+// ToDriver converts wirebson value to MongoDB driver v2 value (bson.D, bson.A, etc).
+func ToDriver(tb testing.TB, v any) any {
+	tb.Helper()
+
+	res, err := wirebson.ToDriver(v)
+	require.NoError(tb, err)
+	return res
 }

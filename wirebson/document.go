@@ -264,7 +264,7 @@ func (doc *Document) MarshalJSON() ([]byte, error) {
 	// encoding/json does not call this method on nil
 	must.NotBeZero(doc)
 
-	d, err := toDriver(doc)
+	d, err := ToDriver(doc)
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}
@@ -295,7 +295,7 @@ func (doc *Document) UnmarshalJSON(b []byte) error {
 		return lazyerrors.Error(err)
 	}
 
-	v, err := fromDriver(d)
+	v, err := FromDriver(d)
 	if err != nil {
 		return lazyerrors.Error(err)
 	}
