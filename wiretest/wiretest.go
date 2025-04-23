@@ -115,7 +115,7 @@ func AssertEqualSlices[T any](tb testing.TB, expected, actual []T) bool {
 	return assert.Fail(tb, msg)
 }
 
-// FromDriver converts MongoDB driver v2 value ([bson.D], [bson.A], etc) to wirebson value.
+// FromDriver converts MongoDB driver v2 (and, temporary, v1) value ([bson.D], [bson.A], etc) to wirebson value.
 func FromDriver(tb testing.TB, v any) any {
 	tb.Helper()
 
