@@ -25,11 +25,13 @@ import (
 	"time"
 )
 
-// logMaxDepth is the maximum depth of a recursive representation of a BSON value.
-const logMaxDepth = 20
+// slogValueMaxDepth is the maximum depth of a recursive representation of a BSON value for [slogValue].
+const slogValueMaxDepth = 20
 
 // slogValue returns a compact representation of any BSON value as [slog.Value].
 // It may change over time.
+//
+// It panics on invalid BSON types.
 //
 // The result is optimized for small values such as function parameters.
 // Some information is lost;
@@ -45,7 +47,7 @@ func slogValue(v any, depth int) slog.Value {
 			return slog.StringValue("Document<nil>")
 		}
 
-		if depth > logMaxDepth {
+		if depth > slogValueMaxDepth {
 			return slog.StringValue("Document<...>")
 		}
 
@@ -69,7 +71,7 @@ func slogValue(v any, depth int) slog.Value {
 			return slog.StringValue("Array<nil>")
 		}
 
-		if depth > logMaxDepth {
+		if depth > slogValueMaxDepth {
 			return slog.StringValue("Array<...>")
 		}
 
@@ -142,16 +144,28 @@ func slogValue(v any, depth int) slog.Value {
 	}
 }
 
-// LogMessage returns a representation as a string.
+// LogMessage returns a representation of any BSON value as a string,
+// somewhat similar (but not identical) to JSON or Go syntax.
 // It may change over time.
+//
+// It panics on invalid BSON types.
+//
+// The result is optimized for large values such as full request documents.
+// All information is preserved.
 func LogMessage(v any) string {
 	var b strings.Builder
 	logMessage(v, -1, 1, &b)
 	return b.String()
 }
 
-// LogMessageIndent returns a representation as an indented string.
+// LogMessageIndent returns an indented representation of any BSON value as a string,
+// somewhat similar (but not identical) to JSON or Go syntax.
 // It may change over time.
+//
+// It panics on invalid BSON types.
+//
+// The result is optimized for large values such as full request documents.
+// All information is preserved.
 func LogMessageIndent(v any) string {
 	var b strings.Builder
 	logMessage(v, 0, 1, &b)
@@ -161,6 +175,8 @@ func LogMessageIndent(v any) string {
 // logMessage returns an indented representation of any BSON value as a string,
 // somewhat similar (but not identical) to JSON or Go syntax.
 // It may change over time.
+//
+// It panics on invalid BSON types.
 //
 // The result is optimized for large values such as full request documents.
 // All information is preserved.
@@ -178,7 +194,7 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 			return
 		}
 
-		if depth > logMaxDepth {
+		if depth > slogValueMaxDepth {
 			b.WriteString("{...}")
 			return
 		}
@@ -230,7 +246,7 @@ func logMessage(v any, indent, depth int, b *strings.Builder) {
 			return
 		}
 
-		if depth > logMaxDepth {
+		if depth > slogValueMaxDepth {
 			b.WriteString("[...]")
 			return
 		}

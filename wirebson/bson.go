@@ -45,6 +45,7 @@ import (
 	"slices"
 	"time"
 
+	oldbson "go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
@@ -117,7 +118,7 @@ func validBSONType(v any) error {
 	return nil
 }
 
-// FromDriver converts MongoDB driver v2 value ([bson.D], [bson.A], etc) to wirebson value.
+// FromDriver converts MongoDB driver v2 (and, temporary, v1) value ([bson.D], [bson.A], etc) to wirebson value.
 func FromDriver(v any) (any, error) {
 	switch v := v.(type) {
 	case bson.D:
@@ -135,6 +136,14 @@ func FromDriver(v any) (any, error) {
 
 		return doc, nil
 
+	case oldbson.D:
+		d := make(bson.D, len(v))
+		for i, e := range v {
+			d[i] = bson.E{Key: e.Key, Value: e.Value}
+		}
+
+		return FromDriver(d)
+
 	case bson.A:
 		arr := MakeArray(len(v))
 		for _, e := range v {
@@ -150,15 +159,15 @@ func FromDriver(v any) (any, error) {
 
 		return arr, nil
 
+	case oldbson.A:
+		return FromDriver(bson.A(v))
+
 	case float64:
 		return v, nil
 	case string:
 		return v, nil
 	case bson.Binary:
-		return Binary{
-			B:       slices.Clip(slices.Clone(v.Data)),
-			Subtype: BinarySubtype(v.Subtype),
-		}, nil
+		return Binary{B: slices.Clip(slices.Clone(v.Data)), Subtype: BinarySubtype(v.Subtype)}, nil
 	case bson.Undefined:
 		return Undefined, nil
 	case bson.ObjectID:
@@ -170,10 +179,7 @@ func FromDriver(v any) (any, error) {
 	case bson.Null, nil:
 		return Null, nil
 	case bson.Regex:
-		return Regex{
-			Pattern: v.Pattern,
-			Options: v.Options,
-		}, nil
+		return Regex{Pattern: v.Pattern, Options: v.Options}, nil
 	case int32:
 		return v, nil
 	case bson.Timestamp:
@@ -182,11 +188,25 @@ func FromDriver(v any) (any, error) {
 		return v, nil
 	case bson.Decimal128:
 		h, l := v.GetBytes()
+		return Decimal128{H: h, L: l}, nil
 
-		return Decimal128{
-			H: h,
-			L: l,
-		}, nil
+	case oldbson.Binary:
+		return Binary{B: slices.Clip(slices.Clone(v.Data)), Subtype: BinarySubtype(v.Subtype)}, nil
+	case oldbson.Undefined:
+		return Undefined, nil
+	case oldbson.ObjectID:
+		return ObjectID(v), nil
+	case oldbson.DateTime:
+		return v.Time().UTC(), nil
+	case oldbson.Null:
+		return Null, nil
+	case oldbson.Regex:
+		return Regex{Pattern: v.Pattern, Options: v.Options}, nil
+	case oldbson.Timestamp:
+		return NewTimestamp(v.T, v.I), nil
+	case oldbson.Decimal128:
+		h, l := v.GetBytes()
+		return Decimal128{H: h, L: l}, nil
 
 	default:
 		return nil, lazyerrors.Errorf("invalid BSON type %T", v)
