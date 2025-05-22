@@ -234,7 +234,7 @@ func (arr *Array) UnmarshalJSON(b []byte) error {
 }
 
 // Copy returns a shallow copy of [*Array]. Only scalar values including [Binary] are copied.
-// [*Array] and [RawArray] are added without a copy, using the same pointer.
+// [*Document], [*Array], [RawDocument] and [RawArray] are added without a copy, using the same pointer.
 func (arr *Array) Copy() (*Array, error) {
 	res := MakeArray(arr.Len())
 
