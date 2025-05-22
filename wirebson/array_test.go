@@ -70,6 +70,7 @@ func TestArrayCopy(t *testing.T) {
 	cp, err := original.Copy()
 	require.NoError(t, err)
 	require.Equal(t, original, cp)
+	require.NotSame(t, original, cp)
 
 	err = cp.Add("new")
 	require.NoError(t, err)

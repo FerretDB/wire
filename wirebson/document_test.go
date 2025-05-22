@@ -75,6 +75,7 @@ func TestDocumentCopy(t *testing.T) {
 	cp, err := original.Copy()
 	require.NoError(t, err)
 	require.Equal(t, original, cp)
+	require.NotSame(t, original, cp)
 
 	cp.Remove("string")
 	require.NotEqual(t, original, cp)
