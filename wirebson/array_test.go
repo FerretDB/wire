@@ -72,7 +72,8 @@ func TestArrayCopy(t *testing.T) {
 	require.Equal(t, original, cp)
 	require.NotSame(t, original, cp)
 
-	err = cp.Add("new")
-	require.NoError(t, err)
-	require.NotEqual(t, original, cp)
+	originalBinary := original.Get(14).(Binary).B
+	copyBinary := cp.Get(14).(Binary).B
+	require.Equal(t, originalBinary, copyBinary)
+	require.NotSame(t, &originalBinary[0], &copyBinary[0])
 }

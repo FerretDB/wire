@@ -77,6 +77,8 @@ func TestDocumentCopy(t *testing.T) {
 	require.Equal(t, original, cp)
 	require.NotSame(t, original, cp)
 
-	cp.Remove("string")
-	require.NotEqual(t, original, cp)
+	originalBinary := original.Get("binary").(Binary).B
+	copyBinary := cp.Get("binary").(Binary).B
+	require.Equal(t, originalBinary, copyBinary)
+	require.NotSame(t, &originalBinary[0], &copyBinary[0])
 }
