@@ -233,17 +233,12 @@ func (arr *Array) UnmarshalJSON(b []byte) error {
 	}
 }
 
-// Copy returns a shallow copy of *Array.
-// Only scalar values including Binary are copied.
-// *Document/*Array and RawDocument/RawArray are added without a copy, using the same pointer.
+// Copy returns a shallow copy of [*Array]. Only scalar values including [Binary] are copied.
+// [*Array] and [RawArray] are added without a copy, using the same pointer.
 func (arr *Array) Copy() (*Array, error) {
-	if arr == nil {
-		return nil, nil
-	}
+	res := MakeArray(arr.Len())
 
-	res := MakeArray(len(arr.values))
-
-	for _, v := range arr.values {
+	for v := range arr.Values() {
 		switch v := v.(type) {
 		case *Document,
 			RawDocument,
@@ -265,8 +260,7 @@ func (arr *Array) Copy() (*Array, error) {
 				return nil, lazyerrors.Error(err)
 			}
 		case Binary:
-			b := Binary{B: slices.Clip(slices.Clone(v.B)), Subtype: v.Subtype}
-			if err := res.Add(b); err != nil {
+			if err := res.Add(Binary{B: slices.Clip(slices.Clone(v.B)), Subtype: v.Subtype}); err != nil {
 				return nil, lazyerrors.Error(err)
 			}
 

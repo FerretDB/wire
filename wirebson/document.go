@@ -21,6 +21,7 @@ import (
 	"iter"
 	"log/slog"
 	"slices"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
@@ -308,6 +309,45 @@ func (doc *Document) UnmarshalJSON(b []byte) error {
 	default:
 		return lazyerrors.Errorf("expected *Document, got %T", v)
 	}
+}
+
+// Copy returns a shallow copy of [*Document]. Only scalar values including [Binary] are copied.
+// [*Document] and [RawDocument] are added without a copy, using the same pointer.
+func (doc *Document) Copy() (*Document, error) {
+	res := MakeDocument(doc.Len())
+
+	for k, v := range doc.All() {
+		switch v := v.(type) {
+		case *Document,
+			RawDocument,
+			*Array,
+			RawArray,
+			float64,
+			string,
+			UndefinedType,
+			ObjectID,
+			bool,
+			time.Time,
+			NullType,
+			nil, Regex,
+			int32,
+			Timestamp,
+			int64,
+			Decimal128:
+			if err := res.Add(k, v); err != nil {
+				return nil, lazyerrors.Error(err)
+			}
+		case Binary:
+			if err := res.Add(k, Binary{B: slices.Clip(slices.Clone(v.B)), Subtype: v.Subtype}); err != nil {
+				return nil, lazyerrors.Error(err)
+			}
+
+		default:
+			return nil, lazyerrors.Errorf("invalid BSON type %T", v)
+		}
+	}
+
+	return res, nil
 }
 
 // LogValue implements [slog.LogValuer].
