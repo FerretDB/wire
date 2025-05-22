@@ -329,7 +329,7 @@ func (doc *Document) Copy() (*Document, error) {
 			bool,
 			time.Time,
 			NullType,
-			nil, Regex,
+			Regex,
 			int32,
 			Timestamp,
 			int64,

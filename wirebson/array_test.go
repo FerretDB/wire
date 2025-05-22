@@ -18,8 +18,10 @@ import (
 	"maps"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestArray(t *testing.T) {
@@ -44,4 +46,32 @@ func TestArray(t *testing.T) {
 		expected := []any{"foo", "bar", "baz"}
 		assert.Equal(t, expected, slices.Collect(arr.Values()))
 	})
+}
+
+func TestArrayCopy(t *testing.T) {
+	original := MustArray(
+		MustDocument("key1", "value1"),
+		MustArray("v1", "v2"),
+		float64(0),
+		"foo",
+		Undefined,
+		ObjectID{},
+		false,
+		time.Date(2023, 10, 1, 0, 0, 0, 0, time.UTC),
+		Null,
+		Regex{Pattern: "foo", Options: "bar"},
+		int32(0),
+		Timestamp(0),
+		int64(0),
+		Decimal128{L: 0, H: 0},
+		Binary{B: []byte{0, 0, 0, 0, 0, 0}, Subtype: BinaryGeneric},
+	)
+
+	cp, err := original.Copy()
+	require.NoError(t, err)
+	require.Equal(t, original, cp)
+
+	err = cp.Add("new")
+	require.NoError(t, err)
+	require.NotEqual(t, original, cp)
 }

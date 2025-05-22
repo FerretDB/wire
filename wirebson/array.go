@@ -251,7 +251,7 @@ func (arr *Array) Copy() (*Array, error) {
 			bool,
 			time.Time,
 			NullType,
-			nil, Regex,
+			Regex,
 			int32,
 			Timestamp,
 			int64,
