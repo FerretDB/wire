@@ -72,8 +72,7 @@ func TestDocumentCopy(t *testing.T) {
 		"binary", Binary{B: []byte{0, 0, 0, 0, 0, 0}, Subtype: BinaryGeneric},
 	)
 
-	cp, err := original.Copy()
-	require.NoError(t, err)
+	cp := original.Copy()
 	require.Equal(t, original, cp)
 	require.NotSame(t, original, cp)
 

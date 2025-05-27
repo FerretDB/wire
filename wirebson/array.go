@@ -23,7 +23,6 @@ import (
 	"slices"
 	"sort"
 	"strconv"
-	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
@@ -233,43 +232,22 @@ func (arr *Array) UnmarshalJSON(b []byte) error {
 	}
 }
 
-// Copy returns a shallow copy of [*Array]. Only scalar values including [Binary] are copied.
-// [*Document], [*Array], [RawDocument] and [RawArray] are added without a copy, using the same pointer.
-func (arr *Array) Copy() (*Array, error) {
+// Copy returns a shallow copy of [*Array]. Only scalar values (including [Binary]) are copied.
+// [*Document], [*Array], [RawDocument], and [RawArray] are added without a copy, using the same pointer/slice.
+func (arr *Array) Copy() *Array {
 	res := MakeArray(arr.Len())
 
 	for v := range arr.Values() {
 		switch v := v.(type) {
-		case *Document,
-			RawDocument,
-			*Array,
-			RawArray,
-			float64,
-			string,
-			UndefinedType,
-			ObjectID,
-			bool,
-			time.Time,
-			NullType,
-			Regex,
-			int32,
-			Timestamp,
-			int64,
-			Decimal128:
-			if err := res.Add(v); err != nil {
-				return nil, lazyerrors.Error(err)
-			}
 		case Binary:
-			if err := res.Add(Binary{B: slices.Clip(slices.Clone(v.B)), Subtype: v.Subtype}); err != nil {
-				return nil, lazyerrors.Error(err)
-			}
-
+			must.NoError(res.Add(Binary{B: slices.Clip(slices.Clone(v.B)), Subtype: v.Subtype}))
 		default:
-			return nil, lazyerrors.Errorf("invalid BSON type %T", v)
+			must.NoError(validBSONType(v))
+			must.NoError(res.Add(v))
 		}
 	}
 
-	return res, nil
+	return res
 }
 
 // LogValue implements [slog.LogValuer].

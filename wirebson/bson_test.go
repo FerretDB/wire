@@ -1451,11 +1451,7 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 			return
 		}
 
-		cp, err := doc.Copy()
-		if err != nil {
-			return
-		}
-
+		cp := doc.Copy()
 		assert.Equal(t, doc, cp)
 		assert.NotSame(t, doc, cp)
 	})
