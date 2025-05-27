@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"iter"
 	"log/slog"
+	"slices"
 	"sort"
 	"strconv"
 
@@ -229,6 +230,24 @@ func (arr *Array) UnmarshalJSON(b []byte) error {
 	default:
 		return lazyerrors.Errorf("expected *Array, got %T", v)
 	}
+}
+
+// Copy returns a shallow copy of [*Array]. Only scalar values (including [Binary]) are copied.
+// [*Document], [*Array], [RawDocument], and [RawArray] are added without a copy, using the same pointer/slice.
+func (arr *Array) Copy() *Array {
+	res := MakeArray(arr.Len())
+
+	for v := range arr.Values() {
+		switch v := v.(type) {
+		case Binary:
+			must.NoError(res.Add(Binary{B: slices.Clip(slices.Clone(v.B)), Subtype: v.Subtype}))
+		default:
+			must.NoError(validBSONType(v))
+			must.NoError(res.Add(v))
+		}
+	}
+
+	return res
 }
 
 // LogValue implements [slog.LogValuer].

@@ -1444,6 +1444,17 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 
 		assertEqual(t, doc, doc2)
 	})
+
+	t.Run("Copy", func(t *testing.T) {
+		doc, err := rawDoc.DecodeDeep()
+		if err != nil {
+			return
+		}
+
+		cp := doc.Copy()
+		assert.Equal(t, doc, cp)
+		assert.NotSame(t, doc, cp)
+	})
 }
 
 func FuzzDocument(f *testing.F) {

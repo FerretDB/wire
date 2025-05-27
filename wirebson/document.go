@@ -310,6 +310,24 @@ func (doc *Document) UnmarshalJSON(b []byte) error {
 	}
 }
 
+// Copy returns a shallow copy of [*Document]. Only scalar values (including [Binary]) are copied.
+// [*Document], [*Array], [RawDocument], and [RawArray] are added without a copy, using the same pointer/slice.
+func (doc *Document) Copy() *Document {
+	res := MakeDocument(doc.Len())
+
+	for k, v := range doc.All() {
+		switch v := v.(type) {
+		case Binary:
+			must.NoError(res.Add(k, Binary{B: slices.Clip(slices.Clone(v.B)), Subtype: v.Subtype}))
+		default:
+			must.NoError(validBSONType(v))
+			must.NoError(res.Add(k, v))
+		}
+	}
+
+	return res
+}
+
 // LogValue implements [slog.LogValuer].
 func (doc *Document) LogValue() slog.Value {
 	return slogValue(doc, 1)
