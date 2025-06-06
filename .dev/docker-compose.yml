@@ -1,24 +1,21 @@
 ---
-# This file is used by integration tests.
-
 services:
-  database:
+  mongodb:
     build:
       context: .
-      dockerfile: ${DOCKERFILE:-mongo}.Dockerfile
+      dockerfile: mongo.Dockerfile
     ports:
       - 27017:27017
     environment:
-      # MongoDB
       MONGO_INITDB_ROOT_USERNAME: username
       MONGO_INITDB_ROOT_PASSWORD: password
 
-      # FerretDB v1
-      FERRETDB_SETUP_USERNAME: username
-      FERRETDB_SETUP_PASSWORD: password
-      FERRETDB_SETUP_DATABASE: admin
-      FERRETDB_TEST_ENABLE_NEW_AUTH: true
-
-      # PostgreSQL for FerretDB v2
+  ferretdb:
+    build:
+      context: .
+      dockerfile: ferretdb.Dockerfile
+    ports:
+      - 27018:27017
+    environment:
       POSTGRES_USER: username
       POSTGRES_PASSWORD: password
