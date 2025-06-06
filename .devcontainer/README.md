@@ -53,6 +53,21 @@ The following ports are automatically forwarded:
 - `27017` - MongoDB
 - `27018` - FerretDB
 
+## Testing the Setup
+
+You can verify that everything is working correctly by running the test script:
+
+```bash
+./.devcontainer/test-setup.sh
+```
+
+This script will:
+- Check all required tools are installed
+- Initialize the project
+- Run short tests
+- Start services
+- Verify connectivity
+
 ## Troubleshooting
 
 If services don't start properly, try:
@@ -60,5 +75,10 @@ If services don't start properly, try:
 task env-down
 task env-up-detach
 ```
+
+If the DevContainer doesn't work as expected:
+1. Ensure Docker is running on your host machine
+2. Try rebuilding the container: `Ctrl+Shift+P` → "Remote-Containers: Rebuild Container"
+3. Check the DevContainer logs in VS Code
 
 For more information, see the main project [CONTRIBUTING.md](../CONTRIBUTING.md).
