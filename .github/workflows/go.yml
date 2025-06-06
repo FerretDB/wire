@@ -20,17 +20,16 @@ env:
   GOMODCACHE: /home/runner/go/mod
   GOPROXY: https://proxy.golang.org
   GOTOOLCHAIN: local
-  MONGODB_URI: mongodb://localhost:27017/
 
 jobs:
   test:
-    name: Test ${{ matrix.dockerfile }}
+    name: Test ${{ matrix.service }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     # Do not run this job in parallel for any PR change or branch push.
     concurrency:
-      group: ${{ github.workflow }}-test-${{ matrix.dockerfile }}-${{ github.head_ref || github.ref_name }}
+      group: ${{ github.workflow }}-test-${{ matrix.service }}-${{ github.head_ref || github.ref_name }}
       cancel-in-progress: true
 
     if: github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'not ready')
@@ -38,7 +37,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dockerfile: [mongo, ferretdb]
+        include:
+          - service: MongoDB
+            uri: mongodb://localhost:27017/
+          - service: FerretDB
+            uri: mongodb://localhost:27018/
 
     permissions:
       contents: read
@@ -66,15 +69,13 @@ jobs:
       - name: Run short tests
         run: bin/task test-short
 
-      - name: Start development environment
+      - name: Start environment
         run: bin/task env-up-detach
-        env:
-          DOCKERFILE: ${{ matrix.dockerfile }}
 
       - name: Run all tests
         run: bin/task test
         env:
-          MONGODB_URI: ${{ matrix.dockerfile == 'ferretdb' && 'mongodb://localhost:27018/' || 'mongodb://localhost:27017/' }}
+          MONGODB_URI: ${{ matrix.uri }}
 
       - name: Get logs
         if: always()

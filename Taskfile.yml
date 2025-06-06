@@ -85,8 +85,6 @@ tasks:
     desc: "Run all tests (requires MONGODB_URI set)"
     cmds:
       - go test -race -count=1 -coverpkg=./... -coverprofile=cover.txt ./...
-    env:
-      MONGODB_URI: mongodb://localhost:27017/
 
   bench:
     desc: "Run benchmarks"
