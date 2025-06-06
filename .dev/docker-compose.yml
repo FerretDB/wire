@@ -1,7 +1,61 @@
 ---
-# This file is used by integration tests.
+# This file is used by integration tests and development.
 
 services:
+  # Wire development container
+  wire-dev:
+    build:
+      context: ..
+      dockerfile: .dev/wire.Dockerfile
+    volumes:
+      - ..:/workspace
+      - wire-go-cache:/go/pkg/mod
+      - wire-go-build-cache:/root/.cache/go-build
+    working_dir: /workspace
+    environment:
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/}
+      - FERRETDB_URI=${FERRETDB_URI:-mongodb://ferretdb:27017/}
+    depends_on:
+      - mongodb
+      - ferretdb
+    networks:
+      - wire-network
+
+  # MongoDB service
+  mongodb:
+    build:
+      context: .
+      dockerfile: mongo.Dockerfile
+    ports:
+      - "27017:27017"
+    environment:
+      # MongoDB
+      MONGO_INITDB_ROOT_USERNAME: username
+      MONGO_INITDB_ROOT_PASSWORD: password
+    networks:
+      - wire-network
+
+  # FerretDB service  
+  ferretdb:
+    build:
+      context: .
+      dockerfile: ferretdb.Dockerfile
+    ports:
+      - "27018:27017"
+    environment:
+      # FerretDB v1
+      FERRETDB_SETUP_USERNAME: username
+      FERRETDB_SETUP_PASSWORD: password
+      FERRETDB_SETUP_DATABASE: admin
+      FERRETDB_TEST_ENABLE_NEW_AUTH: true
+
+      # PostgreSQL for FerretDB v2
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+    networks:
+      - wire-network
+
+  # Legacy database service for backward compatibility
   database:
     build:
       context: .
@@ -22,3 +76,13 @@ services:
       # PostgreSQL for FerretDB v2
       POSTGRES_USER: username
       POSTGRES_PASSWORD: password
+    networks:
+      - wire-network
+
+volumes:
+  wire-go-cache:
+  wire-go-build-cache:
+
+networks:
+  wire-network:
+    driver: bridge
