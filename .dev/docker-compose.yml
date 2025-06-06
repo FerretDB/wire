@@ -20,6 +20,8 @@ services:
       - ferretdb
     networks:
       - wire-network
+    # Keep container running for exec commands
+    command: ["tail", "-f", "/dev/null"]
 
   # MongoDB service
   mongodb:
