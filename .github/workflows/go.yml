@@ -73,6 +73,8 @@ jobs:
 
       - name: Run all tests
         run: bin/task test
+        env:
+          MONGODB_URI: ${{ matrix.dockerfile == 'ferretdb' && 'mongodb://localhost:27018/' || 'mongodb://localhost:27017/' }}
 
       - name: Get logs
         if: always()
