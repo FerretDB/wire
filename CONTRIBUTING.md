@@ -2,6 +2,68 @@
 
 Thank you for your interest in making this package better!
 
+## Development Setup
+
+There are several ways to set up the development environment:
+
+### Option 1: VS Code DevContainers (Recommended)
+
+The easiest way to get started is using VS Code DevContainers:
+
+1. Install [VS Code](https://code.visualstudio.com/) and the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
+2. Open this repository in VS Code
+3. When prompted, click "Reopen in Container" or press `Ctrl+Shift+P` → "Remote-Containers: Reopen in Container"
+
+The container will automatically set up the full development environment including:
+- Go development tools
+- Task runner
+- MongoDB and FerretDB services
+- All necessary dependencies
+
+### Option 2: GitHub Codespaces
+
+For cloud-based development:
+
+1. Click the green "Code" button on GitHub → "Codespaces" tab → "Create codespace on main"
+2. Wait for the environment to set up automatically
+
+### Option 3: Local Development
+
+For local development on your machine:
+
+1. Install [Go 1.24+](https://golang.org/dl/)
+2. Install [Task](https://taskfile.dev/installation/)
+3. Install [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+4. Clone the repository
+5. Run the setup:
+   ```bash
+   task init
+   task env-up-detach  # Start MongoDB and FerretDB services
+   ```
+
+### Development Workflow
+
+Once your environment is set up, you can use these commands:
+
+```bash
+# Run short tests (no external dependencies)
+task test-short
+
+# Run all tests (requires MongoDB services)
+task test-all
+
+# Lint and format code
+task lint
+task fmt
+
+# Start/stop services
+task env-up      # Start and follow logs
+task env-down    # Stop services
+
+# Generate code
+task gen
+```
+
 ## Contributing code
 
 ### Submitting code changes

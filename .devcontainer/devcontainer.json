@@ -1,0 +1,54 @@
+{
+	"name": "FerretDB Wire Development",
+	"image": "mcr.microsoft.com/devcontainers/go:1.24-bullseye",
+
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"golang.go",
+				"ms-vscode.vscode-go",
+				"ms-vscode.docker",
+				"github.vscode-github-actions"
+			],
+			"settings": {
+				"go.gopath": "/go",
+				"go.goroot": "/usr/local/go",
+				"go.toolsGopath": "/go/tools"
+			}
+		},
+		"codespaces": {
+			"openFiles": [
+				"README.md",
+				"CONTRIBUTING.md"
+			]
+		}
+	},
+
+	// Set container specific features
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
+		"ghcr.io/devcontainers/features/docker-compose:2": {}
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [27017, 27018],
+	"portsAttributes": {
+		"27017": {
+			"label": "MongoDB",
+			"onAutoForward": "notify"
+		},
+		"27018": {
+			"label": "FerretDB", 
+			"onAutoForward": "notify"
+		}
+	},
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "go install github.com/go-task/task/v3/cmd/task@latest && task init && task env-up-detach",
+
+	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "vscode"
+}
