@@ -37,28 +37,6 @@ tasks:
         docker compose --file=.dev/docker-compose.yml --project-name=wire
         up --always-recreate-deps --force-recreate --remove-orphans --renew-anon-volumes --timeout=0 --detach
 
-  env-dev-up-detach:
-    desc: "Start development environment with wire-dev container"
-    cmds:
-      - docker version
-      - docker compose version
-      - >
-        docker compose --file=.dev/docker-compose.yml --project-name=wire
-        build --pull
-      - >
-        docker compose --file=.dev/docker-compose.yml --project-name=wire
-        up wire-dev mongodb ferretdb --always-recreate-deps --force-recreate --remove-orphans --renew-anon-volumes --timeout=0 --detach
-
-  env-dev-exec:
-    desc: "Execute command in wire-dev container"
-    cmds:
-      - docker compose --file=.dev/docker-compose.yml --project-name=wire exec wire-dev {{.CLI_ARGS}}
-
-  env-dev-shell:
-    desc: "Open shell in wire-dev container"
-    cmds:
-      - docker compose --file=.dev/docker-compose.yml --project-name=wire exec wire-dev bash
-
   env-logs:
     cmds:
       - docker compose --file=.dev/docker-compose.yml --project-name=wire logs
@@ -70,12 +48,6 @@ tasks:
   env-up:
     desc: "Start development environment"
     deps: [env-up-detach]
-    cmds:
-      - task: env-logs-follow
-
-  env-dev-up:
-    desc: "Start container-based development environment"
-    deps: [env-dev-up-detach]
     cmds:
       - task: env-logs-follow
 
@@ -115,15 +87,6 @@ tasks:
       - go test -race -count=1 -coverpkg=./... -coverprofile=cover.txt ./...
     env:
       MONGODB_URI: mongodb://localhost:27017/
-
-  test-dev:
-    desc: "Run all tests inside wire-dev container"
-    cmds:
-      - task: env-dev-exec
-        vars:
-          CLI_ARGS: "bin/task test"
-    env:
-      MONGODB_URI: mongodb://mongodb:27017/
 
   bench:
     desc: "Run benchmarks"
