@@ -46,13 +46,13 @@ tasks:
       - docker compose --file=.dev/docker-compose.yml --project-name=wire logs --follow
 
   env-up:
-    desc: "Start development environment"
+    desc: "Start Docker Compose services"
     deps: [env-up-detach]
     cmds:
       - task: env-logs-follow
 
   env-down:
-    desc: "Stop development environment"
+    desc: "Stop Docker Compose services"
     cmds:
       - docker compose --file=.dev/docker-compose.yml --project-name=wire down --remove-orphans --volumes
 
@@ -85,6 +85,12 @@ tasks:
     desc: "Run all tests (requires MONGODB_URI set)"
     cmds:
       - go test -race -count=1 -coverpkg=./... -coverprofile=cover.txt ./...
+
+  test-all:
+    desc: "Run all tests for all services"
+    cmds:
+      - env MONGODB_URI=mongodb://localhost:27017/ go test -race -count=1 ./...
+      - env MONGODB_URI=mongodb://localhost:27018/ go test -race -count=1 ./...
 
   bench:
     desc: "Run benchmarks"

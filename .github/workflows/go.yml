@@ -69,7 +69,7 @@ jobs:
       - name: Run short tests
         run: bin/task test-short
 
-      - name: Start environment
+      - name: Start Docker Compose services
         run: bin/task env-up-detach
 
       - name: Run all tests
