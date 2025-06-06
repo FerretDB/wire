@@ -18,24 +18,24 @@
 //
 // The following BSON types are supported:
 //
-//	BSON                Go                       $type alias
+//	BSON                Go                        $type alias
 //
-//	Document / Object   *Document / RawDocument  object
-//	Array               *Array / RawArray        array
+//	Document/Object     *Document or RawDocument  object
+//	Array               *Array or RawArray        array
 //
-//	Double              float64                  double
-//	String              string                   string
-//	Binary data         Binary                   binData
-//	Undefined           UndefinedType            undefined
-//	ObjectId            ObjectID                 objectId
-//	Boolean             bool                     bool
-//	Date                time.Time                date
-//	Null                NullType                 null
-//	Regular Expression  Regex                    regex
-//	32-bit integer      int32                    int
-//	Timestamp           Timestamp                timestamp
-//	64-bit integer      int64                    long
-//	Decimal128          Decimal128               decimal
+//	Double              float64                   double
+//	String              string                    string
+//	Binary data         Binary                    binData
+//	Undefined           UndefinedType             undefined
+//	ObjectId            ObjectID                  objectId
+//	Boolean             bool                      bool
+//	Date                time.Time                 date
+//	Null                NullType                  null
+//	Regular Expression  Regex                     regex
+//	32-bit integer      int32                     int
+//	Timestamp           Timestamp                 timestamp
+//	64-bit integer      int64                     long
+//	Decimal128          Decimal128                decimal
 //
 // Composite types (Document and Array) are passed by pointers.
 // Raw composite type and scalars are passed by values.
