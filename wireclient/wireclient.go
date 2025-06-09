@@ -95,7 +95,7 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 		switch k {
 		case "replicaSet":
 			// safe to ignore
-		case "tsl":
+		case "tls":
 			if len(vs) != 1 {
 				return nil, fmt.Errorf("wireclient.Connect: query parameter %q must have exactly one value", k)
 			}
@@ -111,10 +111,9 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	l.DebugContext(ctx, "Connecting", slog.String("uri", uri))
 
 	if tlsParam {
-		var c net.Conn
-
 		d := tls.Dialer{}
 
+		var c net.Conn
 		if c, err = d.DialContext(ctx, "tcp", u.Host); err != nil {
 			return nil, fmt.Errorf("wireclient.Connect: %w", err)
 		}
