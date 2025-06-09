@@ -135,8 +135,12 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 //
 // nil is returned on context expiration.
 func ConnectPing(ctx context.Context, uri string, l *slog.Logger) *Conn {
+	var err error
+
 	for ctx.Err() == nil {
-		conn, err := Connect(ctx, uri, l)
+		var conn *Conn
+
+		conn, err = Connect(ctx, uri, l)
 		if err != nil {
 			sleep(ctx, time.Second)
 			continue
@@ -149,6 +153,10 @@ func ConnectPing(ctx context.Context, uri string, l *slog.Logger) *Conn {
 		}
 
 		return conn
+	}
+
+	if err != nil {
+		l.DebugContext(ctx, "Connection unsuccessful", slog.String("error", err.Error()))
 	}
 
 	return nil
