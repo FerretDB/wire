@@ -18,6 +18,7 @@ package wireclient
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log/slog"
 	"net"
@@ -88,14 +89,14 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 		return nil, fmt.Errorf("wireclient.Connect: %w", err)
 	}
 
-	var tls bool
+	var tlsParam bool
 
 	for k, vs := range u.Query() {
 		switch k {
 		case "replicaSet":
 			// safe to ignore
 		case "tsl":
-			if tls, err = strconv.ParseBool(vs[0]); err != nil {
+			if tlsParam, err = strconv.ParseBool(vs[0]); err != nil {
 				return nil, fmt.Errorf("wireclient.Connect: query parameter %q has invalid value %q", k, vs[0])
 			}
 		default:
@@ -105,9 +106,25 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 
 	l.DebugContext(ctx, "Connecting", slog.String("uri", uri))
 
-	d := net.Dialer{}
+	if tlsParam {
+		var cert tls.Certificate
 
-	_ = tls
+		if cert, err = tls.LoadX509KeyPair("cert.pem", "key.pem"); err != nil {
+			return nil, fmt.Errorf("wireclient.Connect: %w", err)
+		}
+
+		var c net.Conn
+
+		if c, err = tls.Dial("tcp", u.Host, &tls.Config{
+			Certificates: []tls.Certificate{cert},
+		}); err != nil {
+			return nil, fmt.Errorf("wireclient.Connect: %w", err)
+		}
+
+		return New(c, l), nil
+	}
+
+	d := net.Dialer{}
 
 	c, err := d.DialContext(ctx, "tcp", u.Host)
 	if err != nil {
