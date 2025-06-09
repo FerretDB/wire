@@ -96,6 +96,10 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 		case "replicaSet":
 			// safe to ignore
 		case "tsl":
+			if len(vs) != 1 {
+				return nil, fmt.Errorf("wireclient.Connect: query parameter %q must have exactly one value", k)
+			}
+
 			if tlsParam, err = strconv.ParseBool(vs[0]); err != nil {
 				return nil, fmt.Errorf("wireclient.Connect: query parameter %q has invalid value %q", k, vs[0])
 			}
@@ -107,17 +111,11 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	l.DebugContext(ctx, "Connecting", slog.String("uri", uri))
 
 	if tlsParam {
-		var cert tls.Certificate
-
-		if cert, err = tls.LoadX509KeyPair("cert.pem", "key.pem"); err != nil {
-			return nil, fmt.Errorf("wireclient.Connect: %w", err)
-		}
-
 		var c net.Conn
 
-		if c, err = tls.Dial("tcp", u.Host, &tls.Config{
-			Certificates: []tls.Certificate{cert},
-		}); err != nil {
+		d := tls.Dialer{}
+
+		if c, err = d.DialContext(ctx, "tcp", u.Host); err != nil {
 			return nil, fmt.Errorf("wireclient.Connect: %w", err)
 		}
 
