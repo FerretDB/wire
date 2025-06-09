@@ -22,6 +22,7 @@ import (
 	"log/slog"
 	"net"
 	"net/url"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -87,11 +88,16 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 		return nil, fmt.Errorf("wireclient.Connect: %w", err)
 	}
 
-	for k := range u.Query() {
+	var tls bool
+
+	for k, vs := range u.Query() {
 		switch k {
 		case "replicaSet":
 			// safe to ignore
-
+		case "tsl":
+			if tls, err = strconv.ParseBool(vs[0]); err != nil {
+				return nil, fmt.Errorf("wireclient.Connect: query parameter %q has invalid value %q", k, vs[0])
+			}
 		default:
 			return nil, fmt.Errorf("wireclient.Connect: query parameter %q is not supported", k)
 		}
@@ -100,6 +106,8 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	l.DebugContext(ctx, "Connecting", slog.String("uri", uri))
 
 	d := net.Dialer{}
+
+	_ = tls
 
 	c, err := d.DialContext(ctx, "tcp", u.Host)
 	if err != nil {
