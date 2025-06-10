@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"log/slog"
 	"net"
@@ -135,24 +134,6 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	if tlsParam {
 		var b []byte
 
-		if b, err = os.ReadFile(certFile); err != nil {
-			return nil, fmt.Errorf("wireclient.Connect: %w", err)
-		}
-
-		var cert tls.Certificate
-
-		for block, rest := pem.Decode(b); block != nil; block, rest = pem.Decode(rest) {
-			switch block.Type {
-			case "CERTIFICATE":
-				cert.Certificate = append(cert.Certificate, block.Bytes)
-			case "PRIVATE KEY":
-				cert.PrivateKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)
-				if err != nil {
-					return nil, fmt.Errorf("wireclient.Connect: %w", err)
-				}
-			}
-		}
-
 		if b, err = os.ReadFile(caFile); err != nil {
 			return nil, fmt.Errorf("wireclient.Connect: %w", err)
 		}
@@ -164,9 +145,7 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 
 		d := tls.Dialer{
 			Config: &tls.Config{
-				Certificates: []tls.Certificate{cert},
-				RootCAs:      ca, // error without root CA: `failed to verify certificate: x509: certificate signed by unknown authority`
-				ServerName:   u.Hostname(),
+				RootCAs: ca, // error without root CA: `failed to verify certificate: x509: certificate signed by unknown authority`
 			},
 		}
 
