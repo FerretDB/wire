@@ -123,21 +123,23 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	l.DebugContext(ctx, "Connecting", slog.String("uri", uri))
 
 	if tlsParam {
-		var b []byte
+		var d tls.Dialer
 
-		if b, err = os.ReadFile(caFile); err != nil {
-			return nil, fmt.Errorf("wireclient.Connect: %w", err)
-		}
+		if caFile != "" {
+			var b []byte
 
-		ca := x509.NewCertPool()
-		if ok := ca.AppendCertsFromPEM(b); !ok {
-			return nil, fmt.Errorf("wireclient.Connect: failed to parse tlsCaFile")
-		}
+			if b, err = os.ReadFile(caFile); err != nil {
+				return nil, fmt.Errorf("wireclient.Connect: %w", err)
+			}
 
-		d := tls.Dialer{
-			Config: &tls.Config{
+			ca := x509.NewCertPool()
+			if ok := ca.AppendCertsFromPEM(b); !ok {
+				return nil, fmt.Errorf("wireclient.Connect: failed to parse tlsCaFile")
+			}
+
+			d.Config = &tls.Config{
 				RootCAs: ca,
-			},
+			}
 		}
 
 		var c net.Conn
