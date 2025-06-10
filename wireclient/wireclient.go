@@ -92,7 +92,7 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	}
 
 	var tlsParam bool
-	var certFile, caFile string
+	var caFile string
 
 	for k, vs := range u.Query() {
 		switch k {
@@ -105,15 +105,6 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 
 			if tlsParam, err = strconv.ParseBool(vs[0]); err != nil {
 				return nil, fmt.Errorf("wireclient.Connect: query parameter %q has invalid value %q", k, vs[0])
-			}
-		case "tlsCertificateKeyFile":
-			if len(vs) != 1 {
-				return nil, fmt.Errorf("wireclient.Connect: query parameter %q must have exactly one value", k)
-			}
-
-			certFile = vs[0]
-			if _, err = os.Stat(certFile); err != nil {
-				return nil, fmt.Errorf("wireclient.Connect: query parameter %q error %w", k, err)
 			}
 		case "tlsCaFile":
 			if len(vs) != 1 {
