@@ -19,10 +19,13 @@ import (
 	"bufio"
 	"context"
 	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"log/slog"
 	"net"
 	"net/url"
+	"os"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -90,6 +93,7 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	}
 
 	var tlsParam bool
+	var certFile, caFile string
 
 	for k, vs := range u.Query() {
 		switch k {
@@ -103,6 +107,24 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 			if tlsParam, err = strconv.ParseBool(vs[0]); err != nil {
 				return nil, fmt.Errorf("wireclient.Connect: query parameter %q has invalid value %q", k, vs[0])
 			}
+		case "tlsCertificateKeyFile":
+			if len(vs) != 1 {
+				return nil, fmt.Errorf("wireclient.Connect: query parameter %q must have exactly one value", k)
+			}
+
+			certFile = vs[0]
+			if _, err = os.Stat(certFile); err != nil {
+				return nil, fmt.Errorf("wireclient.Connect: query parameter %q error %w", k, err)
+			}
+		case "tlsCaFile":
+			if len(vs) != 1 {
+				return nil, fmt.Errorf("wireclient.Connect: query parameter %q must have exactly one value", k)
+			}
+
+			caFile = vs[0]
+			if _, err = os.Stat(caFile); err != nil {
+				return nil, fmt.Errorf("wireclient.Connect: query parameter %q error %w", k, err)
+			}
 		default:
 			return nil, fmt.Errorf("wireclient.Connect: query parameter %q is not supported", k)
 		}
@@ -111,7 +133,42 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	l.DebugContext(ctx, "Connecting", slog.String("uri", uri))
 
 	if tlsParam {
-		d := tls.Dialer{}
+		var b []byte
+
+		if b, err = os.ReadFile(certFile); err != nil {
+			return nil, fmt.Errorf("wireclient.Connect: %w", err)
+		}
+
+		var cert tls.Certificate
+
+		for block, rest := pem.Decode(b); block != nil; block, rest = pem.Decode(rest) {
+			switch block.Type {
+			case "CERTIFICATE":
+				cert.Certificate = append(cert.Certificate, block.Bytes)
+			case "PRIVATE KEY":
+				cert.PrivateKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)
+				if err != nil {
+					return nil, fmt.Errorf("wireclient.Connect: %w", err)
+				}
+			}
+		}
+
+		if b, err = os.ReadFile(caFile); err != nil {
+			return nil, fmt.Errorf("wireclient.Connect: %w", err)
+		}
+
+		ca := x509.NewCertPool()
+		if ok := ca.AppendCertsFromPEM(b); !ok {
+			return nil, fmt.Errorf("TLS CA file: failed to parse")
+		}
+
+		d := tls.Dialer{
+			Config: &tls.Config{
+				Certificates: []tls.Certificate{cert},
+				RootCAs:      ca, // error without root CA: `failed to verify certificate: x509: certificate signed by unknown authority`
+				ServerName:   u.Hostname(),
+			},
+		}
 
 		var c net.Conn
 		if c, err = d.DialContext(ctx, "tcp", u.Host); err != nil {
