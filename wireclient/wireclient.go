@@ -136,7 +136,7 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 
 		d := tls.Dialer{
 			Config: &tls.Config{
-				RootCAs: ca, // error without root CA: `failed to verify certificate: x509: certificate signed by unknown authority`
+				RootCAs: ca,
 			},
 		}
 
