@@ -40,6 +40,8 @@ jobs:
         include:
           - service: MongoDB
             uri: mongodb://localhost:27017/
+          - service: MongoDB with TLS
+            uri: mongodb://localhost:37017/?tls=true&tlsCertificateKeyFile=../.dev/build/certs/client.pem&tlsCaFile=../.dev/build/certs/rootCA-cert.pem
           - service: FerretDB
             uri: mongodb://localhost:27018/
 
