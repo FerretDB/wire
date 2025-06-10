@@ -131,7 +131,7 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 
 		ca := x509.NewCertPool()
 		if ok := ca.AppendCertsFromPEM(b); !ok {
-			return nil, fmt.Errorf("TLS CA file: failed to parse")
+			return nil, fmt.Errorf("wireclient.Connect: failed to parse tlsCaFile")
 		}
 
 		d := tls.Dialer{
