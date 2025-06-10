@@ -10,6 +10,20 @@ services:
       MONGO_INITDB_ROOT_USERNAME: username
       MONGO_INITDB_ROOT_PASSWORD: password
 
+  mongodb-tls:
+    build:
+      context: .
+      dockerfile: mongo.Dockerfile
+    command: --config /etc/mongodb.conf
+    ports:
+      - 37017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: username
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - ./build/certs:/etc/certs
+      - ./build/mongodb-tls.conf:/etc/mongodb.conf
+
   ferretdb:
     build:
       context: .

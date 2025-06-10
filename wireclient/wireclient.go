@@ -18,10 +18,14 @@ package wireclient
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"log/slog"
 	"net"
 	"net/url"
+	"os"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -87,17 +91,62 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 		return nil, fmt.Errorf("wireclient.Connect: %w", err)
 	}
 
-	for k := range u.Query() {
+	var tlsParam bool
+	var caFile string
+
+	for k, vs := range u.Query() {
 		switch k {
 		case "replicaSet":
 			// safe to ignore
+		case "tls":
+			if len(vs) != 1 {
+				return nil, fmt.Errorf("wireclient.Connect: query parameter %q must have exactly one value", k)
+			}
 
+			if tlsParam, err = strconv.ParseBool(vs[0]); err != nil {
+				return nil, fmt.Errorf("wireclient.Connect: query parameter %q has invalid value %q", k, vs[0])
+			}
+		case "tlsCaFile":
+			if len(vs) != 1 {
+				return nil, fmt.Errorf("wireclient.Connect: query parameter %q must have exactly one value", k)
+			}
+
+			caFile = vs[0]
+			if _, err = os.Stat(caFile); err != nil {
+				return nil, fmt.Errorf("wireclient.Connect: query parameter %q error %w", k, err)
+			}
 		default:
 			return nil, fmt.Errorf("wireclient.Connect: query parameter %q is not supported", k)
 		}
 	}
 
 	l.DebugContext(ctx, "Connecting", slog.String("uri", uri))
+
+	if tlsParam {
+		var b []byte
+
+		if b, err = os.ReadFile(caFile); err != nil {
+			return nil, fmt.Errorf("wireclient.Connect: %w", err)
+		}
+
+		ca := x509.NewCertPool()
+		if ok := ca.AppendCertsFromPEM(b); !ok {
+			return nil, fmt.Errorf("wireclient.Connect: failed to parse tlsCaFile")
+		}
+
+		d := tls.Dialer{
+			Config: &tls.Config{
+				RootCAs: ca,
+			},
+		}
+
+		var c net.Conn
+		if c, err = d.DialContext(ctx, "tcp", u.Host); err != nil {
+			return nil, fmt.Errorf("wireclient.Connect: %w", err)
+		}
+
+		return New(c, l), nil
+	}
 
 	d := net.Dialer{}
 
@@ -113,8 +162,12 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 //
 // nil is returned on context expiration.
 func ConnectPing(ctx context.Context, uri string, l *slog.Logger) *Conn {
+	var err error
+
 	for ctx.Err() == nil {
-		conn, err := Connect(ctx, uri, l)
+		var conn *Conn
+
+		conn, err = Connect(ctx, uri, l)
 		if err != nil {
 			sleep(ctx, time.Second)
 			continue
@@ -127,6 +180,10 @@ func ConnectPing(ctx context.Context, uri string, l *slog.Logger) *Conn {
 		}
 
 		return conn
+	}
+
+	if err != nil {
+		l.DebugContext(ctx, "Connection unsuccessful", slog.String("error", err.Error()))
 	}
 
 	return nil
