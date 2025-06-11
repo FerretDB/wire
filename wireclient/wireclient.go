@@ -39,7 +39,7 @@ import (
 var nextRequestID atomic.Int32
 
 // skipEmptyExchange is the value of `saslStart`'s options used by [*Conn.Login].
-const skipEmptyExchange = false
+const skipEmptyExchange = true
 
 // Conn represents a single client connection.
 //
@@ -64,6 +64,7 @@ func New(c net.Conn, l *slog.Logger) *Conn {
 }
 
 // Connect creates a new connection for the given MongoDB URI.
+// Credentials are ignored.
 //
 // Context can be used to cancel the connection attempt.
 // Canceling the context after the connection is established has no effect.
@@ -92,12 +93,13 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	}
 
 	var tlsParam bool
-	var caFile string
+	var tlsCaFileParam string
 
 	for k, vs := range u.Query() {
 		switch k {
 		case "replicaSet":
 			// safe to ignore
+
 		case "tls":
 			if len(vs) != 1 {
 				return nil, fmt.Errorf("wireclient.Connect: query parameter %q must have exactly one value", k)
@@ -106,15 +108,17 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 			if tlsParam, err = strconv.ParseBool(vs[0]); err != nil {
 				return nil, fmt.Errorf("wireclient.Connect: query parameter %q has invalid value %q", k, vs[0])
 			}
+
 		case "tlsCaFile":
 			if len(vs) != 1 {
 				return nil, fmt.Errorf("wireclient.Connect: query parameter %q must have exactly one value", k)
 			}
 
-			caFile = vs[0]
-			if _, err = os.Stat(caFile); err != nil {
+			tlsCaFileParam = vs[0]
+			if _, err = os.Stat(tlsCaFileParam); err != nil {
 				return nil, fmt.Errorf("wireclient.Connect: query parameter %q error %w", k, err)
 			}
+
 		default:
 			return nil, fmt.Errorf("wireclient.Connect: query parameter %q is not supported", k)
 		}
@@ -122,35 +126,29 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 
 	l.DebugContext(ctx, "Connecting", slog.String("uri", uri))
 
+	dial := (&net.Dialer{}).DialContext
+
 	if tlsParam {
-		var b []byte
+		var config tls.Config
 
-		if b, err = os.ReadFile(caFile); err != nil {
-			return nil, fmt.Errorf("wireclient.Connect: %w", err)
+		if tlsCaFileParam != "" {
+			var b []byte
+			if b, err = os.ReadFile(tlsCaFileParam); err != nil {
+				return nil, fmt.Errorf("wireclient.Connect: %w", err)
+			}
+
+			ca := x509.NewCertPool()
+			if ok := ca.AppendCertsFromPEM(b); !ok {
+				return nil, fmt.Errorf("wireclient.Connect: failed to parse tlsCaFile")
+			}
+
+			config.RootCAs = ca
 		}
 
-		ca := x509.NewCertPool()
-		if ok := ca.AppendCertsFromPEM(b); !ok {
-			return nil, fmt.Errorf("wireclient.Connect: failed to parse tlsCaFile")
-		}
-
-		d := tls.Dialer{
-			Config: &tls.Config{
-				RootCAs: ca,
-			},
-		}
-
-		var c net.Conn
-		if c, err = d.DialContext(ctx, "tcp", u.Host); err != nil {
-			return nil, fmt.Errorf("wireclient.Connect: %w", err)
-		}
-
-		return New(c, l), nil
+		dial = (&tls.Dialer{Config: &config}).DialContext
 	}
 
-	d := net.Dialer{}
-
-	c, err := d.DialContext(ctx, "tcp", u.Host)
+	c, err := dial(ctx, "tcp", u.Host)
 	if err != nil {
 		return nil, fmt.Errorf("wireclient.Connect: %w", err)
 	}
