@@ -1,0 +1,47 @@
+{
+	"name": "FerretDB Wire Development",
+	"image": "mcr.microsoft.com/devcontainers/go:1.24-bullseye",
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"golang.go",
+				"ms-vscode.vscode-go",
+				"ms-vscode.docker",
+				"github.vscode-github-actions"
+			],
+			"settings": {
+				"go.gopath": "/go",
+				"go.goroot": "/usr/local/go",
+				"go.toolsGopath": "/go/tools"
+			}
+		},
+		"codespaces": {
+			"openFiles": [
+				"README.md",
+				"CONTRIBUTING.md"
+			]
+		}
+	},
+
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
+		"ghcr.io/devcontainers/features/docker-compose:2": {}
+	},
+
+	"forwardPorts": [27017, 27018],
+	"portsAttributes": {
+		"27017": {
+			"label": "MongoDB",
+			"onAutoForward": "notify"
+		},
+		"27018": {
+			"label": "FerretDB", 
+			"onAutoForward": "notify"
+		}
+	},
+
+	"postCreateCommand": "go install github.com/go-task/task/v3/cmd/task@latest && task init && task env-up-detach",
+
+	"remoteUser": "vscode"
+}
