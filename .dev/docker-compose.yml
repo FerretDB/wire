@@ -24,12 +24,22 @@ services:
       - ./build/certs:/etc/certs
       - ./build/mongodb-tls.conf:/etc/mongodb.conf
 
-  ferretdb:
+  ferretdb2:
     build:
       context: .
-      dockerfile: ferretdb.Dockerfile
+      dockerfile: ferretdb2.Dockerfile
     ports:
       - 27018:27017
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+
+  ferretdb1:
+    build:
+      context: .
+      dockerfile: ferretdb1.Dockerfile
+    ports:
+      - 27019:27017
     environment:
       POSTGRES_USER: username
       POSTGRES_PASSWORD: password

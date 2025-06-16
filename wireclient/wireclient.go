@@ -344,6 +344,8 @@ func (c *Conn) Ping(ctx context.Context) error {
 //
 // It should not be used to test various authentication scenarios.
 func (c *Conn) Login(ctx context.Context, username, password, authDB string) error {
+	// TODO https://github.com/FerretDB/wire/issues/127
+
 	s, err := scram.SHA256.NewClient(username, password, "")
 	if err != nil {
 		return fmt.Errorf("wireclient.Conn.Login: %w", err)
