@@ -42,8 +42,11 @@ jobs:
             uri: mongodb://localhost:27017/
           - service: MongoDB with TLS
             uri: mongodb://localhost:37017/?tls=true&tlsCaFile=../.dev/build/certs/rootCA-cert.pem
-          - service: FerretDB
+          - service: FerretDB v2
             uri: mongodb://localhost:27018/
+          # TODO https://github.com/FerretDB/wire/issues/127
+          - service: FerretDB v1
+            uri: mongodb://localhost:27019/
 
     permissions:
       contents: read
