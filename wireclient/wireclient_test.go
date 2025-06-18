@@ -17,6 +17,7 @@ package wireclient
 import (
 	"context"
 	"log/slog"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -93,12 +94,27 @@ func databaseName(tb testing.TB) string {
 	return strings.ReplaceAll(tb.Name(), "/", "_")
 }
 
+func TestLookupSrvURI(t *testing.T) {
+	t.Parallel()
+
+	u, err := url.Parse("mongodb+srv://username:password@cts-vcore.mongocluster.cosmos.azure.com/database")
+	require.NoError(t, err)
+
+	err = lookupSrvURI(t.Context(), u)
+	require.NoError(t, err)
+	assert.Equal(
+		t,
+		"mongodb+srv://username:password@fc-f6de9018d614-000.mongocluster.cosmos.azure.com:10260/database",
+		u.String(),
+	)
+}
+
 func TestConn(t *testing.T) {
 	t.Parallel()
 
 	uri := setup(t)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	t.Cleanup(cancel)
 
 	t.Run("Login", func(t *testing.T) {
