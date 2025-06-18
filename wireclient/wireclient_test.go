@@ -102,11 +102,7 @@ func TestLookupSrvURI(t *testing.T) {
 
 	err = lookupSrvURI(t.Context(), u)
 	require.NoError(t, err)
-	assert.Equal(
-		t,
-		"mongodb+srv://username:password@fc-f6de9018d614-000.mongocluster.cosmos.azure.com:10260/database",
-		u.String(),
-	)
+	assert.Equal(t, "mongodb://username:password@fc-f6de9018d614-000.mongocluster.cosmos.azure.com:10260/database", u.String())
 }
 
 func TestConn(t *testing.T) {

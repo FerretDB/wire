@@ -77,6 +77,7 @@ func lookupSrvURI(ctx context.Context, u *url.URL) error {
 
 	srv := srvs[0]
 	u.Host = net.JoinHostPort(strings.TrimSuffix(srv.Target, "."), strconv.Itoa(int(srv.Port)))
+	u.Scheme = "mongodb"
 
 	return nil
 }
