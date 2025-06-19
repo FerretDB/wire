@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -63,6 +64,24 @@ func New(c net.Conn, l *slog.Logger) *Conn {
 	}
 }
 
+// lookupSrvURI converts mongodb+srv:// URI to mongodb:// URI, performing the simplest SRV lookup.
+func lookupSrvURI(ctx context.Context, u *url.URL) error {
+	_, srvs, err := net.DefaultResolver.LookupSRV(ctx, "mongodb", "tcp", u.Hostname())
+	if err != nil {
+		return fmt.Errorf("lookupSrvURI: SRV lookup failed: %w", err)
+	}
+
+	if len(srvs) != 1 {
+		return fmt.Errorf("lookupSrvURI: expected exactly one SRV record, got %d", len(srvs))
+	}
+
+	srv := srvs[0]
+	u.Host = net.JoinHostPort(strings.TrimSuffix(srv.Target, "."), strconv.Itoa(int(srv.Port)))
+	u.Scheme = "mongodb"
+
+	return nil
+}
+
 // Connect creates a new connection for the given MongoDB URI.
 // Credentials are ignored.
 //
@@ -74,6 +93,12 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
 		return nil, fmt.Errorf("wireclient.Connect: %w", err)
+	}
+
+	if u.Scheme == "mongodb+srv" {
+		if err = lookupSrvURI(ctx, u); err != nil {
+			return nil, fmt.Errorf("wireclient.Connect: %w", err)
+		}
 	}
 
 	if u.Scheme != "mongodb" {
