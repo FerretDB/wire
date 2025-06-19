@@ -136,36 +136,36 @@ func testMessages(t *testing.T, testCases []testCase) {
 				switch msgBody := msgBody.(type) {
 				case *OpMsg:
 					doc, _ := msgBody.Document()
-					require.Panics(t, func() { doc.Remove("foo") })
+					assert.Panics(t, func() { doc.Remove("foo") })
 
 					doc, _ = msgBody.DocumentDeep()
-					require.Panics(t, func() { doc.Remove("foo") })
+					assert.Panics(t, func() { doc.Remove("foo") })
 
 					_, _ = msgBody.DocumentRaw()
 
 					doc, _ = msgBody.Section0()
-					require.Panics(t, func() { doc.Remove("foo") })
+					assert.Panics(t, func() { doc.Remove("foo") })
 
 					doc, _, _, _ = msgBody.Sections()
-					require.Panics(t, func() { doc.Remove("foo") })
+					assert.Panics(t, func() { doc.Remove("foo") })
 				case *OpQuery:
 					doc, _ := msgBody.Query()
-					require.Panics(t, func() { _ = doc.Add("foo", "bar") })
+					assert.Panics(t, func() { _ = doc.Add("foo", "bar") })
 
 					doc, _ = msgBody.QueryDeep()
-					require.Panics(t, func() { _ = doc.Add("foo", "bar") })
+					assert.Panics(t, func() { _ = doc.Add("foo", "bar") })
 
 					doc, _ = msgBody.ReturnFieldsSelector()
-					require.Panics(t, func() { _ = doc.Add("foo", "bar") })
+					assert.Panics(t, func() { _ = doc.Add("foo", "bar") })
 
 					doc, _ = msgBody.ReturnFieldsSelectorDeep()
-					require.Panics(t, func() { _ = doc.Add("foo", "bar") })
+					assert.Panics(t, func() { _ = doc.Add("foo", "bar") })
 				case *OpReply:
 					doc, _ := msgBody.Document()
-					require.Panics(t, func() { _ = doc.Replace("foo", "bar") })
+					assert.Panics(t, func() { _ = doc.Replace("foo", "bar") })
 
 					doc, _ = msgBody.DocumentDeep()
-					require.Panics(t, func() { _ = doc.Replace("foo", "bar") })
+					assert.Panics(t, func() { _ = doc.Replace("foo", "bar") })
 				}
 			})
 
