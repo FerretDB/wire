@@ -135,12 +135,19 @@ func testMessages(t *testing.T, testCases []testCase) {
 
 				switch msgBody := msgBody.(type) {
 				case *OpMsg:
-					_, _ = msgBody.Document()
-					_, _ = msgBody.DocumentDeep()
+					doc, _ := msgBody.Document()
+					require.Panics(t, func() { doc.Remove("foo") })
+
+					doc, _ = msgBody.DocumentDeep()
+					require.Panics(t, func() { doc.Remove("foo") })
+
 					_, _ = msgBody.DocumentRaw()
 
-					_, _ = msgBody.Section0()
-					_, _, _, _ = msgBody.Sections()
+					doc, _ = msgBody.Section0()
+					require.Panics(t, func() { doc.Remove("foo") })
+
+					doc, _, _, _ = msgBody.Sections()
+					require.Panics(t, func() { doc.Remove("foo") })
 				}
 			})
 
