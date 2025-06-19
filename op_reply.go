@@ -144,8 +144,7 @@ func (reply *OpReply) Document() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	// TODO https://github.com/FerretDB/wire/issues/108
-	// doc.Freeze()
+	doc.Freeze()
 
 	return doc, nil
 }
@@ -161,8 +160,7 @@ func (reply *OpReply) DocumentDeep() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	// TODO https://github.com/FerretDB/wire/issues/108
-	// doc.Freeze()
+	doc.Freeze()
 
 	return doc, nil
 }

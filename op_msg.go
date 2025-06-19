@@ -254,8 +254,7 @@ func (msg *OpMsg) Document() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	// TODO https://github.com/FerretDB/wire/issues/108
-	// doc.Freeze()
+	doc.Freeze()
 
 	return doc, nil
 }
@@ -275,8 +274,7 @@ func (msg *OpMsg) DocumentDeep() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	// TODO https://github.com/FerretDB/wire/issues/108
-	// doc.Freeze()
+	doc.Freeze()
 
 	return doc, nil
 }
@@ -311,8 +309,7 @@ func (msg *OpMsg) Section0() (*wirebson.Document, error) {
 				return nil, lazyerrors.Error(err)
 			}
 
-			// TODO https://github.com/FerretDB/wire/issues/108
-			// doc.Freeze()
+			doc.Freeze()
 
 			return doc, nil
 		}
@@ -343,8 +340,7 @@ func (msg *OpMsg) Sections() (*wirebson.Document, wirebson.RawDocument, []byte, 
 				return nil, nil, nil, lazyerrors.Error(err)
 			}
 
-			// TODO https://github.com/FerretDB/wire/issues/108
-			// doc.Freeze()
+			doc.Freeze()
 
 		case 1:
 			for _, d := range s.documents {
