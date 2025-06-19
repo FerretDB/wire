@@ -135,12 +135,37 @@ func testMessages(t *testing.T, testCases []testCase) {
 
 				switch msgBody := msgBody.(type) {
 				case *OpMsg:
-					_, _ = msgBody.Document()
-					_, _ = msgBody.DocumentDeep()
+					doc, _ := msgBody.Document()
+					assert.Panics(t, func() { doc.Remove("foo") })
+
+					doc, _ = msgBody.DocumentDeep()
+					assert.Panics(t, func() { doc.Remove("foo") })
+
 					_, _ = msgBody.DocumentRaw()
 
-					_, _ = msgBody.Section0()
-					_, _, _, _ = msgBody.Sections()
+					doc, _ = msgBody.Section0()
+					assert.Panics(t, func() { doc.Remove("foo") })
+
+					doc, _, _, _ = msgBody.Sections()
+					assert.Panics(t, func() { doc.Remove("foo") })
+				case *OpQuery:
+					doc, _ := msgBody.Query()
+					assert.Panics(t, func() { _ = doc.Add("foo", "bar") })
+
+					doc, _ = msgBody.QueryDeep()
+					assert.Panics(t, func() { _ = doc.Add("foo", "bar") })
+
+					doc, _ = msgBody.ReturnFieldsSelector()
+					assert.Panics(t, func() { _ = doc.Add("foo", "bar") })
+
+					doc, _ = msgBody.ReturnFieldsSelectorDeep()
+					assert.Panics(t, func() { _ = doc.Add("foo", "bar") })
+				case *OpReply:
+					doc, _ := msgBody.Document()
+					assert.Panics(t, func() { _ = doc.Replace("foo", "bar") })
+
+					doc, _ = msgBody.DocumentDeep()
+					assert.Panics(t, func() { _ = doc.Replace("foo", "bar") })
 				}
 			})
 
