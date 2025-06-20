@@ -25,6 +25,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -369,12 +370,61 @@ func (c *Conn) Ping(ctx context.Context) error {
 //
 // It should not be used to test various authentication scenarios.
 func (c *Conn) Login(ctx context.Context, username, password, authDB string) error {
-	// TODO https://github.com/FerretDB/wire/issues/127
-	return c.loginScramSHA256(ctx, username, password, authDB)
+	helloCmd := wirebson.MustDocument(
+		"hello", int32(1),
+		"saslSupportedMechs", authDB+"."+username,
+		"$db", authDB,
+	)
+
+	body, err := wire.NewOpMsg(helloCmd)
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+	}
+
+	_, resBody, err := c.Request(ctx, body)
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+	}
+
+	helloRes, err := resBody.(*wire.OpMsg).DocumentDeep()
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+	}
+
+	saslSupportedMechs := helloRes.Get("saslSupportedMechs")
+	if saslSupportedMechs == nil {
+		return fmt.Errorf("wireclient.Conn.Login: TODO")
+	}
+
+	supportedMechs, ok := saslSupportedMechs.(*wirebson.Array)
+	if !ok {
+		return fmt.Errorf("wireclient.Conn.Login: TODO")
+	}
+
+	var supportedMechanisms []string
+
+	for _, mech := range supportedMechs.All() {
+		mechStr, ok := mech.(string)
+		if !ok {
+			return fmt.Errorf("wireclient.Conn.Login: TODO")
+		}
+
+		supportedMechanisms = append(supportedMechanisms, mechStr)
+	}
+
+	switch {
+	case slices.Contains(supportedMechanisms, "SCRAM-SHA-256"):
+		return c.loginScramSHA256(ctx, username, password, authDB)
+	case slices.Contains(supportedMechanisms, "PLAIN"):
+		return c.loginPlain(ctx, username, password, authDB)
+	default:
+		return fmt.Errorf("wireclient.Conn.Login: unsupported authentication mechanisms")
+	}
 }
 
 // TODO https://github.com/FerretDB/wire/issues/127
 func (c *Conn) loginPlain(ctx context.Context, username, password, authDB string) error {
+	return nil
 }
 
 func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB string) error {
