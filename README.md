@@ -9,3 +9,8 @@
 
 This module is in the process of extraction from [FerretDB](https://github.com/FerretDB/FerretDB).
 Please do not use it yet.
+
+## Development
+
+The easiest way to start developing is using VS Code DevContainers or GitHub Codespaces.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup instructions.
