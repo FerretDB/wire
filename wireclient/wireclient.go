@@ -424,7 +424,45 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 
 // TODO https://github.com/FerretDB/wire/issues/127
 func (c *Conn) loginPlain(ctx context.Context, username, password, authDB string) error {
-	return nil
+	plainCredentials := "\000" + username + "\000" + password
+
+	cmd := wirebson.MustDocument(
+		"saslStart", int32(1),
+		"mechanism", "PLAIN",
+		"payload", wirebson.Binary{B: []byte(plainCredentials)},
+		"$db", authDB,
+	)
+
+	c.l.DebugContext(
+		ctx, "Login: PLAIN client",
+		slog.String("mechanism", "PLAIN"),
+	)
+
+	body, err := wire.NewOpMsg(cmd)
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.loginPlain: %w", err)
+	}
+
+	_, resBody, err := c.Request(ctx, body)
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.loginPlain: %w", err)
+	}
+
+	res, err := resBody.(*wire.OpMsg).DocumentDeep()
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.loginPlain: %w", err)
+	}
+
+	if ok := res.Get("ok"); ok != 1.0 {
+		return fmt.Errorf("wireclient.Conn.loginPlain: authentication failed (ok was %v)", ok)
+	}
+
+	c.l.DebugContext(
+		ctx, "Login: PLAIN server",
+		slog.String("status", "success"),
+	)
+
+	return c.checkAuth(ctx)
 }
 
 func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB string) error {
