@@ -163,7 +163,9 @@ func TestTypes(t *testing.T) {
 		supportedMechanisms, err = conn.getSupportedMechs(ctx, "username", "admin")
 		require.NoError(t, err)
 
-		opts := options.Client().ApplyURI(uri).SetAuth(options.Credential{Username: "username", Password: "password", AuthMechanism: supportedMechanisms[0]})
+		opts := options.Client().
+			ApplyURI(uri).
+			SetAuth(options.Credential{Username: "username", Password: "password", AuthMechanism: supportedMechanisms[0]})
 		mConn, err = mongo.Connect(opts)
 		require.NoError(t, err)
 

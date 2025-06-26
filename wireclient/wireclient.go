@@ -400,8 +400,8 @@ func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) (
 	var supportedMechanisms []string
 
 	for _, mech := range supportedMechs.All() {
-		mechStr, ok := mech.(string)
-		if !ok {
+		var mechStr string
+		if mechStr, ok = mech.(string); !ok {
 			return nil, fmt.Errorf("wireclient.Conn.Login: TODO")
 		}
 
