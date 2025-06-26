@@ -159,7 +159,7 @@ func TestTypes(t *testing.T) {
 		err = conn.Login(ctx, "username", "password", "admin")
 		require.NoError(t, err)
 
-		opts := options.Client().ApplyURI(uri).SetAuth(options.Credential{Username: "username", Password: "password"})
+		opts := options.Client().ApplyURI(uri).SetAuth(options.Credential{Username: "username", Password: "password", AuthMechanism: "PLAIN"})
 		mConn, err = mongo.Connect(opts)
 		require.NoError(t, err)
 
