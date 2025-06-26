@@ -159,8 +159,11 @@ func TestTypes(t *testing.T) {
 		err = conn.Login(ctx, "username", "password", "admin")
 		require.NoError(t, err)
 
-		// TODO dynamic AuthMechanism
-		opts := options.Client().ApplyURI(uri).SetAuth(options.Credential{Username: "username", Password: "password", AuthMechanism: "PLAIN"})
+		var supportedMechanisms []string
+		supportedMechanisms, err = conn.getSupportedMechs(ctx, "username", "admin")
+		require.NoError(t, err)
+
+		opts := options.Client().ApplyURI(uri).SetAuth(options.Credential{Username: "username", Password: "password", AuthMechanism: supportedMechanisms[0]})
 		mConn, err = mongo.Connect(opts)
 		require.NoError(t, err)
 

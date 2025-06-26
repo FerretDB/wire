@@ -365,11 +365,7 @@ func (c *Conn) Ping(ctx context.Context) error {
 	return nil
 }
 
-// Login authenticates the connection with the given credentials
-// using some unspecified sequences of commands.
-//
-// It should not be used to test various authentication scenarios.
-func (c *Conn) Login(ctx context.Context, username, password, authDB string) error {
+func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) ([]string, error) {
 	helloCmd := wirebson.MustDocument(
 		"hello", int32(1),
 		"saslSupportedMechs", authDB+"."+username,
@@ -378,27 +374,27 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 
 	body, err := wire.NewOpMsg(helloCmd)
 	if err != nil {
-		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		return nil, fmt.Errorf("wireclient.Conn.Login: %w", err)
 	}
 
 	_, resBody, err := c.Request(ctx, body)
 	if err != nil {
-		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		return nil, fmt.Errorf("wireclient.Conn.Login: %w", err)
 	}
 
 	helloRes, err := resBody.(*wire.OpMsg).DocumentDeep()
 	if err != nil {
-		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		return nil, fmt.Errorf("wireclient.Conn.Login: %w", err)
 	}
 
 	saslSupportedMechs := helloRes.Get("saslSupportedMechs")
 	if saslSupportedMechs == nil {
-		return fmt.Errorf("wireclient.Conn.Login: TODO")
+		return nil, fmt.Errorf("wireclient.Conn.Login: TODO")
 	}
 
 	supportedMechs, ok := saslSupportedMechs.(*wirebson.Array)
 	if !ok {
-		return fmt.Errorf("wireclient.Conn.Login: TODO")
+		return nil, fmt.Errorf("wireclient.Conn.Login: TODO")
 	}
 
 	var supportedMechanisms []string
@@ -406,10 +402,23 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 	for _, mech := range supportedMechs.All() {
 		mechStr, ok := mech.(string)
 		if !ok {
-			return fmt.Errorf("wireclient.Conn.Login: TODO")
+			return nil, fmt.Errorf("wireclient.Conn.Login: TODO")
 		}
 
 		supportedMechanisms = append(supportedMechanisms, mechStr)
+	}
+
+	return supportedMechanisms, nil
+}
+
+// Login authenticates the connection with the given credentials
+// using some unspecified sequences of commands.
+//
+// It should not be used to test various authentication scenarios.
+func (c *Conn) Login(ctx context.Context, username, password, authDB string) error {
+	supportedMechanisms, err := c.getSupportedMechs(ctx, username, authDB)
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.Login: %w", err)
 	}
 
 	switch {
