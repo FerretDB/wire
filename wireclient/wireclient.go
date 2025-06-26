@@ -365,6 +365,8 @@ func (c *Conn) Ping(ctx context.Context) error {
 	return nil
 }
 
+// getSupportedMechs sends a hello command to the server
+// and returns the list of supported authentication mechanisms.
 func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) ([]string, error) {
 	helloCmd := wirebson.MustDocument(
 		"hello", int32(1),
@@ -374,27 +376,27 @@ func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) (
 
 	body, err := wire.NewOpMsg(helloCmd)
 	if err != nil {
-		return nil, fmt.Errorf("wireclient.Conn.Login: %w", err)
+		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: %w", err)
 	}
 
 	_, resBody, err := c.Request(ctx, body)
 	if err != nil {
-		return nil, fmt.Errorf("wireclient.Conn.Login: %w", err)
+		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: %w", err)
 	}
 
 	helloRes, err := resBody.(*wire.OpMsg).DocumentDeep()
 	if err != nil {
-		return nil, fmt.Errorf("wireclient.Conn.Login: %w", err)
+		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: %w", err)
 	}
 
 	saslSupportedMechs := helloRes.Get("saslSupportedMechs")
 	if saslSupportedMechs == nil {
-		return nil, fmt.Errorf("wireclient.Conn.Login: TODO")
+		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid hello response")
 	}
 
 	supportedMechs, ok := saslSupportedMechs.(*wirebson.Array)
 	if !ok {
-		return nil, fmt.Errorf("wireclient.Conn.Login: TODO")
+		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid hello response")
 	}
 
 	var supportedMechanisms []string
@@ -402,7 +404,7 @@ func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) (
 	for _, mech := range supportedMechs.All() {
 		var mechStr string
 		if mechStr, ok = mech.(string); !ok {
-			return nil, fmt.Errorf("wireclient.Conn.Login: TODO")
+			return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid hello response")
 		}
 
 		supportedMechanisms = append(supportedMechanisms, mechStr)
@@ -431,7 +433,7 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 	}
 }
 
-// TODO https://github.com/FerretDB/wire/issues/127
+// loginPlain authenticates the connection using the PLAIN mechanism.
 func (c *Conn) loginPlain(ctx context.Context, username, password, authDB string) error {
 	plainCredentials := "\000" + username + "\000" + password
 
@@ -474,6 +476,7 @@ func (c *Conn) loginPlain(ctx context.Context, username, password, authDB string
 	return c.checkAuth(ctx)
 }
 
+// loginScramSHA256 authenticates the connection using the SCRAM-SHA-256 mechanism.
 func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB string) error {
 	s, err := scram.SHA256.NewClient(username, password, "")
 	if err != nil {
