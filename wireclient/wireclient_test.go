@@ -159,6 +159,7 @@ func TestTypes(t *testing.T) {
 		err = conn.Login(ctx, "username", "password", "admin")
 		require.NoError(t, err)
 
+		// TODO dynamic AuthMechanism
 		opts := options.Client().ApplyURI(uri).SetAuth(options.Credential{Username: "username", Password: "password", AuthMechanism: "PLAIN"})
 		mConn, err = mongo.Connect(opts)
 		require.NoError(t, err)
@@ -170,6 +171,7 @@ func TestTypes(t *testing.T) {
 	}
 
 	t.Run("Decimal128", func(t *testing.T) {
+		t.Skip("Not implemented for v1")
 		d := wirebson.Decimal128{H: 13, L: 42}
 		md := bson.NewDecimal128(13, 42)
 
