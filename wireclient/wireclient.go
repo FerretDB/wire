@@ -480,14 +480,14 @@ func (c *Conn) loginPlain(ctx context.Context, username, password, authDB string
 func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB string) error {
 	s, err := scram.SHA256.NewClient(username, password, "")
 	if err != nil {
-		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 	}
 
 	conv := s.NewConversation()
 
 	payload, err := conv.Step("")
 	if err != nil {
-		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 	}
 
 	cmd := wirebson.MustDocument(
@@ -502,7 +502,7 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 
 	if skipEmptyExchange {
 		if err = cmd.Add("options", wirebson.MustDocument("skipEmptyExchange", true)); err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 		}
 
 		// only one `saslContinue`
@@ -518,21 +518,21 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 
 		var body *wire.OpMsg
 		if body, err = wire.NewOpMsg(cmd); err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 		}
 
 		var resBody wire.MsgBody
 		if _, resBody, err = c.Request(ctx, body); err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 		}
 
 		var res *wirebson.Document
 		if res, err = resBody.(*wire.OpMsg).DocumentDeep(); err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 		}
 
 		if ok := res.Get("ok"); ok != 1.0 {
-			return fmt.Errorf("wireclient.Conn.Login: %s failed (ok was %v)", cmd.Command(), ok)
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: %s failed (ok was %v)", cmd.Command(), ok)
 		}
 
 		payload = string(res.Get("payload").(wirebson.Binary).B)
@@ -545,24 +545,24 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 		if res.Get("done").(bool) {
 			if skipEmptyExchange {
 				if step != 2 {
-					return fmt.Errorf("wireclient.Conn.Login: expected server conversation to be done at step 2")
+					return fmt.Errorf("wireclient.Conn.loginScramSHA256: expected server conversation to be done at step 2")
 				}
 
 				if _, err = conv.Step(payload); err != nil {
-					return fmt.Errorf("wireclient.Conn.Login: %w", err)
+					return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 				}
 			} else {
 				if step != 3 {
-					return fmt.Errorf("wireclient.Conn.Login: expected server conversation to be done at step 3")
+					return fmt.Errorf("wireclient.Conn.loginScramSHA256: expected server conversation to be done at step 3")
 				}
 			}
 
 			if !conv.Done() {
-				return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
+				return fmt.Errorf("wireclient.Conn.loginScramSHA256: conversation is not done")
 			}
 
 			if !conv.Valid() {
-				return fmt.Errorf("wireclient.Conn.Login: conversation is done, but not valid")
+				return fmt.Errorf("wireclient.Conn.loginScramSHA256: conversation is done, but not valid")
 			}
 
 			return c.checkAuth(ctx)
@@ -570,7 +570,7 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 
 		payload, err = conv.Step(payload)
 		if err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 		}
 
 		cmd = wirebson.MustDocument(
@@ -581,7 +581,7 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 		)
 	}
 
-	return fmt.Errorf("wireclient.Conn.Login: too many steps")
+	return fmt.Errorf("wireclient.Conn.loginScramSHA256: too many steps")
 }
 
 // checkAuth checks if the connection is authenticated.
