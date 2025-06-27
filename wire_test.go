@@ -141,6 +141,7 @@ func testMessages(t *testing.T, testCases []testCase) {
 
 					_, _ = msgBody.Section0()
 					_, _, _, _ = msgBody.Sections()
+				default:
 				}
 			})
 
@@ -228,6 +229,7 @@ func fuzzMessages(f *testing.F, testCases []testCase) {
 
 				_, _ = msgBody.Section0()
 				_, _, _, _ = msgBody.Sections()
+			default:
 			}
 
 			// remove random tail
