@@ -158,7 +158,7 @@ func (query *OpQuery) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Query returns decoded frozen query document.
+// Query returns decoded query document.
 // It may be shallowly or deeply decoded.
 func (query *OpQuery) Query() (*wirebson.Document, error) {
 	doc, err := query.query.Decode()
@@ -166,19 +166,15 @@ func (query *OpQuery) Query() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	doc.Freeze()
-
 	return doc, nil
 }
 
-// QueryDeep returns deeply decoded frozen query document.
+// QueryDeep returns deeply decoded query document.
 func (query *OpQuery) QueryDeep() (*wirebson.Document, error) {
 	doc, err := query.query.DecodeDeep()
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}
-
-	doc.Freeze()
 
 	return doc, nil
 }
@@ -188,7 +184,7 @@ func (query *OpQuery) QueryRaw() wirebson.RawDocument {
 	return query.query
 }
 
-// ReturnFieldsSelector returns decoded frozen returnFieldsSelector document, or nil.
+// ReturnFieldsSelector returns decoded returnFieldsSelector document, or nil.
 // It may be shallowly or deeply decoded.
 func (query *OpQuery) ReturnFieldsSelector() (*wirebson.Document, error) {
 	if query.returnFieldsSelector == nil {
@@ -200,12 +196,10 @@ func (query *OpQuery) ReturnFieldsSelector() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	doc.Freeze()
-
 	return doc, nil
 }
 
-// ReturnFieldsSelectorDeep returns deeply decoded frozen returnFieldsSelector document, or nil.
+// ReturnFieldsSelectorDeep returns decoded returnFieldsSelector document, or nil.
 func (query *OpQuery) ReturnFieldsSelectorDeep() (*wirebson.Document, error) {
 	if query.returnFieldsSelector == nil {
 		return nil, nil
@@ -215,8 +209,6 @@ func (query *OpQuery) ReturnFieldsSelectorDeep() (*wirebson.Document, error) {
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}
-
-	doc.Freeze()
 
 	return doc, nil
 }
