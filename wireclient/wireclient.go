@@ -39,6 +39,9 @@ import (
 // nextRequestID stores the last generated request ID.
 var nextRequestID atomic.Int32
 
+// skipEmptyExchange is the value of `saslStart`'s options used by [*Conn.Login].
+const skipEmptyExchange = false
+
 // Conn represents a single client connection.
 //
 // It is not safe for concurrent use.
