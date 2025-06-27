@@ -136,10 +136,17 @@ func TestConn(t *testing.T) {
 			u, err := url.Parse(uri)
 			require.NoError(t, err)
 
-			pass, ok := u.User.Password()
-			require.True(t, ok)
+			username, password := "username", "password"
 
-			assert.NoError(t, conn.Login(ctx, u.User.Username(), pass, ""))
+			if u.User.Username() != "" {
+				username = u.User.Username()
+			}
+
+			if pass, ok := u.User.Password(); ok {
+				password = pass
+			}
+
+			assert.NoError(t, conn.Login(ctx, username, password, ""))
 		})
 	})
 }
