@@ -40,7 +40,7 @@ import (
 var nextRequestID atomic.Int32
 
 // skipEmptyExchange is the value of `saslStart`'s options used by [*Conn.Login].
-const skipEmptyExchange = false
+const skipEmptyExchange = true
 
 // Conn represents a single client connection.
 //
