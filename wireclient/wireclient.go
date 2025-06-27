@@ -39,9 +39,6 @@ import (
 // nextRequestID stores the last generated request ID.
 var nextRequestID atomic.Int32
 
-// skipEmptyExchange is the value of `saslStart`'s options used by [*Conn.Login].
-const skipEmptyExchange = true
-
 // Conn represents a single client connection.
 //
 // It is not safe for concurrent use.
@@ -393,13 +390,8 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 	// one `saslStart`, two `saslContinue` requests
 	steps := 3
 
-	if skipEmptyExchange {
-		if err = cmd.Add("options", wirebson.MustDocument("skipEmptyExchange", true)); err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
-		}
-
-		// only one `saslContinue`
-		steps = 2
+	if err = cmd.Add("options", wirebson.MustDocument("skipEmptyExchange", true)); err != nil {
+		return fmt.Errorf("wireclient.Conn.Login: %w", err)
 	}
 
 	for step := 1; step <= steps; step++ {
@@ -436,17 +428,9 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 		)
 
 		if res.Get("done").(bool) {
-			if skipEmptyExchange {
-				if step != 2 {
-					return fmt.Errorf("wireclient.Conn.Login: expected server conversation to be done at step 2")
-				}
-
+			if !conv.Done() {
 				if _, err = conv.Step(payload); err != nil {
 					return fmt.Errorf("wireclient.Conn.Login: %w", err)
-				}
-			} else {
-				if step != 3 {
-					return fmt.Errorf("wireclient.Conn.Login: expected server conversation to be done at step 3")
 				}
 			}
 
