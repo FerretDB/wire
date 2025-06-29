@@ -298,14 +298,21 @@ func (msg *OpMsg) RawDocument() (wirebson.RawDocument, error) {
 //
 // Most callers should use [OpMsg.Document] instead.
 func (msg *OpMsg) Section0() (*wirebson.Document, error) {
+	doc, err := msg.Section0Raw().Decode()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	return doc, nil
+}
+
+// Section0Raw returns the [wirebson.RawDocument] from section of kind 0.
+//
+// Most callers should use [OpMsg.DocumentRaw] instead.
+func (msg *OpMsg) Section0Raw() wirebson.RawDocument {
 	for _, s := range msg.sections {
 		if s.kind == 0 {
-			doc, err := s.documents[0].Decode()
-			if err != nil {
-				return nil, lazyerrors.Error(err)
-			}
-
-			return doc, nil
+			return s.documents[0]
 		}
 	}
 
