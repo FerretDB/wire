@@ -30,6 +30,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
 	"github.com/FerretDB/wire"
+	"github.com/FerretDB/wire/internal/util/testutil"
 	"github.com/FerretDB/wire/wirebson"
 	"github.com/FerretDB/wire/wiretest"
 )
@@ -176,7 +177,8 @@ func TestTypes(t *testing.T) {
 	}
 
 	t.Run("Decimal128", func(t *testing.T) {
-		t.Skip("Not implemented for v1")
+		testutil.SkipForFerretDBv1(t)
+
 		d := wirebson.Decimal128{H: 13, L: 42}
 		md := bson.NewDecimal128(13, 42)
 

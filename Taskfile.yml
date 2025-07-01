@@ -95,7 +95,7 @@ tasks:
       - env MONGODB_URI=mongodb://localhost:27018/ go test -race -count=1 ./...
 
       # TODO https://github.com/FerretDB/wire/issues/127
-      - env MONGODB_URI=mongodb://localhost:27019/ go test -race -count=1 ./...
+      - env MONGODB_URI=mongodb://localhost:27019/ go test -race -count=1 ./... -ferretdbv1
 
   bench:
     desc: "Run benchmarks"
