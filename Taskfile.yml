@@ -93,8 +93,6 @@ tasks:
       # tlsCaFile path is relative to wireclient package
       - env MONGODB_URI='mongodb://localhost:37017/?tls=true&tlsCaFile=../.dev/build/certs/rootCA-cert.pem' go test -race -count=1 ./...
       - env MONGODB_URI=mongodb://localhost:27018/ go test -race -count=1 ./...
-
-      # TODO https://github.com/FerretDB/wire/issues/127
       - env MONGODB_URI=mongodb://localhost:27019/ go test -race -count=1 ./... -ferretdbv1
 
   bench:
