@@ -26,6 +26,8 @@ import (
 // It generally references a part of a larger slice, not a copy.
 type RawArray []byte
 
+func (raw RawArray) array() {}
+
 // Encode returns itself to implement the [AnyArray] interface.
 //
 // Receiver must not be nil.

@@ -26,6 +26,8 @@ import (
 // It generally references a part of a larger slice, not a copy.
 type RawDocument []byte
 
+func (raw RawDocument) document() {}
+
 // Encode returns itself to implement the [AnyDocument] interface.
 //
 // Receiver must not be nil.

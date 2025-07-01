@@ -84,6 +84,8 @@ func MakeDocument(cap int) *Document {
 	}
 }
 
+func (doc *Document) document() {}
+
 // Freeze prevents Document from further field modifications.
 // Any methods that would modify Document fields will panic.
 //

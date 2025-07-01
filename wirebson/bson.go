@@ -74,22 +74,30 @@ type ScalarType interface {
 //
 // Note that the Encode and Decode methods could return the receiver itself,
 // so care must be taken when results are modified.
+//
+//sumtype:decl
 type AnyDocument interface {
 	Encode() (RawDocument, error)
 	Decode() (*Document, error)
 	LogMessage() string
 	LogMessageIndent() string
+
+	document() // seal for go-check-sumtype linter
 }
 
 // AnyArray represents a BSON array type (both [*Array] and [RawArray]).
 //
 // Note that the Encode and Decode methods could return the receiver itself,
 // so care must be taken when results are modified.
+//
+//sumtype:decl
 type AnyArray interface {
 	Encode() (RawArray, error)
 	Decode() (*Array, error)
 	LogMessage() string
 	LogMessageIndent() string
+
+	array() // seal for go-check-sumtype linter
 }
 
 // validBSONType checks if v is a valid BSON type (including raw types).

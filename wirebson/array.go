@@ -68,6 +68,8 @@ func MakeArray(cap int) *Array {
 	}
 }
 
+func (arr *Array) array() {}
+
 // Freeze prevents Array from further modifications.
 // Any methods that would modify the Array will panic.
 //

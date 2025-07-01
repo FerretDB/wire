@@ -238,7 +238,7 @@ func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 	return b, nil
 }
 
-// Document returns the value of msg as decoded frozen [*wirebson.Document].
+// Document returns the value of msg as decoded [*wirebson.Document].
 // It may be shallowly or deeply decoded.
 //
 // The error is returned if msg contains anything other than a single section of kind 0
@@ -254,12 +254,10 @@ func (msg *OpMsg) Document() (*wirebson.Document, error) {
 		return nil, lazyerrors.Error(err)
 	}
 
-	doc.Freeze()
-
 	return doc, nil
 }
 
-// DocumentDeep returns the value of msg as deeply decoded frozen [*wirebson.Document].
+// DocumentDeep returns the value of msg as deeply decoded [*wirebson.Document].
 //
 // The error is returned if msg contains anything other than a single section of kind 0
 // with a single document.
@@ -273,8 +271,6 @@ func (msg *OpMsg) DocumentDeep() (*wirebson.Document, error) {
 	if err != nil {
 		return nil, lazyerrors.Error(err)
 	}
-
-	doc.Freeze()
 
 	return doc, nil
 }
@@ -297,21 +293,26 @@ func (msg *OpMsg) RawDocument() (wirebson.RawDocument, error) {
 	return msg.DocumentRaw()
 }
 
-// Section0 returns the frozen [*wirebson.Document] decoded from the section of kind 0.
+// Section0 returns the [*wirebson.Document] decoded from the section of kind 0.
 // It may be shallowly or deeply decoded.
 //
 // Most callers should use [OpMsg.Document] instead.
 func (msg *OpMsg) Section0() (*wirebson.Document, error) {
+	doc, err := msg.Section0Raw().Decode()
+	if err != nil {
+		return nil, lazyerrors.Error(err)
+	}
+
+	return doc, nil
+}
+
+// Section0Raw returns the [wirebson.RawDocument] from section of kind 0.
+//
+// Most callers should use [OpMsg.DocumentRaw] instead.
+func (msg *OpMsg) Section0Raw() wirebson.RawDocument {
 	for _, s := range msg.sections {
 		if s.kind == 0 {
-			doc, err := s.documents[0].Decode()
-			if err != nil {
-				return nil, lazyerrors.Error(err)
-			}
-
-			doc.Freeze()
-
-			return doc, nil
+			return s.documents[0]
 		}
 	}
 
@@ -319,7 +320,7 @@ func (msg *OpMsg) Section0() (*wirebson.Document, error) {
 	panic("not reached")
 }
 
-// Sections returns the frozen [*wirebson.Document] decoded from the section of kind 0
+// Sections returns the [*wirebson.Document] decoded from the section of kind 0
 // (it may be shallowly or deeply decoded),
 // the raw value of that document,
 // and the concatenation of raw values of all sections with kind 1.
@@ -339,8 +340,6 @@ func (msg *OpMsg) Sections() (*wirebson.Document, wirebson.RawDocument, []byte, 
 			if doc, err = spec.Decode(); err != nil {
 				return nil, nil, nil, lazyerrors.Error(err)
 			}
-
-			doc.Freeze()
 
 		case 1:
 			for _, d := range s.documents {

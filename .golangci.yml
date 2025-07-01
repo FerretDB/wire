@@ -7,12 +7,16 @@ linters:
   default: none
   enable:
     - asciicheck
+    - gochecksumtype
     - govet
     - staticcheck
 
   # https://golangci-lint.run/usage/linters/
   settings:
     # asciicheck
+    gochecksumtype:
+      default-signifies-exhaustive: true
+      include-shared-interfaces: false
     govet:
       enable-all: true
       settings:
