@@ -44,7 +44,6 @@ jobs:
             uri: mongodb://localhost:37017/?tls=true&tlsCaFile=../.dev/build/certs/rootCA-cert.pem
           - service: FerretDB v2
             uri: mongodb://localhost:27018/
-          # TODO https://github.com/FerretDB/wire/issues/127
           - service: FerretDB v1
             uri: mongodb://localhost:27019/
 
@@ -81,6 +80,7 @@ jobs:
         run: bin/task test
         env:
           MONGODB_URI: ${{ matrix.uri }}
+          TEST_FLAGS: ${{ matrix.service == 'FerretDB v1' && '-ferretdbv1' || '' }}
 
       - name: Get logs
         if: always()

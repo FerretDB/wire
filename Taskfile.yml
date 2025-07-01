@@ -84,7 +84,7 @@ tasks:
   test:
     desc: "Run all tests (requires MONGODB_URI set)"
     cmds:
-      - go test -race -count=1 -coverpkg=./... -coverprofile=cover.txt ./...
+      - go test -race -count=1 -coverpkg=./... -coverprofile=cover.txt ./... {{.TEST_FLAGS}}
 
   test-all:
     desc: "Run all tests for all services"
