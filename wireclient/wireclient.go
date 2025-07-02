@@ -428,14 +428,24 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			slog.Int("step", step), slog.String("payload", payload),
 		)
 
-		if res.Get("done").(bool) {
-			// For servers that support `skipEmptyExchange`, we can finish the conversation here.
-			if !conv.Done() && step == 2 {
-				if _, err = conv.Step(payload); err != nil {
-					return fmt.Errorf("wireclient.Conn.Login: %w", err)
-				}
+		// For servers that support `skipEmptyExchange`, we can finish the conversation here.
+		if res.Get("done").(bool) && step == 2 {
+			if _, err = conv.Step(payload); err != nil {
+				return fmt.Errorf("wireclient.Conn.Login: %w", err)
 			}
 
+			if !conv.Done() {
+				return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
+			}
+
+			if !conv.Valid() {
+				return fmt.Errorf("wireclient.Conn.Login: conversation is done, but not valid")
+			}
+
+			return c.checkAuth(ctx)
+		}
+
+		if res.Get("done").(bool) && step == 3 {
 			if !conv.Done() {
 				return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
 			}
