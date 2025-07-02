@@ -387,8 +387,7 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 		"$db", authDB,
 	)
 
-	// one `saslStart`, two `saslContinue` requests for servers that don't support `skipEmptyExchange`
-	// and one `saslContinue` for servers that support it.
+	// one `saslStart`, two `saslContinue` for servers that don't support `skipEmptyExchange`
 	steps := 3
 
 	if err = cmd.Add("options", wirebson.MustDocument("skipEmptyExchange", true)); err != nil {
@@ -428,8 +427,17 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			slog.Int("step", step), slog.String("payload", payload),
 		)
 
-		// For servers that support `skipEmptyExchange`, we can finish the conversation here.
-		if res.Get("done").(bool) && step == 2 {
+		done := res.Get("done").(bool)
+
+		switch {
+		case !done:
+		case step == 2:
+			c.l.DebugContext(
+				ctx, "wireclient.Conn.Login: conversation done at step 2, assuming that server supports skipEmptyExchange",
+				slog.Int("step", step), slog.String("payload", payload),
+				slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
+			)
+
 			if _, err = conv.Step(payload); err != nil {
 				return fmt.Errorf("wireclient.Conn.Login: %w", err)
 			}
@@ -443,9 +451,7 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			}
 
 			return c.checkAuth(ctx)
-		}
-
-		if res.Get("done").(bool) && step == 3 {
+		case step == 3:
 			if !conv.Done() {
 				return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
 			}
