@@ -387,7 +387,8 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 		"$db", authDB,
 	)
 
-	// one `saslStart`, two `saslContinue` requests
+	// one `saslStart`, two `saslContinue` requests for servers that don't support `skipEmptyExchange`
+	// and one `saslContinue` for servers that support it.
 	steps := 3
 
 	if err = cmd.Add("options", wirebson.MustDocument("skipEmptyExchange", true)); err != nil {
@@ -428,6 +429,7 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 		)
 
 		if res.Get("done").(bool) {
+			// For servers that support `skipEmptyExchange`, we can finish the conversation here.
 			if !conv.Done() {
 				if _, err = conv.Step(payload); err != nil {
 					return fmt.Errorf("wireclient.Conn.Login: %w", err)
