@@ -15,6 +15,7 @@
 package wireclient
 
 import (
+	"os"
 	"testing"
 
 	"github.com/FerretDB/wire/internal/util/testutil"

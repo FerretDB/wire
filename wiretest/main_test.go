@@ -15,8 +15,8 @@
 package wiretest
 
 import (
-	"testing"
 	"os"
+	"testing"
 
 	"github.com/FerretDB/wire/internal/util/testutil"
 )
