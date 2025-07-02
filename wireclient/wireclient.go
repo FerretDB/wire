@@ -368,16 +368,11 @@ func (c *Conn) Ping(ctx context.Context) error {
 // getSupportedMechs sends a hello command to the server
 // and returns the list of supported authentication mechanisms.
 func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) ([]string, error) {
-	helloCmd := wirebson.MustDocument(
+	body := wire.MustOpMsg(
 		"hello", int32(1),
 		"saslSupportedMechs", authDB+"."+username,
 		"$db", authDB,
 	)
-
-	body, err := wire.NewOpMsg(helloCmd)
-	if err != nil {
-		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: %w", err)
-	}
 
 	_, resBody, err := c.Request(ctx, body)
 	if err != nil {
