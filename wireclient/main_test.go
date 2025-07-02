@@ -22,5 +22,5 @@ import (
 
 func TestMain(m *testing.M) {
 	testutil.FlagInit()
-	m.Run()
+	os.Exit(m.Run())
 }
