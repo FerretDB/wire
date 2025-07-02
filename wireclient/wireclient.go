@@ -432,7 +432,7 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 func (c *Conn) loginPlain(ctx context.Context, username, password, authDB string) error {
 	plainCredentials := "\000" + username + "\000" + password
 
-	cmd := wirebson.MustDocument(
+	body := wire.MustOpMsg(
 		"saslStart", int32(1),
 		"mechanism", "PLAIN",
 		"payload", wirebson.Binary{B: []byte(plainCredentials)},
@@ -443,11 +443,6 @@ func (c *Conn) loginPlain(ctx context.Context, username, password, authDB string
 		ctx, "Login: PLAIN client",
 		slog.String("mechanism", "PLAIN"),
 	)
-
-	body, err := wire.NewOpMsg(cmd)
-	if err != nil {
-		return fmt.Errorf("wireclient.Conn.loginPlain: %w", err)
-	}
 
 	_, resBody, err := c.Request(ctx, body)
 	if err != nil {
