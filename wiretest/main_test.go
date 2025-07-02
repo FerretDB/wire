@@ -16,11 +16,12 @@ package wiretest
 
 import (
 	"testing"
+	"os"
 
 	"github.com/FerretDB/wire/internal/util/testutil"
 )
 
 func TestMain(m *testing.M) {
 	testutil.FlagInit()
-	m.Run()
+	os.Exit(m.Run())
 }
