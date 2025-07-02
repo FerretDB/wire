@@ -137,6 +137,7 @@ func TestConn(t *testing.T) {
 			require.NoError(t, err)
 
 			username, password := "username", "password"
+			db := "admin"
 
 			if u.User.Username() != "" {
 				username = u.User.Username()
@@ -146,7 +147,11 @@ func TestConn(t *testing.T) {
 				password = pass
 			}
 
-			assert.NoError(t, conn.Login(ctx, username, password, ""))
+			if dbName := strings.TrimPrefix(u.Path, "/"); dbName != "" {
+				db = dbName
+			}
+
+			assert.NoError(t, conn.Login(ctx, username, password, db))
 		})
 	})
 }
