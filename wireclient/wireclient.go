@@ -428,12 +428,14 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			slog.Int("step", step), slog.String("payload", payload),
 		)
 
-		payload, err = conv.Step(payload)
-		if err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
-		}
-
 		if res.Get("done").(bool) {
+			// For servers that support `skipEmptyExchange`, we can finish the conversation here.
+			if !conv.Done() && step == 2 {
+				if _, err = conv.Step(payload); err != nil {
+					return fmt.Errorf("wireclient.Conn.Login: %w", err)
+				}
+			}
+
 			if !conv.Done() {
 				return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
 			}
@@ -443,6 +445,11 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			}
 
 			return c.checkAuth(ctx)
+		}
+
+		payload, err = conv.Step(payload)
+		if err != nil {
+			return fmt.Errorf("wireclient.Conn.Login: %w", err)
 		}
 
 		cmd = wirebson.MustDocument(
