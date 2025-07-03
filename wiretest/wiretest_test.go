@@ -17,6 +17,8 @@ package wiretest
 import (
 	"math"
 	"testing"
+
+	_ "github.com/FerretDB/wire/internal/util/testutil"
 )
 
 func TestEqual(t *testing.T) {
