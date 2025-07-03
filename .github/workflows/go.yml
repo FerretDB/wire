@@ -81,7 +81,7 @@ jobs:
         run: bin/task test
         env:
           MONGODB_URI: ${{ matrix.uri }}
-          TEST_FLAGS: ${{ matrix.ferretdbv1 }}
+          TEST_FLAGS: ${{ matrix.flags }}
 
       - name: Get logs
         if: always()
