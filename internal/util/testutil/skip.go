@@ -15,24 +15,17 @@
 package testutil
 
 import (
-	"flag"
+	"os"
 	"testing"
 )
-
-// ferretDBv1 is a flag to indicate if tests are running against FerretDB v1.
-var ferretDBv1 = flag.Bool("ferretdbv1", false, "run tests against FerretDB v1")
-
-// FlagInit initializes the flags for the test package.
-// It should be called in the TestMain function of the every package.
-func FlagInit() {
-	flag.Parse()
-}
 
 // SkipForFerretDBv1 skips the test if running against FerretDB v1.
 func SkipForFerretDBv1(tb testing.TB) {
 	tb.Helper()
 
-	if *ferretDBv1 {
+	v := os.Getenv("WIRE_FERRETDBV1")
+
+	if v == "1" || v == "true" || v == "yes" {
 		tb.Skip("Not implemented for v1")
 	}
 }
