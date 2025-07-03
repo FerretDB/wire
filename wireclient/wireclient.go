@@ -387,7 +387,6 @@ func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) (
 	saslSupportedMechs := helloRes.Get("saslSupportedMechs")
 	if saslSupportedMechs == nil {
 		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: no saslSupportedMechs in hello response")
-
 	}
 
 	supportedMechs, ok := saslSupportedMechs.(*wirebson.Array)
