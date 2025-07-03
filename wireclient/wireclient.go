@@ -386,12 +386,13 @@ func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) (
 
 	saslSupportedMechs := helloRes.Get("saslSupportedMechs")
 	if saslSupportedMechs == nil {
-		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid hello response")
+		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: no saslSupportedMechs in hello response")
+
 	}
 
 	supportedMechs, ok := saslSupportedMechs.(*wirebson.Array)
 	if !ok {
-		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid hello response")
+		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid saslSupportedMechs in hello response")
 	}
 
 	var supportedMechanisms []string
@@ -399,7 +400,7 @@ func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) (
 	for _, mech := range supportedMechs.All() {
 		var mechStr string
 		if mechStr, ok = mech.(string); !ok {
-			return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid hello response")
+			return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid saslSupportedMechs value %v", mech)
 		}
 
 		supportedMechanisms = append(supportedMechanisms, mechStr)
