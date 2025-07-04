@@ -394,7 +394,7 @@ func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) (
 		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid saslSupportedMechs in hello response")
 	}
 
-	supportedMechanisms := make([]string, 0, len(supportedMechs.All()))
+	var supportedMechanisms []string
 
 	for _, mech := range supportedMechs.All() {
 		var mechStr string
