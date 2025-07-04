@@ -427,10 +427,25 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			slog.Int("step", step), slog.String("payload", payload),
 		)
 
-		done := res.Get("done").(bool)
+		if done := res.Get("done").(bool); !done {
+			payload, err = conv.Step(payload)
+			if err != nil {
+				return fmt.Errorf("wireclient.Conn.Login: %w", err)
+			}
+
+			cmd = wirebson.MustDocument(
+				"saslContinue", int32(1),
+				"conversationId", int32(1),
+				"payload", wirebson.Binary{B: []byte(payload)},
+				"$db", authDB,
+			)
+
+			continue
+		}
 
 		switch {
-		case !done:
+		case step == 1:
+			return fmt.Errorf("wireclient.Conn.Login: conversation is done at step %d, but expected to be at step 1 or 2", step)
 		case step == 2:
 			c.l.DebugContext(
 				ctx, "wireclient.Conn.Login: conversation done at step 2, assuming that server supports skipEmptyExchange",
@@ -461,19 +476,9 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			}
 
 			return c.checkAuth(ctx)
+		default:
+			panic("unreachable")
 		}
-
-		payload, err = conv.Step(payload)
-		if err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
-		}
-
-		cmd = wirebson.MustDocument(
-			"saslContinue", int32(1),
-			"conversationId", int32(1),
-			"payload", wirebson.Binary{B: []byte(payload)},
-			"$db", authDB,
-		)
 	}
 
 	return fmt.Errorf("wireclient.Conn.Login: too many steps")
