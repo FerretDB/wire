@@ -445,10 +445,11 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 
 		switch {
 		case step == 1:
-			return fmt.Errorf("wireclient.Conn.Login: conversation is done at step %d, but expected to be at step 1 or 2", step)
+			return fmt.Errorf("wireclient.Conn.Login: conversation is done at saslStart, but it shouldn't")
 		case step == 2:
 			c.l.DebugContext(
-				ctx, "wireclient.Conn.Login: conversation done at step 2, assuming that server supports skipEmptyExchange",
+				ctx, "wireclient.Conn.Login: conversation done at the first saslContinue, "+
+					"assuming that server supports skipEmptyExchange",
 				slog.Int("step", step), slog.String("payload", payload),
 				slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
 			)
