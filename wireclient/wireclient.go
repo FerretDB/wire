@@ -39,9 +39,6 @@ import (
 // nextRequestID stores the last generated request ID.
 var nextRequestID atomic.Int32
 
-// skipEmptyExchange is the value of `saslStart`'s options used by [*Conn.Login].
-const skipEmptyExchange = true
-
 // Conn represents a single client connection.
 //
 // It is not safe for concurrent use.
@@ -390,16 +387,11 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 		"$db", authDB,
 	)
 
-	// one `saslStart`, two `saslContinue` requests
+	// one `saslStart`, two `saslContinue` for servers that don't support `skipEmptyExchange`
 	steps := 3
 
-	if skipEmptyExchange {
-		if err = cmd.Add("options", wirebson.MustDocument("skipEmptyExchange", true)); err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
-		}
-
-		// only one `saslContinue`
-		steps = 2
+	if err = cmd.Add("options", wirebson.MustDocument("skipEmptyExchange", true)); err != nil {
+		return fmt.Errorf("wireclient.Conn.Login: %w", err)
 	}
 
 	for step := 1; step <= steps; step++ {
@@ -435,19 +427,35 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			slog.Int("step", step), slog.String("payload", payload),
 		)
 
-		if res.Get("done").(bool) {
-			if skipEmptyExchange {
-				if step != 2 {
-					return fmt.Errorf("wireclient.Conn.Login: expected server conversation to be done at step 2")
-				}
+		if done := res.Get("done").(bool); !done {
+			payload, err = conv.Step(payload)
+			if err != nil {
+				return fmt.Errorf("wireclient.Conn.Login: %w", err)
+			}
 
-				if _, err = conv.Step(payload); err != nil {
-					return fmt.Errorf("wireclient.Conn.Login: %w", err)
-				}
-			} else {
-				if step != 3 {
-					return fmt.Errorf("wireclient.Conn.Login: expected server conversation to be done at step 3")
-				}
+			cmd = wirebson.MustDocument(
+				"saslContinue", int32(1),
+				"conversationId", int32(1),
+				"payload", wirebson.Binary{B: []byte(payload)},
+				"$db", authDB,
+			)
+
+			continue
+		}
+
+		switch step {
+		case 1:
+			return fmt.Errorf("wireclient.Conn.Login: conversation is done at saslStart, but it shouldn't")
+		case 2:
+			c.l.DebugContext(
+				ctx, "wireclient.Conn.Login: conversation done at the first saslContinue, "+
+					"assuming that server supports skipEmptyExchange",
+				slog.Int("step", step), slog.String("payload", payload),
+				slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
+			)
+
+			if _, err = conv.Step(payload); err != nil {
+				return fmt.Errorf("wireclient.Conn.Login: %w", err)
 			}
 
 			if !conv.Done() {
@@ -459,19 +467,19 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			}
 
 			return c.checkAuth(ctx)
-		}
+		case 3:
+			if !conv.Done() {
+				return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
+			}
 
-		payload, err = conv.Step(payload)
-		if err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
-		}
+			if !conv.Valid() {
+				return fmt.Errorf("wireclient.Conn.Login: conversation is done, but not valid")
+			}
 
-		cmd = wirebson.MustDocument(
-			"saslContinue", int32(1),
-			"conversationId", int32(1),
-			"payload", wirebson.Binary{B: []byte(payload)},
-			"$db", authDB,
-		)
+			return c.checkAuth(ctx)
+		default:
+			panic("unreachable")
+		}
 	}
 
 	return fmt.Errorf("wireclient.Conn.Login: too many steps")
