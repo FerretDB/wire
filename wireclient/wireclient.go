@@ -443,10 +443,10 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			continue
 		}
 
-		switch {
-		case step == 1:
+		switch step {
+		case 1:
 			return fmt.Errorf("wireclient.Conn.Login: conversation is done at saslStart, but it shouldn't")
-		case step == 2:
+		case 2:
 			c.l.DebugContext(
 				ctx, "wireclient.Conn.Login: conversation done at the first saslContinue, "+
 					"assuming that server supports skipEmptyExchange",
@@ -467,7 +467,7 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 			}
 
 			return c.checkAuth(ctx)
-		case step == 3:
+		case 3:
 			if !conv.Done() {
 				return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
 			}
