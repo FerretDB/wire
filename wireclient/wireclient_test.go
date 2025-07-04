@@ -30,6 +30,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
 	"github.com/FerretDB/wire"
+	"github.com/FerretDB/wire/internal/util/testutil"
 	"github.com/FerretDB/wire/wirebson"
 	"github.com/FerretDB/wire/wiretest"
 )
@@ -159,7 +160,14 @@ func TestTypes(t *testing.T) {
 		err = conn.Login(ctx, "username", "password", "admin")
 		require.NoError(t, err)
 
-		opts := options.Client().ApplyURI(uri).SetAuth(options.Credential{Username: "username", Password: "password"})
+		var supportedMechanisms []string
+		supportedMechanisms, err = conn.getSupportedMechs(ctx, "username", "admin")
+		require.NoError(t, err)
+		require.NotEmpty(t, supportedMechanisms)
+
+		opts := options.Client().
+			ApplyURI(uri).
+			SetAuth(options.Credential{Username: "username", Password: "password", AuthMechanism: supportedMechanisms[0]})
 		mConn, err = mongo.Connect(opts)
 		require.NoError(t, err)
 
@@ -170,6 +178,8 @@ func TestTypes(t *testing.T) {
 	}
 
 	t.Run("Decimal128", func(t *testing.T) {
+		testutil.SkipForFerretDBv1(t)
+
 		d := wirebson.Decimal128{H: 13, L: 42}
 		md := bson.NewDecimal128(13, 42)
 
