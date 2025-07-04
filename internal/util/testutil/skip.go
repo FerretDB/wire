@@ -20,7 +20,7 @@ import (
 )
 
 // ferretDBv1 is a flag to indicate if tests are running against FerretDB v1.
-var ferretDBv1 = flag.Bool("ferretdbv1", false, "run tests against FerretDB v1")
+var ferretDBv1 = flag.Bool("ferretdbv1", false, "skip tests that fail with FerretDB v1")
 
 // SkipForFerretDBv1 skips the test if running against FerretDB v1.
 func SkipForFerretDBv1(tb testing.TB) {

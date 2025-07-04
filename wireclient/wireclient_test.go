@@ -163,7 +163,6 @@ func TestTypes(t *testing.T) {
 		var supportedMechanisms []string
 		supportedMechanisms, err = conn.getSupportedMechs(ctx, "username", "admin")
 		require.NoError(t, err)
-
 		require.NotEmpty(t, supportedMechanisms)
 
 		opts := options.Client().
