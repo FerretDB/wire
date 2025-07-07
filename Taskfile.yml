@@ -88,6 +88,7 @@ tasks:
       - go test -race -count=1 -coverpkg=./... -coverprofile=cover.txt ./...
 
   test-all:
+    # keep in sync with CI config
     desc: "Run all tests for all services"
     cmds:
       - env MONGODB_URI=mongodb://{{.HOST}}:27017/ go test -race -count=1 ./...
