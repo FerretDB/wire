@@ -261,7 +261,8 @@ func (doc *Document) Encode() (RawDocument, error) {
 	return buf.Bytes(), nil
 }
 
-// MarshalJSON implements [json.Marshaler].
+// MarshalJSON implements [json.Marshaler]
+// by encoding Canonical Extended JSON v2 representation of the document.
 func (doc *Document) MarshalJSON() ([]byte, error) {
 	// encoding/json does not call this method on nil
 	must.NotBeZero(doc)
@@ -287,7 +288,8 @@ func (doc *Document) Decode() (*Document, error) {
 	return doc, nil
 }
 
-// UnmarshalJSON implements [json.Unmarshaler].
+// UnmarshalJSON implements [json.Unmarshaler]
+// by decoding Canonical Extended JSON v2 representation of the document.
 func (doc *Document) UnmarshalJSON(b []byte) error {
 	// encoding/json does not call this method on nil
 	must.NotBeZero(doc)
@@ -348,7 +350,6 @@ func (doc *Document) LogMessageIndent() string {
 // check interfaces
 var (
 	_ AnyDocument      = (*Document)(nil)
-	_ slog.LogValuer   = (*Document)(nil)
 	_ json.Marshaler   = (*Document)(nil)
 	_ json.Unmarshaler = (*Document)(nil)
 )
