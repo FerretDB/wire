@@ -1078,9 +1078,9 @@ func TestNormal(t *testing.T) {
 				doc, err := tc.raw.DecodeDeep()
 				require.NoError(t, err)
 
-				copy := doc.Copy()
-				assertEqual(t, doc, copy)
-				assert.NotSame(t, doc, copy)
+				c := doc.Copy()
+				assertEqual(t, doc, c)
+				assert.NotSame(t, doc, c)
 			})
 		})
 	}
@@ -1476,9 +1476,9 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 			return
 		}
 
-		copy := doc.Copy()
-		assertEqual(t, doc, copy)
-		assert.NotSame(t, doc, copy)
+		c := doc.Copy()
+		assertEqual(t, doc, c)
+		assert.NotSame(t, doc, c)
 	})
 }
 

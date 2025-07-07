@@ -19,6 +19,7 @@ import (
 	"math"
 	"slices"
 	"testing"
+	"unsafe"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -49,17 +50,17 @@ func TestArray(t *testing.T) {
 }
 
 func TestArrayCopy(t *testing.T) {
-	original := MustArray(
+	o := MustArray(
 		math.NaN(),
 		Binary{B: []byte{0, 1, 2, 3, 4, 5}, Subtype: BinaryVector},
 	)
 
-	copy := original.Copy()
-	assertEqual(t, original, copy)
-	require.NotSame(t, original, copy)
+	c := o.Copy()
+	assertEqual(t, o, c)
+	require.NotSame(t, o, c)
 
-	originalBinary := original.Get(1).(Binary).B
-	copyBinary := copy.Get(1).(Binary).B
-	require.Equal(t, originalBinary, copyBinary)
-	require.NotSame(t, &originalBinary[0], &copyBinary[0])
+	ob := o.Get(1).(Binary).B
+	cb := c.Get(1).(Binary).B
+	require.Equal(t, ob, cb)
+	require.NotSame(t, unsafe.SliceData(ob), unsafe.SliceData(cb))
 }

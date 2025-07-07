@@ -19,6 +19,7 @@ import (
 	"math"
 	"slices"
 	"testing"
+	"unsafe"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -54,17 +55,17 @@ func TestDocument(t *testing.T) {
 }
 
 func TestDocumentCopy(t *testing.T) {
-	original := MustDocument(
+	o := MustDocument(
 		"nan", math.NaN(),
 		"binary", Binary{B: []byte{0, 1, 2, 3, 4, 5}, Subtype: BinaryVector},
 	)
 
-	copy := original.Copy()
-	assertEqual(t, original, copy)
-	require.NotSame(t, original, copy)
+	c := o.Copy()
+	assertEqual(t, o, c)
+	require.NotSame(t, o, c)
 
-	originalBinary := original.Get("binary").(Binary).B
-	copyBinary := copy.Get("binary").(Binary).B
-	require.Equal(t, originalBinary, copyBinary)
-	require.NotSame(t, &originalBinary[0], &copyBinary[0])
+	ob := o.Get("binary").(Binary).B
+	cb := c.Get("binary").(Binary).B
+	require.Equal(t, ob, cb)
+	require.NotSame(t, unsafe.SliceData(ob), unsafe.SliceData(cb))
 }
