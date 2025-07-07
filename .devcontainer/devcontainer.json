@@ -1,7 +1,7 @@
 {
     "name": "wire",
     "dockerComposeFile": [
-        "../docker-compose.yml"
+        "../.dev/docker-compose.yml"
     ],
     "service": "devcontainer",
     "customizations": {
@@ -14,8 +14,8 @@
     },
     "workspaceFolder": "/workspace",
     "overrideCommand": true,
-    "updateContentCommand": "cd /workspace/tools && go generate -x && cd .. && bin/task init",
-    "postCreateCommand": "go install github.com/go-delve/delve/cmd/dlv@latest",
+    "updateContentCommand": "cd /workspace/tools && go generate -x && ../bin/task -d .. init",
+
     // for debugging with delve
     "capAdd": [
         "SYS_PTRACE"

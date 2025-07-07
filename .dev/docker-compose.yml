@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: golang.Dockerfile
     volumes:
-      - .:/workspace
+      - ..:/workspace
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
