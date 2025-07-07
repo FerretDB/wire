@@ -71,6 +71,7 @@ func MustOpMsg(pairs ...any) *OpMsg {
 	return msg
 }
 
+// msgbody implements [MsgBody].
 func (msg *OpMsg) msgbody() {}
 
 // check implements [MsgBody].
@@ -196,7 +197,14 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 	return nil
 }
 
-// MarshalBinary writes an OpMsg to a byte array.
+// Size implements [MsgBody].
+func (msg *OpMsg) Size() int {
+	// TODO https://github.com/FerretDB/wire/issues/139
+	b, _ := msg.MarshalBinary()
+	return len(b)
+}
+
+// MarshalBinary implements [MsgBody].
 func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 	b := make([]byte, 4, 16)
 

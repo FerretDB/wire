@@ -16,9 +16,10 @@ package wirebson
 
 import (
 	"maps"
+	"math"
 	"slices"
 	"testing"
-	"time"
+	"unsafe"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -49,30 +50,17 @@ func TestArray(t *testing.T) {
 }
 
 func TestArrayCopy(t *testing.T) {
-	original := MustArray(
-		MustDocument("key1", "value1"),
-		MustArray("v1", "v2"),
-		float64(0),
-		"foo",
-		Undefined,
-		ObjectID{},
-		false,
-		time.Date(2023, 10, 1, 0, 0, 0, 0, time.UTC),
-		Null,
-		Regex{Pattern: "foo", Options: "bar"},
-		int32(0),
-		Timestamp(0),
-		int64(0),
-		Decimal128{L: 0, H: 0},
-		Binary{B: []byte{0, 0, 0, 0, 0, 0}, Subtype: BinaryGeneric},
+	o := MustArray(
+		math.NaN(),
+		Binary{B: []byte{0, 1, 2, 3, 4, 5}, Subtype: BinaryVector},
 	)
 
-	cp := original.Copy()
-	require.Equal(t, original, cp)
-	require.NotSame(t, original, cp)
+	c := o.Copy()
+	assertEqual(t, o, c)
+	require.NotSame(t, o, c)
 
-	originalBinary := original.Get(14).(Binary).B
-	copyBinary := cp.Get(14).(Binary).B
-	require.Equal(t, originalBinary, copyBinary)
-	require.NotSame(t, &originalBinary[0], &copyBinary[0])
+	ob := o.Get(1).(Binary).B
+	cb := c.Get(1).(Binary).B
+	require.Equal(t, ob, cb)
+	require.NotSame(t, unsafe.SliceData(ob), unsafe.SliceData(cb))
 }

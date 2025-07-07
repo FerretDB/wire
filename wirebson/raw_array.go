@@ -114,6 +114,5 @@ func (raw RawArray) LogMessageIndent() string {
 
 // check interfaces
 var (
-	_ AnyArray       = RawArray(nil)
-	_ slog.LogValuer = RawArray(nil)
+	_ AnyArray = RawArray(nil)
 )

@@ -30,6 +30,9 @@ import (
 //
 //sumtype:decl
 type MsgBody interface {
+	// Size returns the size of the encoded body.
+	Size() int
+
 	encoding.BinaryMarshaler
 
 	// UnmarshalBinaryNocopy is a variant of [encoding.BinaryUnmarshaler] that does not have to copy the data.

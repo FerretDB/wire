@@ -120,13 +120,14 @@ func testMessages(t *testing.T, testCases []testCase) {
 				}
 
 				assert.NoError(t, err)
-				assert.Equal(t, tc.msgHeader, msgHeader)
-				assert.Equal(t, tc.msgBody, msgBody)
 				assert.Zero(t, br.Len(), "not all br bytes were consumed")
 				assert.Zero(t, bufr.Buffered(), "not all bufr bytes were consumed")
 
-				require.NotNil(t, msgHeader)
-				require.NotNil(t, msgBody)
+				require.Equal(t, tc.msgHeader, msgHeader)
+				require.Equal(t, tc.msgBody, msgBody)
+
+				assert.Equal(t, len(tc.expectedB)-MsgHeaderLen, msgBody.Size())
+
 				assert.NotEmpty(t, msgHeader.String())
 				assert.Equal(t, strings.ReplaceAll(testutil.Unindent(tc.si), `"`, "`"), msgBody.StringIndent())
 				assert.NotEmpty(t, msgBody.String())
@@ -163,12 +164,11 @@ func testMessages(t *testing.T, testCases []testCase) {
 
 					return
 				}
-
 				require.NoError(t, err)
+
 				err = bufw.Flush()
 				require.NoError(t, err)
-				actualB := buf.Bytes()
-				require.Equal(t, tc.expectedB, actualB)
+				require.Equal(t, tc.expectedB, buf.Bytes())
 			})
 		})
 	}
@@ -216,6 +216,14 @@ func fuzzMessages(f *testing.F, testCases []testCase) {
 				t.Skip()
 			}
 
+			// remove random tail
+			expectedB = b[:len(b)-bufr.Buffered()-br.Len()]
+
+			require.NotNil(t, msgHeader)
+			require.NotNil(t, msgBody)
+
+			assert.Equal(t, len(expectedB)-MsgHeaderLen, msgBody.Size())
+
 			assert.NotEmpty(t, msgHeader.String())
 			assert.NotEmpty(t, msgBody.StringIndent())
 			assert.NotEmpty(t, msgBody.String())
@@ -234,19 +242,19 @@ func fuzzMessages(f *testing.F, testCases []testCase) {
 			default:
 			}
 
-			// remove random tail
-			expectedB = b[:len(b)-bufr.Buffered()-br.Len()]
 		}
 
 		// test WriteMessage
 		{
-			var bw bytes.Buffer
-			bufw := bufio.NewWriter(&bw)
+			var buf bytes.Buffer
+			bufw := bufio.NewWriter(&buf)
+
 			err = WriteMessage(bufw, msgHeader, msgBody)
 			require.NoError(t, err)
+
 			err = bufw.Flush()
 			require.NoError(t, err)
-			assert.Equal(t, expectedB, bw.Bytes())
+			assert.Equal(t, expectedB, buf.Bytes())
 		}
 	})
 }
