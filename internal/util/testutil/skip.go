@@ -12,20 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wiretest
+package testutil
 
 import (
-	"math"
+	"flag"
 	"testing"
-
-	_ "github.com/FerretDB/wire/internal/util/testutil"
 )
 
-func TestEqual(t *testing.T) {
-	t.Parallel()
+// ferretDBv1 is a flag to indicate if tests are running against FerretDB v1.
+var ferretDBv1 = flag.Bool("ferretdbv1", false, "skip tests that fail with FerretDB v1")
 
-	AssertEqualSlices(t,
-		[]any{0.0, math.Copysign(0, +1), math.NaN()},
-		[]any{0.0, math.Copysign(0, +1), math.Float64frombits(0x7ff8000f000f0001)},
-	)
+// SkipForFerretDBv1 skips the test if running against FerretDB v1.
+func SkipForFerretDBv1(tb testing.TB) {
+	tb.Helper()
+
+	if *ferretDBv1 {
+		tb.Skip("Not implemented for v1")
+	}
 }

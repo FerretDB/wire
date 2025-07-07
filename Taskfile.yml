@@ -85,7 +85,7 @@ tasks:
   test:
     desc: "Run all tests (requires MONGODB_URI set)"
     cmds:
-      - go test -race -count=1 -coverpkg=./... -coverprofile=cover.txt ./...
+      - go test -race -count=1 -coverpkg=./... -coverprofile=cover.txt ./... {{.TEST_FLAGS}}
 
   test-all:
     # keep in sync with CI config
@@ -95,8 +95,7 @@ tasks:
       # tlsCaFile path is relative to wireclient package
       - env MONGODB_URI='mongodb://{{.HOST}}:37017/?tls=true&tlsCaFile=../.dev/build/certs/rootCA-cert.pem' go test -race -count=1 ./...
       - env MONGODB_URI=mongodb://{{.HOST}}:27018/ go test -race -count=1 ./...
-      # TODO https://github.com/FerretDB/wire/issues/127
-      - env MONGODB_URI=mongodb://{{.HOST}}:27019/ go test -race -count=1 ./...
+      - env MONGODB_URI=mongodb://{{.HOST}}:27019/ go test -race -count=1 ./... -ferretdbv1
 
   bench:
     desc: "Run benchmarks"
