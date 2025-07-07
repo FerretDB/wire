@@ -1,5 +1,16 @@
 ---
 services:
+  devcontainer:
+    build:
+      context: .
+      dockerfile: golang.Dockerfile
+    volumes:
+      - .:/workspace
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      HOST: "host.docker.internal"
+
   mongodb:
     build:
       context: .

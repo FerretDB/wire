@@ -1,0 +1,26 @@
+{
+    "name": "wire",
+    "dockerComposeFile": [
+        "../docker-compose.yml"
+    ],
+    "service": "devcontainer",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "golang.go",
+                "editorconfig.editorconfig"
+            ]
+        }
+    },
+    "workspaceFolder": "/workspace",
+    "overrideCommand": true,
+    "updateContentCommand": "cd /workspace/tools && go generate -x && cd .. && bin/task init",
+    "postCreateCommand": "go install github.com/go-delve/delve/cmd/dlv@latest",
+    // for debugging with delve
+    "capAdd": [
+        "SYS_PTRACE"
+    ],
+    "securityOpt": [
+        "seccomp=unconfined"
+    ]
+}
