@@ -138,6 +138,13 @@ func (query *OpQuery) UnmarshalBinaryNocopy(b []byte) error {
 	return nil
 }
 
+// Size implements [MsgBody].
+func (query *OpQuery) Size() int {
+	// TODO https://github.com/FerretDB/wire/issues/139
+	b, _ := query.MarshalBinary()
+	return len(b)
+}
+
 // MarshalBinary implements [MsgBody].
 func (query *OpQuery) MarshalBinary() ([]byte, error) {
 	nameSize := wirebson.SizeCString(query.FullCollectionName)

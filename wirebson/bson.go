@@ -42,6 +42,7 @@
 package wirebson
 
 import (
+	"log/slog"
 	"slices"
 	"time"
 
@@ -81,6 +82,7 @@ type AnyDocument interface {
 	Decode() (*Document, error)
 	LogMessage() string
 	LogMessageIndent() string
+	slog.LogValuer
 
 	document() // seal for go-check-sumtype linter
 }
