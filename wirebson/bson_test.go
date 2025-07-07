@@ -1066,6 +1066,22 @@ func TestNormal(t *testing.T) {
 
 				assertEqual(t, tc.doc, doc)
 			})
+
+			t.Run("Size", func(t *testing.T) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(t, err)
+
+				assert.Equal(t, len(tc.raw), Size(doc))
+			})
+
+			t.Run("Copy", func(t *testing.T) {
+				doc, err := tc.raw.DecodeDeep()
+				require.NoError(t, err)
+
+				copy := doc.Copy()
+				assertEqual(t, doc, copy)
+				assert.NotSame(t, doc, copy)
+			})
 		})
 	}
 }
@@ -1445,15 +1461,24 @@ func testRawDocument(t *testing.T, rawDoc RawDocument) {
 		assertEqual(t, doc, doc2)
 	})
 
+	t.Run("Size", func(t *testing.T) {
+		doc, err := rawDoc.DecodeDeep()
+		if err != nil {
+			return
+		}
+
+		assert.Equal(t, len(rawDoc), Size(doc))
+	})
+
 	t.Run("Copy", func(t *testing.T) {
 		doc, err := rawDoc.DecodeDeep()
 		if err != nil {
 			return
 		}
 
-		cp := doc.Copy()
-		assert.Equal(t, doc, cp)
-		assert.NotSame(t, doc, cp)
+		copy := doc.Copy()
+		assertEqual(t, doc, copy)
+		assert.NotSame(t, doc, copy)
 	})
 }
 
