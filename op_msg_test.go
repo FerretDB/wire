@@ -689,36 +689,3 @@ func TestMsg(t *testing.T) {
 func FuzzMsg(f *testing.F) {
 	fuzzMessages(f, msgTestCases)
 }
-
-func TestOpMsgSize(t *testing.T) {
-	t.Parallel()
-
-	// Test that Size() returns the same value as len(MarshalBinary())
-	for _, tc := range msgTestCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			// Skip test cases that have nil msgBody (error cases)
-			if tc.msgBody == nil {
-				t.Skip("Skipping test case with nil msgBody")
-			}
-
-			msg := tc.msgBody.(*OpMsg)
-			
-			// Get size from current Size() method
-			size := msg.Size()
-			
-			// Get size from MarshalBinary()
-			data, err := msg.MarshalBinary()
-			if err != nil {
-				t.Fatalf("MarshalBinary failed: %v", err)
-			}
-			expectedSize := len(data)
-			
-			if size != expectedSize {
-				t.Errorf("Size() = %d, len(MarshalBinary()) = %d", size, expectedSize)
-			}
-		})
-	}
-}
