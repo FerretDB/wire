@@ -168,7 +168,10 @@ func testMessages(t *testing.T, testCases []testCase) {
 
 				err = bufw.Flush()
 				require.NoError(t, err)
+
 				require.Equal(t, tc.expectedB, buf.Bytes())
+
+				assert.Equal(t, tc.msgBody.Size(), buf.Len()-MsgHeaderLen)
 			})
 		})
 	}
@@ -254,7 +257,10 @@ func fuzzMessages(f *testing.F, testCases []testCase) {
 
 			err = bufw.Flush()
 			require.NoError(t, err)
-			assert.Equal(t, expectedB, buf.Bytes())
+
+			require.Equal(t, expectedB, buf.Bytes())
+
+			assert.Equal(t, msgBody.Size(), buf.Len()-MsgHeaderLen)
 		}
 	})
 }
