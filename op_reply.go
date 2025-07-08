@@ -116,9 +116,7 @@ func (reply *OpReply) UnmarshalBinaryNocopy(b []byte) error {
 
 // Size implements [MsgBody].
 func (reply *OpReply) Size() int {
-	// TODO https://github.com/FerretDB/wire/issues/139
-	b, _ := reply.MarshalBinary()
-	return len(b)
+	return 20 + len(reply.document)
 }
 
 // MarshalBinary implements [MsgBody].
