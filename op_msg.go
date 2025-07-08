@@ -199,9 +199,34 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 
 // Size implements [MsgBody].
 func (msg *OpMsg) Size() int {
-	// TODO https://github.com/FerretDB/wire/issues/139
-	b, _ := msg.MarshalBinary()
-	return len(b)
+	res := 4
+
+	for _, section := range msg.sections {
+		res++
+
+		switch section.kind {
+		case 0:
+			if len(section.documents) > 0 {
+				res += len(section.documents[0])
+			}
+
+		case 1:
+			res += 4 + wirebson.SizeCString(section.identifier)
+			for _, doc := range section.documents {
+				res += len(doc)
+			}
+
+		default:
+			// that is already checked by checkSections
+			panic("not reached")
+		}
+	}
+
+	if msg.Flags.FlagSet(OpMsgChecksumPresent) {
+		res += 4
+	}
+
+	return res
 }
 
 // MarshalBinary implements [MsgBody].
