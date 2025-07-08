@@ -6,6 +6,7 @@ env:
   GOCOVERDIR: tmp/cover
 
 vars:
+  HOST: '{{env "HOST" | default "localhost"}}'
   BENCH: Benchmark.*
   BENCH_TIME: 1s
   BENCH_COUNT: 5
@@ -87,13 +88,14 @@ tasks:
       - go test -race -count=1 -coverpkg=./... -coverprofile=cover.txt ./... {{.TEST_FLAGS}}
 
   test-all:
+    # keep in sync with CI config
     desc: "Run all tests for all services"
     cmds:
-      - env MONGODB_URI=mongodb://localhost:27017/ go test -race -count=1 ./...
+      - env MONGODB_URI=mongodb://{{.HOST}}:27017/ go test -race -count=1 ./...
       # tlsCaFile path is relative to wireclient package
-      - env MONGODB_URI='mongodb://localhost:37017/?tls=true&tlsCaFile=../.dev/build/certs/rootCA-cert.pem' go test -race -count=1 ./...
-      - env MONGODB_URI=mongodb://localhost:27018/ go test -race -count=1 ./...
-      - env MONGODB_URI=mongodb://localhost:27019/ go test -race -count=1 ./... -ferretdbv1
+      - env MONGODB_URI='mongodb://{{.HOST}}:37017/?tls=true&tlsCaFile=../.dev/build/certs/rootCA-cert.pem' go test -race -count=1 ./...
+      - env MONGODB_URI=mongodb://{{.HOST}}:27018/ go test -race -count=1 ./...
+      - env MONGODB_URI=mongodb://{{.HOST}}:27019/ go test -race -count=1 ./... -ferretdbv1
 
   bench:
     desc: "Run benchmarks"
