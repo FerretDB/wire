@@ -199,35 +199,34 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 
 // Size implements [MsgBody].
 func (msg *OpMsg) Size() int {
-	size := 4 // flags (4 bytes)
+	res := 4
 
 	for _, section := range msg.sections {
-		size++ // section kind (1 byte)
+		res++
 
 		switch section.kind {
 		case 0:
 			if len(section.documents) > 0 {
-				size += len(section.documents[0])
+				res += len(section.documents[0])
 			}
 
 		case 1:
-			size += 4 // section size (4 bytes)
-			size += wirebson.SizeCString(section.identifier)
+			res += 4 + wirebson.SizeCString(section.identifier)
 			for _, doc := range section.documents {
-				size += len(doc)
+				res += len(doc)
 			}
 
 		default:
-			// This should not happen in practice as MarshalBinary would error
-			// Keep the calculation consistent with MarshalBinary behavior
+			// that is already checked by checkSections
+			panic("not reached")
 		}
 	}
 
 	if msg.Flags.FlagSet(OpMsgChecksumPresent) {
-		size += 4 // checksum (4 bytes)
+		res += 4
 	}
 
-	return size
+	return res
 }
 
 // MarshalBinary implements [MsgBody].
