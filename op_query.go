@@ -138,6 +138,12 @@ func (query *OpQuery) UnmarshalBinaryNocopy(b []byte) error {
 	return nil
 }
 
+// Size implements [MsgBody].
+func (query *OpQuery) Size() int {
+	nameSize := wirebson.SizeCString(query.FullCollectionName)
+	return 12 + nameSize + len(query.query) + len(query.returnFieldsSelector)
+}
+
 // MarshalBinary implements [MsgBody].
 func (query *OpQuery) MarshalBinary() ([]byte, error) {
 	nameSize := wirebson.SizeCString(query.FullCollectionName)

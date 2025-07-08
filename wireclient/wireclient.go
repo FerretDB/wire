@@ -25,6 +25,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -361,23 +362,119 @@ func (c *Conn) Ping(ctx context.Context) error {
 	return nil
 }
 
+// getSupportedMechs sends a hello command to the server
+// and returns the list of supported authentication mechanisms.
+func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) ([]string, error) {
+	body := wire.MustOpMsg(
+		"hello", int32(1),
+		"saslSupportedMechs", authDB+"."+username,
+		"$db", authDB,
+	)
+
+	_, resBody, err := c.Request(ctx, body)
+	if err != nil {
+		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: %w", err)
+	}
+
+	helloRes, err := resBody.(*wire.OpMsg).DocumentDeep()
+	if err != nil {
+		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: %w", err)
+	}
+
+	saslSupportedMechs := helloRes.Get("saslSupportedMechs")
+	if saslSupportedMechs == nil {
+		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: no saslSupportedMechs in hello response")
+	}
+
+	supportedMechs, ok := saslSupportedMechs.(*wirebson.Array)
+	if !ok {
+		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid saslSupportedMechs in hello response")
+	}
+
+	var supportedMechanisms []string
+
+	for _, mech := range supportedMechs.All() {
+		var mechStr string
+		if mechStr, ok = mech.(string); !ok {
+			return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid saslSupportedMechs value %v", mech)
+		}
+
+		supportedMechanisms = append(supportedMechanisms, mechStr)
+	}
+
+	return supportedMechanisms, nil
+}
+
 // Login authenticates the connection with the given credentials
 // using some unspecified sequences of commands.
 //
 // It should not be used to test various authentication scenarios.
 func (c *Conn) Login(ctx context.Context, username, password, authDB string) error {
-	// TODO https://github.com/FerretDB/wire/issues/127
-
-	s, err := scram.SHA256.NewClient(username, password, "")
+	supportedMechanisms, err := c.getSupportedMechs(ctx, username, authDB)
 	if err != nil {
 		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+	}
+
+	switch {
+	case slices.Contains(supportedMechanisms, "SCRAM-SHA-256"):
+		return c.loginScramSHA256(ctx, username, password, authDB)
+	case slices.Contains(supportedMechanisms, "PLAIN"):
+		return c.loginPlain(ctx, username, password, authDB)
+	default:
+		return fmt.Errorf("wireclient.Conn.Login: unsupported authentication mechanisms")
+	}
+}
+
+// loginPlain authenticates the connection using the PLAIN mechanism.
+func (c *Conn) loginPlain(ctx context.Context, username, password, authDB string) error {
+	plainCredentials := "\000" + username + "\000" + password
+
+	body := wire.MustOpMsg(
+		"saslStart", int32(1),
+		"mechanism", "PLAIN",
+		"payload", wirebson.Binary{B: []byte(plainCredentials)},
+		"$db", authDB,
+	)
+
+	c.l.DebugContext(
+		ctx, "Login: PLAIN client",
+		slog.String("mechanism", "PLAIN"),
+	)
+
+	_, resBody, err := c.Request(ctx, body)
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.loginPlain: %w", err)
+	}
+
+	res, err := resBody.(*wire.OpMsg).DocumentDeep()
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.loginPlain: %w", err)
+	}
+
+	if ok := res.Get("ok"); ok != 1.0 {
+		return fmt.Errorf("wireclient.Conn.loginPlain: authentication failed (ok was %v)", ok)
+	}
+
+	c.l.DebugContext(
+		ctx, "Login: PLAIN server",
+		slog.String("status", "success"),
+	)
+
+	return c.checkAuth(ctx)
+}
+
+// loginScramSHA256 authenticates the connection using the SCRAM-SHA-256 mechanism.
+func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB string) error {
+	s, err := scram.SHA256.NewClient(username, password, "")
+	if err != nil {
+		return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 	}
 
 	conv := s.NewConversation()
 
 	payload, err := conv.Step("")
 	if err != nil {
-		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 	}
 
 	cmd := wirebson.MustDocument(
@@ -391,7 +488,7 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 	steps := 3
 
 	if err = cmd.Add("options", wirebson.MustDocument("skipEmptyExchange", true)); err != nil {
-		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 	}
 
 	for step := 1; step <= steps; step++ {
@@ -403,21 +500,21 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 
 		var body *wire.OpMsg
 		if body, err = wire.NewOpMsg(cmd); err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 		}
 
 		var resBody wire.MsgBody
 		if _, resBody, err = c.Request(ctx, body); err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 		}
 
 		var res *wirebson.Document
 		if res, err = resBody.(*wire.OpMsg).DocumentDeep(); err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 		}
 
 		if ok := res.Get("ok"); ok != 1.0 {
-			return fmt.Errorf("wireclient.Conn.Login: %s failed (ok was %v)", cmd.Command(), ok)
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: %s failed (ok was %v)", cmd.Command(), ok)
 		}
 
 		payload = string(res.Get("payload").(wirebson.Binary).B)
@@ -481,7 +578,7 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 		return c.checkAuth(ctx)
 	}
 
-	return fmt.Errorf("wireclient.Conn.Login: too many steps")
+	return fmt.Errorf("wireclient.Conn.loginScramSHA256: too many steps")
 }
 
 // checkAuth checks if the connection is authenticated.

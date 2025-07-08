@@ -183,7 +183,8 @@ func (arr *Array) Encode() (RawArray, error) {
 	return buf.Bytes(), nil
 }
 
-// MarshalJSON implements [json.Marshaler].
+// MarshalJSON implements [json.Marshaler]
+// by encoding Canonical Extended JSON v2 representation of the array.
 func (arr *Array) MarshalJSON() ([]byte, error) {
 	// encoding/json does not call this method on nil
 	must.NotBeZero(arr)
@@ -209,7 +210,8 @@ func (arr *Array) Decode() (*Array, error) {
 	return arr, nil
 }
 
-// UnmarshalJSON implements [json.Unmarshaler].
+// UnmarshalJSON implements [json.Unmarshaler]
+// by decoding Canonical Extended JSON v2 representation of the array.
 func (arr *Array) UnmarshalJSON(b []byte) error {
 	// encoding/json does not call this method on nil
 	must.NotBeZero(arr)
@@ -270,7 +272,6 @@ func (arr *Array) LogMessageIndent() string {
 // check interfaces
 var (
 	_ AnyArray         = (*Array)(nil)
-	_ slog.LogValuer   = (*Array)(nil)
 	_ json.Marshaler   = (*Array)(nil)
 	_ json.Unmarshaler = (*Array)(nil)
 )

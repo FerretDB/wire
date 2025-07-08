@@ -114,6 +114,11 @@ func (reply *OpReply) UnmarshalBinaryNocopy(b []byte) error {
 	return nil
 }
 
+// Size implements [MsgBody].
+func (reply *OpReply) Size() int {
+	return 20 + len(reply.document)
+}
+
 // MarshalBinary implements [MsgBody].
 func (reply *OpReply) MarshalBinary() ([]byte, error) {
 	b := make([]byte, 20+len(reply.document))

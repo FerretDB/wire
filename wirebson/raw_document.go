@@ -183,6 +183,5 @@ func (raw RawDocument) LogMessageIndent() string {
 
 // check interfaces
 var (
-	_ AnyDocument    = RawDocument(nil)
-	_ slog.LogValuer = RawDocument(nil)
+	_ AnyDocument = RawDocument(nil)
 )

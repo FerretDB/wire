@@ -71,6 +71,7 @@ func MustOpMsg(pairs ...any) *OpMsg {
 	return msg
 }
 
+// msgbody implements [MsgBody].
 func (msg *OpMsg) msgbody() {}
 
 // check implements [MsgBody].
@@ -196,7 +197,39 @@ func (msg *OpMsg) UnmarshalBinaryNocopy(b []byte) error {
 	return nil
 }
 
-// MarshalBinary writes an OpMsg to a byte array.
+// Size implements [MsgBody].
+func (msg *OpMsg) Size() int {
+	res := 4
+
+	for _, section := range msg.sections {
+		res++
+
+		switch section.kind {
+		case 0:
+			if len(section.documents) > 0 {
+				res += len(section.documents[0])
+			}
+
+		case 1:
+			res += 4 + wirebson.SizeCString(section.identifier)
+			for _, doc := range section.documents {
+				res += len(doc)
+			}
+
+		default:
+			// that is already checked by checkSections
+			panic("not reached")
+		}
+	}
+
+	if msg.Flags.FlagSet(OpMsgChecksumPresent) {
+		res += 4
+	}
+
+	return res
+}
+
+// MarshalBinary implements [MsgBody].
 func (msg *OpMsg) MarshalBinary() ([]byte, error) {
 	b := make([]byte, 4, 16)
 
