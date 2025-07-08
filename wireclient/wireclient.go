@@ -493,7 +493,7 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 
 	for step := 1; step <= steps; step++ {
 		c.l.DebugContext(
-			ctx, "Login: client",
+			ctx, "loginScramSHA256: client",
 			slog.Int("step", step), slog.String("payload", payload),
 			slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
 		)
@@ -527,7 +527,7 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 		if done := res.Get("done").(bool); !done {
 			payload, err = conv.Step(payload)
 			if err != nil {
-				return fmt.Errorf("wireclient.Conn.Login: %w", err)
+				return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 			}
 
 			cmd = wirebson.MustDocument(
@@ -542,22 +542,22 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 
 		switch step {
 		case 1:
-			return fmt.Errorf("wireclient.Conn.Login: conversation is done at saslStart, but it shouldn't")
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: conversation is done at saslStart, but it shouldn't")
 		case 2:
 			c.l.DebugContext(
-				ctx, "wireclient.Conn.Login: conversation done at the first saslContinue, "+
+				ctx, "wireclient.Conn.loginScramSHA256: conversation done at the first saslContinue, "+
 					"assuming that server supports skipEmptyExchange",
 				slog.Int("step", step), slog.String("payload", payload),
 				slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
 			)
 
 			if _, err = conv.Step(payload); err != nil {
-				return fmt.Errorf("wireclient.Conn.Login: %w", err)
+				return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 			}
 
 		case 3:
 			c.l.DebugContext(
-				ctx, "wireclient.Conn.Login: conversation done at the second saslContinue, "+
+				ctx, "wireclient.Conn.loginScramSHA256: conversation done at the second saslContinue, "+
 					"assuming that server doesn't support skipEmptyExchange",
 				slog.Int("step", step), slog.String("payload", payload),
 				slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
@@ -568,11 +568,11 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 		}
 
 		if !conv.Done() {
-			return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: conversation is not done")
 		}
 
 		if !conv.Valid() {
-			return fmt.Errorf("wireclient.Conn.Login: conversation is done, but not valid")
+			return fmt.Errorf("wireclient.Conn.loginScramSHA256: conversation is done, but not valid")
 		}
 
 		return c.checkAuth(ctx)
