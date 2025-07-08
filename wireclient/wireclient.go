@@ -466,7 +466,6 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 				slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
 			)
 
-			return c.checkAuth(ctx)
 		default:
 			panic("unreachable")
 		}
