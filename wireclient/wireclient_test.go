@@ -134,25 +134,7 @@ func TestConn(t *testing.T) {
 				require.NoError(t, conn.Close())
 			})
 
-			u, err := url.Parse(uri)
-			require.NoError(t, err)
-
-			username, password := "username", "password"
-			db := "admin"
-
-			if u.User.Username() != "" {
-				username = u.User.Username()
-			}
-
-			if pass, ok := u.User.Password(); ok {
-				password = pass
-			}
-
-			if dbName := strings.TrimPrefix(u.Path, "/"); dbName != "" {
-				db = dbName
-			}
-
-			assert.NoError(t, conn.Login(ctx, username, password, db))
+			assert.NoError(t, conn.Login(ctx, "username", "password", "admin"))
 		})
 	})
 }
