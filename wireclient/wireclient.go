@@ -458,28 +458,28 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 				return fmt.Errorf("wireclient.Conn.Login: %w", err)
 			}
 
-			if !conv.Done() {
-				return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
-			}
-
-			if !conv.Valid() {
-				return fmt.Errorf("wireclient.Conn.Login: conversation is done, but not valid")
-			}
-
-			return c.checkAuth(ctx)
 		case 3:
-			if !conv.Done() {
-				return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
-			}
-
-			if !conv.Valid() {
-				return fmt.Errorf("wireclient.Conn.Login: conversation is done, but not valid")
-			}
+			c.l.DebugContext(
+				ctx, "wireclient.Conn.Login: conversation done at the second saslContinue, "+
+					"assuming that server doesn't support skipEmptyExchange",
+				slog.Int("step", step), slog.String("payload", payload),
+				slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
+			)
 
 			return c.checkAuth(ctx)
 		default:
 			panic("unreachable")
 		}
+
+		if !conv.Done() {
+			return fmt.Errorf("wireclient.Conn.Login: conversation is not done")
+		}
+
+		if !conv.Valid() {
+			return fmt.Errorf("wireclient.Conn.Login: conversation is done, but not valid")
+		}
+
+		return c.checkAuth(ctx)
 	}
 
 	return fmt.Errorf("wireclient.Conn.Login: too many steps")
