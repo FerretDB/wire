@@ -540,10 +540,7 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 			continue
 		}
 
-		switch step {
-		case 1:
-			return fmt.Errorf("wireclient.Conn.loginScramSHA256: conversation is done at saslStart, but it shouldn't")
-		case 2:
+		if step == 2 {
 			c.l.DebugContext(
 				ctx, "wireclient.Conn.loginScramSHA256: conversation done at the first saslContinue, "+
 					"assuming that server supports skipEmptyExchange",
@@ -554,17 +551,6 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 			if _, err = conv.Step(payload); err != nil {
 				return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
 			}
-
-		case 3:
-			c.l.DebugContext(
-				ctx, "wireclient.Conn.loginScramSHA256: conversation done at the second saslContinue, "+
-					"assuming that server doesn't support skipEmptyExchange",
-				slog.Int("step", step), slog.String("payload", payload),
-				slog.Bool("done", conv.Done()), slog.Bool("valid", conv.Valid()),
-			)
-
-		default:
-			panic("unreachable")
 		}
 
 		if !conv.Done() {
