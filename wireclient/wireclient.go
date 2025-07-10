@@ -428,12 +428,10 @@ func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) (
 //
 // It should not be used to test various authentication scenarios.
 func (c *Conn) Login(ctx context.Context, username, password, authDB string) error {
-	var supportedMechanisms []string
-	var err error
+	supportedMechanisms := []string{c.authMechanism}
 
-	if c.authMechanism != "" {
-		supportedMechanisms = append(supportedMechanisms, c.authMechanism)
-	} else {
+	if c.authMechanism == "" {
+		var err error
 		supportedMechanisms, err = c.getSupportedMechs(ctx, username, authDB)
 		if err != nil {
 			return fmt.Errorf("wireclient.Conn.Login: %w", err)
