@@ -352,6 +352,7 @@ func (c *Conn) Ping(ctx context.Context) error {
 //
 // The authMechanism is used to enforce a specific authentication mechanism.
 // If empty, the negotiation is performed instead using `hello` command.
+// Note that in practice it often fails due to incorrect handling of the `loadBalanced` parameter.
 func (c *Conn) Login(ctx context.Context, userinfo *url.Userinfo, authSource, authMechanism string) error {
 	username := userinfo.Username()
 	password, _ := userinfo.Password()
@@ -376,6 +377,8 @@ func (c *Conn) Login(ctx context.Context, userinfo *url.Userinfo, authSource, au
 
 // hello sends a hello command to the server
 // and returns the list of supported authentication mechanisms.
+//
+// Note that in practice it often fails due to incorrect handling of the `loadBalanced` parameter.
 func (c *Conn) hello(ctx context.Context, username, authDB string) ([]string, error) {
 	body := wire.MustOpMsg(
 		"hello", int32(1),
