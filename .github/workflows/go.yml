@@ -38,15 +38,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # keep in sync with Taskfile.yml
+          # keep in sync with Taskfile.yml's test-all
           - service: MongoDB
-            uri: mongodb://localhost:27017/
-          - service: MongoDB with TLS
-            uri: mongodb://localhost:37017/?tls=true&tlsCaFile=../.dev/build/certs/rootCA-cert.pem
+            uri: mongodb://username:password@127.0.0.1:27017/invalid?authSource=admin&authMechanism=SCRAM-SHA-256
+          - service: MongoDB TLS
+            uri: mongodb://username:password@127.0.0.1:37017/admin?tls=true&tlsCaFile=../.dev/build/certs/rootCA-cert.pem
           - service: FerretDB v2
-            uri: mongodb://localhost:27018/
+            uri: mongodb://username:password@127.0.0.1:27018/
           - service: FerretDB v1
-            uri: mongodb://localhost:27019/
+            uri: mongodb://username:password@127.0.0.1:27019/?authMechanism=PLAIN
             flags: -ferretdbv1
 
     permissions:
