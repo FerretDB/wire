@@ -1,4 +1,4 @@
-FROM golang:1.24.4
+FROM golang:1.24.5
 
 COPY go.mod go.sum /tmp/wire/
 COPY tools/go.mod tools/go.sum /tmp/wire/tools/
