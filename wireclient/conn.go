@@ -467,10 +467,9 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 		"$db", authDB,
 	)
 
-	// one `saslStart`, two `saslContinue` for servers that don't support `skipEmptyExchange`
-	steps := 3
-
-	for step := 1; step <= steps; step++ {
+	// One `saslStart`, two `saslContinue` for servers that don't support `skipEmptyExchange`;
+	// one and one for those who do.
+	for step := 1; step <= 3; step++ {
 		c.l.DebugContext(
 			ctx, "wireclient.Conn.loginScramSHA256: client",
 			slog.Int("step", step), slog.String("payload", payload),
