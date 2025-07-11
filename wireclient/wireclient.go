@@ -48,17 +48,24 @@ type Conn struct {
 	r *bufio.Reader
 	w *bufio.Writer
 	l *slog.Logger // debug-level only
+
+	// enforces the authentication mechanism. If empty, the negotiation is performed.
+	authMechanism string
 }
 
 // New wraps the given connection.
 //
 // The passed logger will be used only for debug-level messages.
-func New(c net.Conn, l *slog.Logger) *Conn {
+//
+// The authMechanism is used to enforce a specific authentication mechanism.
+// If empty, the negotiation is performed instead.
+func New(c net.Conn, l *slog.Logger, authMechanism string) *Conn {
 	return &Conn{
-		c: c,
-		r: bufio.NewReader(c),
-		w: bufio.NewWriter(c),
-		l: l,
+		c:             c,
+		r:             bufio.NewReader(c),
+		w:             bufio.NewWriter(c),
+		l:             l,
+		authMechanism: authMechanism,
 	}
 }
 
@@ -117,9 +124,17 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 
 	var tlsParam bool
 	var tlsCaFileParam string
+	var authMechanismParam string
 
 	for k, vs := range u.Query() {
 		switch k {
+		case "authMechanism":
+			if len(vs) != 1 {
+				return nil, fmt.Errorf("wireclient.Connect: query parameter %q must have exactly one value", k)
+			}
+
+			authMechanismParam = vs[0]
+
 		case "replicaSet":
 			// safe to ignore
 
@@ -176,7 +191,7 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 		return nil, fmt.Errorf("wireclient.Connect: %w", err)
 	}
 
-	return New(c, l), nil
+	return New(c, l, authMechanismParam), nil
 }
 
 // ConnectPing uses a combination of [Connect] and [Conn.Ping] to establish a working connection.
@@ -410,9 +425,14 @@ func (c *Conn) getSupportedMechs(ctx context.Context, username, authDB string) (
 //
 // It should not be used to test various authentication scenarios.
 func (c *Conn) Login(ctx context.Context, username, password, authDB string) error {
-	supportedMechanisms, err := c.getSupportedMechs(ctx, username, authDB)
-	if err != nil {
-		return fmt.Errorf("wireclient.Conn.Login: %w", err)
+	supportedMechanisms := []string{c.authMechanism}
+
+	if c.authMechanism == "" {
+		var err error
+		supportedMechanisms, err = c.getSupportedMechs(ctx, username, authDB)
+		if err != nil {
+			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		}
 	}
 
 	switch {
@@ -421,7 +441,7 @@ func (c *Conn) Login(ctx context.Context, username, password, authDB string) err
 	case slices.Contains(supportedMechanisms, "PLAIN"):
 		return c.loginPlain(ctx, username, password, authDB)
 	default:
-		return fmt.Errorf("wireclient.Conn.Login: unsupported authentication mechanisms")
+		return fmt.Errorf("wireclient.Conn.Login: unsupported authentication mechanisms: %v", supportedMechanisms)
 	}
 }
 
