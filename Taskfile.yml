@@ -6,7 +6,7 @@ env:
   GOCOVERDIR: tmp/cover
 
 vars:
-  HOST: '{{env "HOST" | default "localhost"}}'
+  HOST: '{{env "HOST" | default "127.0.0.1"}}'
   BENCH: Benchmark.*
   BENCH_TIME: 1s
   BENCH_COUNT: 5

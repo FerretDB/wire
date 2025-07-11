@@ -40,13 +40,13 @@ jobs:
         include:
           # keep in sync with Taskfile.yml's test-all
           - service: MongoDB
-            uri: mongodb://username:password@{{.HOST}}:27017/invalid?authSource=admin&authMechanism=SCRAM-SHA-256
+            uri: mongodb://username:password@127.0.0.1:27017/invalid?authSource=admin&authMechanism=SCRAM-SHA-256
           - service: MongoDB TLS
-            uri: mongodb://username:password@{{.HOST}}:37017/admin?tls=true&tlsCaFile=../.dev/build/certs/rootCA-cert.pem
+            uri: mongodb://username:password@127.0.0.1:37017/admin?tls=true&tlsCaFile=../.dev/build/certs/rootCA-cert.pem
           - service: FerretDB v2
-            uri: mongodb://username:password@{{.HOST}}:27018/
+            uri: mongodb://username:password@127.0.0.1:27018/
           - service: FerretDB v1
-            uri: mongodb://username:password@{{.HOST}}:27019/?authMechanism=PLAIN
+            uri: mongodb://username:password@127.0.0.1:27019/?authMechanism=PLAIN
             flags: -ferretdbv1
 
     permissions:

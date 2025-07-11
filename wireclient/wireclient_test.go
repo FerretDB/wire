@@ -26,17 +26,17 @@ func TestCredentials(t *testing.T) {
 	t.Parallel()
 
 	cleanURI, userinfo, authSource, authMechanism, err := Credentials(
-		"mongodb://username:password@localhost:27017/test?authMechanism=PLAIN&authSource=$external",
+		"mongodb://username:password@127.0.0.1:27017/test?authMechanism=PLAIN&authSource=$external",
 	)
 	require.NoError(t, err)
-	assert.Equal(t, "mongodb://localhost:27017/", cleanURI)
+	assert.Equal(t, "mongodb://127.0.0.1:27017/", cleanURI)
 	assert.Equal(t, "username:password", userinfo.String())
 	assert.Equal(t, "$external", authSource)
 	assert.Equal(t, "PLAIN", authMechanism)
 
-	cleanURI, userinfo, authSource, authMechanism, err = Credentials("mongodb://localhost:27017/test")
+	cleanURI, userinfo, authSource, authMechanism, err = Credentials("mongodb://127.0.0.1:27017/test")
 	require.NoError(t, err)
-	assert.Equal(t, "mongodb://localhost:27017/", cleanURI)
+	assert.Equal(t, "mongodb://127.0.0.1:27017/", cleanURI)
 	assert.Equal(t, "", userinfo.String())
 	assert.Equal(t, "test", authSource)
 	assert.Equal(t, "", authMechanism)
