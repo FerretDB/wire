@@ -60,8 +60,7 @@ func New(c net.Conn, l *slog.Logger) *Conn {
 	}
 }
 
-// Connect creates a new connection for the given MongoDB URI.
-// Credentials are ignored.
+// Connect creates a new connection for the given MongoDB URI. See [Credentials].
 //
 // Context can be used to cancel the connection attempt.
 // Canceling the context after the connection is established has no effect.
@@ -85,6 +84,10 @@ func Connect(ctx context.Context, uri string, l *slog.Logger) (*Conn, error) {
 
 	if u.Opaque != "" {
 		return nil, fmt.Errorf("wireclient.Connect: invalid URI %q", uri)
+	}
+
+	if u.User != nil {
+		return nil, fmt.Errorf("wireclient.Connect: credentials must be absent")
 	}
 
 	if u.Path != "/" {
@@ -342,6 +345,35 @@ func (c *Conn) Ping(ctx context.Context) error {
 	return nil
 }
 
+// Login authenticates the connection with the given credentials
+// using some unspecified sequences of commands.
+//
+// It should not be used to test various authentication scenarios.
+//
+// The authMechanism is used to enforce a specific authentication mechanism.
+// If empty, the negotiation is performed instead using `hello` command.
+func (c *Conn) Login(ctx context.Context, userinfo *url.Userinfo, authSource, authMechanism string) error {
+	username := userinfo.Username()
+	password, _ := userinfo.Password()
+
+	mechs := []string{authMechanism}
+	if authMechanism == "" {
+		var err error
+		if mechs, err = c.hello(ctx, username, authSource); err != nil {
+			return fmt.Errorf("wireclient.Conn.Login: %w", err)
+		}
+	}
+
+	switch {
+	case slices.Contains(mechs, "SCRAM-SHA-256"):
+		return c.loginScramSHA256(ctx, username, password, authSource)
+	case slices.Contains(mechs, "PLAIN"):
+		return c.loginPlain(ctx, username, password, authSource)
+	default:
+		return fmt.Errorf("wireclient.Conn.Login: unsupported authentication mechanisms: %v", mechs)
+	}
+}
+
 // hello sends a hello command to the server
 // and returns the list of supported authentication mechanisms.
 func (c *Conn) hello(ctx context.Context, username, authDB string) ([]string, error) {
@@ -353,66 +385,31 @@ func (c *Conn) hello(ctx context.Context, username, authDB string) ([]string, er
 
 	_, resBody, err := c.Request(ctx, body)
 	if err != nil {
-		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: %w", err)
+		return nil, fmt.Errorf("wireclient.Conn.hello: %w", err)
 	}
 
-	helloRes, err := resBody.(*wire.OpMsg).DocumentDeep()
+	res, err := resBody.(*wire.OpMsg).DocumentDeep()
 	if err != nil {
-		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: %w", err)
+		return nil, fmt.Errorf("wireclient.Conn.hello: %w", err)
 	}
 
-	saslSupportedMechs := helloRes.Get("saslSupportedMechs")
-	if saslSupportedMechs == nil {
-		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: no saslSupportedMechs in hello response")
-	}
-
-	supportedMechs, ok := saslSupportedMechs.(*wirebson.Array)
+	saslSupportedMech, ok := res.Get("saslSupportedMechs").(*wirebson.Array)
 	if !ok {
-		return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid saslSupportedMechs in hello response")
+		return nil, fmt.Errorf("wireclient.Conn.hello: invalid saslSupportedMechs in hello response")
 	}
 
-	var supportedMechanisms []string
+	var mechs []string
 
-	for _, mech := range supportedMechs.All() {
-		var mechStr string
-		if mechStr, ok = mech.(string); !ok {
-			return nil, fmt.Errorf("wireclient.Conn.getSupportedMechs: invalid saslSupportedMechs value %v", mech)
+	for _, mech := range saslSupportedMech.All() {
+		var m string
+		if m, ok = mech.(string); !ok {
+			return nil, fmt.Errorf("wireclient.Conn.hello: invalid saslSupportedMechs value %v", mech)
 		}
 
-		supportedMechanisms = append(supportedMechanisms, mechStr)
+		mechs = append(mechs, m)
 	}
 
-	return supportedMechanisms, nil
-}
-
-// Login authenticates the connection with the given credentials
-// using some unspecified sequences of commands.
-//
-// It should not be used to test various authentication scenarios.
-//
-// The authMechanism is used to enforce a specific authentication mechanism.
-// If empty, the negotiation is performed instead.
-func (c *Conn) Login(ctx context.Context, userinfo *url.Userinfo, authDB, authMechanism string) error {
-	supportedMechanisms := []string{authMechanism}
-	username := userinfo.Username()
-	password, _ := userinfo.Password()
-
-	if authMechanism == "" {
-		var err error
-
-		if supportedMechanisms, err = c.hello(ctx, username, authDB); err != nil {
-			return fmt.Errorf("wireclient.Conn.Login: %w", err)
-		}
-	}
-
-	switch {
-	case slices.Contains(supportedMechanisms, "SCRAM-SHA-256"):
-		return c.loginScramSHA256(ctx, username, password, authDB)
-	case slices.Contains(supportedMechanisms, "PLAIN"):
-		return c.loginPlain(ctx, username, password, authDB)
-	default:
-		return fmt.Errorf("wireclient.Conn.Login: unsupported authentication mechanisms: %v", supportedMechanisms)
-	}
+	return mechs, nil
 }
 
 // loginPlain authenticates the connection using the PLAIN mechanism.
@@ -424,11 +421,6 @@ func (c *Conn) loginPlain(ctx context.Context, username, password, authDB string
 		"mechanism", "PLAIN",
 		"payload", wirebson.Binary{B: []byte(plainCredentials)},
 		"$db", authDB,
-	)
-
-	c.l.DebugContext(
-		ctx, "Login: PLAIN client",
-		slog.String("mechanism", "PLAIN"),
 	)
 
 	_, resBody, err := c.Request(ctx, body)
@@ -444,11 +436,6 @@ func (c *Conn) loginPlain(ctx context.Context, username, password, authDB string
 	if ok := res.Get("ok"); ok != 1.0 {
 		return fmt.Errorf("wireclient.Conn.loginPlain: authentication failed (ok was %v)", ok)
 	}
-
-	c.l.DebugContext(
-		ctx, "Login: PLAIN server",
-		slog.String("status", "success"),
-	)
 
 	return c.checkAuth(ctx)
 }
@@ -471,15 +458,14 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 		"saslStart", int32(1),
 		"mechanism", "SCRAM-SHA-256",
 		"payload", wirebson.Binary{B: []byte(payload)},
+		"options", wirebson.MustDocument(
+			"skipEmptyExchange", true,
+		),
 		"$db", authDB,
 	)
 
 	// one `saslStart`, two `saslContinue` for servers that don't support `skipEmptyExchange`
 	steps := 3
-
-	if err = cmd.Add("options", wirebson.MustDocument("skipEmptyExchange", true)); err != nil {
-		return fmt.Errorf("wireclient.Conn.loginScramSHA256: %w", err)
-	}
 
 	for step := 1; step <= steps; step++ {
 		c.l.DebugContext(
@@ -510,7 +496,7 @@ func (c *Conn) loginScramSHA256(ctx context.Context, username, password, authDB 
 		payload = string(res.Get("payload").(wirebson.Binary).B)
 
 		c.l.DebugContext(
-			ctx, "Login: server",
+			ctx, "wireclient.Conn.loginScramSHA256: server",
 			slog.Int("step", step), slog.String("payload", payload),
 		)
 
@@ -566,7 +552,7 @@ func (c *Conn) checkAuth(ctx context.Context) error {
 
 	res, err := resBody.(*wire.OpMsg).DocumentDeep()
 	if err != nil {
-		return fmt.Errorf("wireclient.Conn.Ping: %w", err)
+		return fmt.Errorf("wireclient.Conn.checkAuth: %w", err)
 	}
 
 	if ok := res.Get("ok"); ok != 1.0 {
@@ -574,11 +560,4 @@ func (c *Conn) checkAuth(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// sleep waits until the given duration is over or the context is canceled.
-func sleep(ctx context.Context, d time.Duration) {
-	ctx, cancel := context.WithTimeout(ctx, d)
-	defer cancel()
-	<-ctx.Done()
 }

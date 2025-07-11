@@ -22,21 +22,23 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
-// Credentials extracts userinfo, authSource, and authMechanism suitable for [Conn.Login] from the given MongoDB URI.
+// Credentials extracts user credentials, authSource, and authMechanism suitable for [Conn.Login]
+// from the given MongoDB URI.
 // It also returns a clean URI suitable for [Connect].
 //
 // If both authSource query parameter and URI path are present, the query parameter takes precedence.
 // If both are empty, it does not defaults to "admin".
 // The caller should handle this case if needed.
-func Credentials(uri string) (cleanURI string, userinfo *url.Userinfo, authSource, authMechanism string, err error) {
+func Credentials(uri string) (cleanURI string, credentials *url.Userinfo, authSource, authMechanism string, err error) {
 	u, err := url.Parse(uri)
 	if err != nil {
 		return
 	}
 
-	userinfo = u.User
+	credentials = u.User
 	u.User = nil
 
 	q := u.Query()
@@ -89,4 +91,11 @@ func lookupSrvURI(ctx context.Context, u *url.URL) error {
 	u.Scheme = "mongodb"
 
 	return nil
+}
+
+// sleep waits until the given duration is over or the context is canceled.
+func sleep(ctx context.Context, d time.Duration) {
+	ctx, cancel := context.WithTimeout(ctx, d)
+	defer cancel()
+	<-ctx.Done()
 }

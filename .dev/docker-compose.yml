@@ -52,5 +52,5 @@ services:
     ports:
       - 27019:27017
     environment:
-      POSTGRES_USER: username
-      POSTGRES_PASSWORD: password
+      # remove password to actually test old PLAIN authentication
+      FERRETDB_POSTGRESQL_URL: postgres://username@127.0.0.1:5432/ferretdb

@@ -65,8 +65,8 @@ func logger(tb testing.TB) *slog.Logger {
 	return slog.New(h)
 }
 
-// setup waits for FerretDB or MongoDB to start and returns the URI.
-func setup(tb testing.TB) string {
+// setup waits for FerretDB or MongoDB to start and returns full URI.
+func setup(tb testing.TB) (string, *Conn) {
 	tb.Helper()
 
 	if testing.Short() {
@@ -76,94 +76,94 @@ func setup(tb testing.TB) string {
 	uri := os.Getenv("MONGODB_URI")
 	require.NotEmpty(tb, uri, "MONGODB_URI environment variable must be set; set it or run tests with `go test -short`")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	conn := ConnectPing(ctx, uri, logger(tb))
-	require.NotNil(tb, conn)
-
-	err := conn.Close()
+	cleanURI, _, _, _, err := Credentials(uri)
 	require.NoError(tb, err)
 
-	return uri
+	ctx, cancel := context.WithTimeout(tb.Context(), 30*time.Second)
+	defer cancel()
+
+	conn := ConnectPing(ctx, cleanURI, logger(tb))
+	require.NotNil(tb, conn)
+
+	tb.Cleanup(func() {
+		require.NoError(tb, conn.Close())
+	})
+
+	return uri, conn
 }
 
-// databaseName returns the database name for the test.
-func databaseName(tb testing.TB) string {
-	tb.Helper()
-
-	return strings.ReplaceAll(tb.Name(), "/", "_")
-}
-
-func TestConn(t *testing.T) {
+func TestConnLogin(t *testing.T) {
 	t.Parallel()
 
-	uri := setup(t)
+	fullURI, _ := setup(t)
 
 	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	t.Cleanup(cancel)
 
-	t.Run("Login", func(t *testing.T) {
-		t.Run("InvalidUsername", func(t *testing.T) {
-			conn := ConnectPing(ctx, uri, logger(t))
-			require.NotNil(t, conn)
+	t.Run("Success", func(t *testing.T) {
+		uri, credentials, authSource, authMechanism, err := Credentials(fullURI)
+		require.NoError(t, err)
 
-			t.Cleanup(func() {
-				require.NoError(t, conn.Close())
-			})
+		conn, err := Connect(ctx, uri, logger(t))
+		require.NoError(t, err)
 
-			assert.Error(t, conn.Login(ctx, url.UserPassword("invalid", "invalid"), "admin", ""))
+		t.Cleanup(func() {
+			require.NoError(t, conn.Close())
 		})
 
-		t.Run("Valid", func(t *testing.T) {
-			conn := ConnectPing(ctx, uri, logger(t))
-			require.NotNil(t, conn)
+		assert.NoError(t, conn.Login(ctx, credentials, authSource, authMechanism))
+	})
 
-			t.Cleanup(func() {
-				require.NoError(t, conn.Close())
-			})
+	t.Run("InvalidCredentials", func(t *testing.T) {
+		uri, _, authSource, authMechanism, err := Credentials(fullURI)
+		require.NoError(t, err)
 
-			assert.NoError(t, conn.Login(ctx, url.UserPassword("username", "password"), "admin", ""))
+		conn, err := Connect(ctx, uri, logger(t))
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			require.NoError(t, conn.Close())
 		})
+
+		assert.Error(t, conn.Login(ctx, url.UserPassword("invalid", "invalid"), authSource, authMechanism))
+	})
+
+	t.Run("InvalidAuthMechanism", func(t *testing.T) {
+		uri, credentials, authSource, _, err := Credentials(fullURI)
+		require.NoError(t, err)
+
+		conn, err := Connect(ctx, uri, logger(t))
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			require.NoError(t, conn.Close())
+		})
+
+		assert.Error(t, conn.Login(ctx, credentials, authSource, "invalid"))
 	})
 }
 
 func TestConnTypes(t *testing.T) {
 	t.Parallel()
 
-	uri := setup(t)
+	var mConn *mongo.Client
+	uri, conn := setup(t)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	t.Cleanup(cancel)
 
-	var conn *Conn
-	var mConn *mongo.Client
-
-	// avoid shadowing err in subtests
+	// avoid err shadowing by subtests
 	{
 		var err error
 
-		conn = ConnectPing(ctx, uri, logger(t))
-		require.NotNil(t, conn)
-
-		err = conn.Login(ctx, url.UserPassword("username", "password"), "admin", "")
+		mConn, err = mongo.Connect(options.Client().ApplyURI(uri))
 		require.NoError(t, err)
 
-		var supportedMechanisms []string
-		supportedMechanisms, err = conn.hello(ctx, "username", "admin")
-		require.NoError(t, err)
-		require.NotEmpty(t, supportedMechanisms)
-
-		opts := options.Client().
-			ApplyURI(uri).
-			SetAuth(options.Credential{Username: "username", Password: "password", AuthMechanism: supportedMechanisms[0]})
-		mConn, err = mongo.Connect(opts)
+		_, credentials, authSource, authMechanism, err := Credentials(uri)
 		require.NoError(t, err)
 
-		t.Cleanup(func() {
-			require.NoError(t, conn.Close())
-			require.NoError(t, mConn.Disconnect(ctx))
-		})
+		err = conn.Login(ctx, credentials, authSource, authMechanism)
+		require.NoError(t, err)
 	}
 
 	t.Run("Decimal128", func(t *testing.T) {
@@ -172,7 +172,7 @@ func TestConnTypes(t *testing.T) {
 		d := wirebson.Decimal128{H: 13, L: 42}
 		md := bson.NewDecimal128(13, 42)
 
-		db := mConn.Database(databaseName(t))
+		db := mConn.Database("decimal128")
 		require.NoError(t, db.Drop(ctx))
 
 		_, body, err := conn.Request(ctx, wire.MustOpMsg(
@@ -227,7 +227,7 @@ func TestConnTypes(t *testing.T) {
 		require.EqualValues(t, 100, ts.T())
 		require.EqualValues(t, 500, ts.I())
 
-		db := mConn.Database(databaseName(t))
+		db := mConn.Database("timestamp")
 		require.NoError(t, db.Drop(ctx))
 
 		_, body, err := conn.Request(ctx, wire.MustOpMsg(
