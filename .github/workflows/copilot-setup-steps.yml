@@ -1,0 +1,32 @@
+---
+name: Copilot Setup Steps
+
+on: workflow_dispatch
+
+jobs:
+  copilot-setup-steps:
+    name: Setup development environment for Copilot coding agent
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: FerretDB/github-actions/setup-go@main
+        with:
+          cache-key: copilot-setup
+
+      - name: Install Task and tools
+        run: go generate -x
+        working-directory: tools
+
+      - name: Initialize project dependencies
+        run: bin/task init
+
+      - name: Run code generators and formatters
+        run: bin/task gen
+
+      - name: Verify setup with short tests
+        run: bin/task test-short
