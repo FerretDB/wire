@@ -27,7 +27,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
-	"github.com/FerretDB/wire/internal/util/must"
 )
 
 // Array represents a BSON array in the (partially) decoded form.
@@ -161,7 +160,9 @@ func (arr *Array) SortInterface(less func(a, b any) bool) sort.Interface {
 // This method should accept a slice of bytes, not return it.
 // That would allow to avoid unnecessary allocations.
 func (arr *Array) Encode() (RawArray, error) {
-	must.NotBeZero(arr)
+	if arr == nil {
+		panic("arr is nil")
+	}
 
 	size := sizeArray(arr)
 	buf := bytes.NewBuffer(make([]byte, 0, size))
@@ -187,7 +188,9 @@ func (arr *Array) Encode() (RawArray, error) {
 // by encoding Canonical Extended JSON v2 representation of the array.
 func (arr *Array) MarshalJSON() ([]byte, error) {
 	// encoding/json does not call this method on nil
-	must.NotBeZero(arr)
+	if arr == nil {
+		panic("arr is nil")
+	}
 
 	a, err := ToDriver(arr)
 	if err != nil {
@@ -206,7 +209,10 @@ func (arr *Array) MarshalJSON() ([]byte, error) {
 //
 // Receiver must not be nil.
 func (arr *Array) Decode() (*Array, error) {
-	must.NotBeZero(arr)
+	if arr == nil {
+		panic("arr is nil")
+	}
+
 	return arr, nil
 }
 
@@ -214,7 +220,9 @@ func (arr *Array) Decode() (*Array, error) {
 // by decoding Canonical Extended JSON v2 representation of the array.
 func (arr *Array) UnmarshalJSON(b []byte) error {
 	// encoding/json does not call this method on nil
-	must.NotBeZero(arr)
+	if arr == nil {
+		panic("arr is nil")
+	}
 
 	var a bson.A
 	if err := bson.UnmarshalExtJSON(b, true, &a); err != nil {
@@ -228,7 +236,6 @@ func (arr *Array) UnmarshalJSON(b []byte) error {
 
 	switch v := v.(type) {
 	case *Array:
-		must.NotBeZero(v)
 		*arr = *v
 		return nil
 	default:
@@ -244,10 +251,17 @@ func (arr *Array) Copy() *Array {
 	for v := range arr.Values() {
 		switch v := v.(type) {
 		case Binary:
-			must.NoError(res.Add(Binary{B: slices.Clip(slices.Clone(v.B)), Subtype: v.Subtype}))
+			if err := res.Add(Binary{B: slices.Clip(slices.Clone(v.B)), Subtype: v.Subtype}); err != nil {
+				panic(err)
+			}
+
 		default:
-			must.NoError(validBSONType(v))
-			must.NoError(res.Add(v))
+			if err := validBSONType(v); err != nil {
+				panic(err)
+			}
+			if err := res.Add(v); err != nil {
+				panic(err)
+			}
 		}
 	}
 
