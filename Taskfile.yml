@@ -112,6 +112,11 @@ tasks:
       - go test -bench='{{.BENCH}}' -count={{.BENCH_COUNT}} -benchtime={{.BENCH_TIME}} -timeout=60m ./wirebson | tee new.txt
       - bin/benchstat old.txt new.txt
 
+  bench-ci:
+    desc: "Run benchmarks and push results to MongoDB (for CI)"
+    cmds:
+      - go run ./cmd/benchpush -bench='{{.BENCH}}' -count={{.BENCH_COUNT}} -benchtime={{.BENCH_TIME}} -uri='{{.BENCHMARK_MONGODB_URI}}'
+
   fuzz:
     desc: "Run fuzzers for about 1 minute (with default FUZZ_TIME)"
     cmds:
