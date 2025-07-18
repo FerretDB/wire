@@ -22,9 +22,11 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// OpQuery is a deprecated request message type.
+// OpQuery represent the deprecated OP_QUERY wire protocol message type.
+// It stores BSON documents in the raw form.
 //
-// Message is checked during construction by [NewOpQuery], [MustOpQuery], or [OpQuery.UnmarshalBinaryNocopy].
+// Message is checked during construction by [NewOpQuery], [MustOpQuery], or [OpQuery.UnmarshalBinaryNocopy]
+// without decoding BSON documents inside.
 type OpQuery struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: flags, collection name, number to skip, number to return, query, fields selector.

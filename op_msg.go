@@ -23,9 +23,11 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// OpMsg is the main wire protocol message type.
+// OpMsg represent the OP_MSG wire protocol message type.
+// It stores BSON documents in the raw form.
 //
-// Message is checked during construction by [NewOpMsg], [MustOpMsg], or [OpMsg.UnmarshalBinaryNocopy].
+// Message is checked during construction by [NewOpMsg], [MustOpMsg], or [OpMsg.UnmarshalBinaryNocopy]
+// without decoding BSON documents inside.
 type OpMsg struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: flags, sections, optional checksum.
@@ -76,10 +78,6 @@ func (msg *OpMsg) msgbody() {}
 
 // check implements [MsgBody].
 func (msg *OpMsg) check() error {
-	if err := checkSections(msg.sections); err != nil {
-		return lazyerrors.Error(err)
-	}
-
 	for _, s := range msg.sections {
 		for _, d := range s.documents {
 			if _, err := d.DecodeDeep(); err != nil {
