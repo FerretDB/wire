@@ -12,6 +12,13 @@ on:
       - main
   schedule:
     - cron: "12 0 * * *"
+  workflow_dispatch:
+    inputs:
+      run_benchmarks:
+        description: 'Run benchmarks'
+        required: false
+        default: false
+        type: boolean
 
 env:
   GOPATH: /home/runner/go
@@ -142,3 +149,38 @@ jobs:
 
       - name: Run fuzzers
         run: bin/task fuzz
+
+  benchmark:
+    name: Benchmark
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    # Do not run this job in parallel for any PR change or branch push.
+    concurrency:
+      group: ${{ github.workflow }}-benchmark-${{ github.head_ref || github.ref_name }}
+      cancel-in-progress: true
+
+    # Only run on main branch, scheduled runs, or when triggered manually
+    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_benchmarks)
+
+    permissions:
+      contents: read
+
+    steps:
+      # TODO https://github.com/FerretDB/github-actions/issues/211
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: FerretDB/github-actions/setup-go@main
+        with:
+          cache-key: benchmark
+
+      - name: Install Task and tools
+        run: go generate -x
+        working-directory: tools
+
+      - name: Run benchmarks and push results
+        run: bin/task bench-ci
+        env:
+          BENCHMARK_MONGODB_URI: ${{ secrets.BENCHMARK_MONGODB_URI }}
