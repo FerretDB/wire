@@ -22,11 +22,12 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// OpReply is a deprecated response message type.
-//
-// Message is checked during construction by [NewOpReply], [MustOpReply], or [OpReply.UnmarshalBinaryNocopy].
-//
+// OpReply represents the deprecated OP_REPLY wire protocol message type.
+// It stores BSON documents in the raw form.
 // Only up to one returned document is supported.
+//
+// Message is checked during construction by [NewOpReply], [MustOpReply], or [OpReply.UnmarshalBinaryNocopy]
+// without decoding BSON documents inside.
 type OpReply struct {
 	// The order of fields is weird to make the struct smaller due to alignment.
 	// The wire order is: flags, cursor ID, starting from, documents.

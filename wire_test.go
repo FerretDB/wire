@@ -136,6 +136,8 @@ func testMessages(t *testing.T, testCases []testCase) {
 
 				switch msgBody := msgBody.(type) {
 				case *OpMsg:
+					require.NoError(t, checkSections(msgBody.sections))
+
 					_, _ = msgBody.Document()
 					_, _ = msgBody.DocumentDeep()
 					_, _ = msgBody.DocumentRaw()
@@ -231,6 +233,8 @@ func fuzzMessages(f *testing.F, testCases []testCase) {
 
 			switch msgBody := msgBody.(type) {
 			case *OpMsg:
+				require.NoError(t, checkSections(msgBody.sections))
+
 				_, _ = msgBody.Document()
 				_, _ = msgBody.DocumentDeep()
 				_, _ = msgBody.DocumentRaw()

@@ -15,10 +15,6 @@
 // Package must provides helper functions that panic on error.
 package must
 
-import (
-	"fmt"
-)
-
 // NoError panics if the error is not nil.
 //
 // Use that function only for static initialization, test code, or code that "can't" fail.
@@ -26,16 +22,5 @@ import (
 func NoError(err error) {
 	if err != nil {
 		panic(err)
-	}
-}
-
-// NotBeZero panics if argument has zero value.
-//
-// Use that function only for static initialization, test code, or code that "can't" fail.
-// When in doubt, don't.
-func NotBeZero[T comparable](v T) {
-	var zero T
-	if v == zero {
-		panic(fmt.Sprintf("v has zero value (%#v)", v))
 	}
 }

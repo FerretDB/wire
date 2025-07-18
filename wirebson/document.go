@@ -25,7 +25,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"github.com/FerretDB/wire/internal/util/lazyerrors"
-	"github.com/FerretDB/wire/internal/util/must"
 )
 
 // field represents a single Document field in the (partially) decoded form.
@@ -136,15 +135,6 @@ func (doc *Document) Get(name string) any {
 	return nil
 }
 
-// GetByIndex returns the name and the value of the field at the given index (between 0 and [Document.Len]-1).
-// It panics if index is out of bounds.
-//
-// Deprecated: use [Document.All] instead.
-func (doc *Document) GetByIndex(i int) (string, any) {
-	f := doc.fields[i]
-	return f.name, f.value
-}
-
 // All returns an iterator over all field name/value pairs of the Document.
 func (doc *Document) All() iter.Seq2[string, any] {
 	return func(yield func(string, any) bool) {
@@ -239,7 +229,9 @@ func (doc *Document) Command() string {
 // This method should accept a slice of bytes, not return it.
 // That would allow to avoid unnecessary allocations.
 func (doc *Document) Encode() (RawDocument, error) {
-	must.NotBeZero(doc)
+	if doc == nil {
+		panic("doc is nil")
+	}
 
 	size := sizeDocument(doc)
 	buf := bytes.NewBuffer(make([]byte, 0, size))
@@ -265,7 +257,9 @@ func (doc *Document) Encode() (RawDocument, error) {
 // by encoding Canonical Extended JSON v2 representation of the document.
 func (doc *Document) MarshalJSON() ([]byte, error) {
 	// encoding/json does not call this method on nil
-	must.NotBeZero(doc)
+	if doc == nil {
+		panic("doc is nil")
+	}
 
 	d, err := ToDriver(doc)
 	if err != nil {
@@ -284,7 +278,10 @@ func (doc *Document) MarshalJSON() ([]byte, error) {
 //
 // Receiver must not be nil.
 func (doc *Document) Decode() (*Document, error) {
-	must.NotBeZero(doc)
+	if doc == nil {
+		panic("doc is nil")
+	}
+
 	return doc, nil
 }
 
@@ -292,7 +289,9 @@ func (doc *Document) Decode() (*Document, error) {
 // by decoding Canonical Extended JSON v2 representation of the document.
 func (doc *Document) UnmarshalJSON(b []byte) error {
 	// encoding/json does not call this method on nil
-	must.NotBeZero(doc)
+	if doc == nil {
+		panic("doc is nil")
+	}
 
 	var d bson.D
 	if err := bson.UnmarshalExtJSON(b, true, &d); err != nil {
@@ -306,7 +305,6 @@ func (doc *Document) UnmarshalJSON(b []byte) error {
 
 	switch v := v.(type) {
 	case *Document:
-		must.NotBeZero(v)
 		*doc = *v
 		return nil
 	default:
@@ -322,10 +320,17 @@ func (doc *Document) Copy() *Document {
 	for k, v := range doc.All() {
 		switch v := v.(type) {
 		case Binary:
-			must.NoError(res.Add(k, Binary{B: slices.Clip(slices.Clone(v.B)), Subtype: v.Subtype}))
+			if err := res.Add(k, Binary{B: slices.Clip(slices.Clone(v.B)), Subtype: v.Subtype}); err != nil {
+				panic(err)
+			}
+
 		default:
-			must.NoError(validBSONType(v))
-			must.NoError(res.Add(k, v))
+			if err := validBSONType(v); err != nil {
+				panic(err)
+			}
+			if err := res.Add(k, v); err != nil {
+				panic(err)
+			}
 		}
 	}
 
