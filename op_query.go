@@ -22,7 +22,7 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// OpQuery represent the deprecated OP_QUERY wire protocol message type.
+// OpQuery represents the deprecated OP_QUERY wire protocol message type.
 // It stores BSON documents in the raw form.
 //
 // Message is checked during construction by [NewOpQuery], [MustOpQuery], or [OpQuery.UnmarshalBinaryNocopy]

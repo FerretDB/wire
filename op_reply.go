@@ -22,7 +22,7 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// OpReply represent the deprecated OP_REPLY wire protocol message type.
+// OpReply represents the deprecated OP_REPLY wire protocol message type.
 // It stores BSON documents in the raw form.
 // Only up to one returned document is supported.
 //

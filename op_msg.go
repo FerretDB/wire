@@ -23,7 +23,7 @@ import (
 	"github.com/FerretDB/wire/wirebson"
 )
 
-// OpMsg represent the OP_MSG wire protocol message type.
+// OpMsg represents the OP_MSG wire protocol message type.
 // It stores BSON documents in the raw form.
 //
 // Message is checked during construction by [NewOpMsg], [MustOpMsg], or [OpMsg.UnmarshalBinaryNocopy]
