@@ -136,15 +136,6 @@ func (doc *Document) Get(name string) any {
 	return nil
 }
 
-// GetByIndex returns the name and the value of the field at the given index (between 0 and [Document.Len]-1).
-// It panics if index is out of bounds.
-//
-// Deprecated: use [Document.All] instead.
-func (doc *Document) GetByIndex(i int) (string, any) {
-	f := doc.fields[i]
-	return f.name, f.value
-}
-
 // All returns an iterator over all field name/value pairs of the Document.
 func (doc *Document) All() iter.Seq2[string, any] {
 	return func(yield func(string, any) bool) {
