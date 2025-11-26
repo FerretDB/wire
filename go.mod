@@ -6,10 +6,10 @@ toolchain go1.24.5
 
 require (
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/stretchr/testify v1.10.0
-	github.com/xdg-go/scram v1.1.2
-	go.mongodb.org/mongo-driver v1.17.4
-	go.mongodb.org/mongo-driver/v2 v2.2.2
+	github.com/stretchr/testify v1.11.1
+	github.com/xdg-go/scram v1.2.0
+	go.mongodb.org/mongo-driver v1.17.6
+	go.mongodb.org/mongo-driver/v2 v2.4.0
 )
 
 require (
