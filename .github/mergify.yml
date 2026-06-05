@@ -1,4 +1,3 @@
----
 # see https://docs.mergify.com/
 
 pull_request_rules:
@@ -8,14 +7,14 @@ pull_request_rules:
       # - "-closed"
       # - "-conflict"
       # - "#commits-behind > 0"
-      - "-draft"
-      - "-locked"
-      - "-merged"
-      - "author != dependabot[bot]"
-      - "base = main"
-      - "branch-protection-review-decision = APPROVED"
-      - "label != 'not ready'"
-      - "#review-threads-unresolved = 0"
+      - -draft
+      - -locked
+      - -merged
+      - author != dependabot[bot]
+      - base = main
+      - github-review-decision = APPROVED
+      - label != 'not ready'
+      - '#review-threads-unresolved = 0'
     actions:
       update:
 
@@ -42,3 +41,5 @@ pull_request_rules:
     actions:
       label:
         remove: [conflict]
+merge_protections_settings:
+  reporting_method: check-runs
