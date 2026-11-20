@@ -13,7 +13,7 @@ pull_request_rules:
       - "-merged"
       - "author != dependabot[bot]"
       - "base = main"
-      - "branch-protection-review-decision = APPROVED"
+      - "github-review-decision = APPROVED"
       - "label != 'not ready'"
       - "#review-threads-unresolved = 0"
     actions:
